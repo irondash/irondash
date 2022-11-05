@@ -7,9 +7,9 @@ It defines `JNI_OnLoad` function which is called by JVM when the library is load
 It also attempts to store the class loader that loaded Flutter application.
 
 This only works if the dylib that uses this crate is loaded from Java using `System.loadLibrary`. It will not work if the dylib is loaded from other
-code (i.e. through dlopen).
+code (i.e. through `dlopen`).
 
-This crate also assumes that `System.loadLibrary` is called from the main
+This crate also assumes that `System.loadLibrary` is called from main
 thread. It will remember main thread looper and provides functionality
 to schedule callbacks to be run on main thread.
 

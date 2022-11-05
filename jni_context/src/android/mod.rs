@@ -36,26 +36,26 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub struct AndroidJniContext {
+pub struct JniContext {
     vm: JavaVM,
     class_loader: Option<GlobalRef>,
     callbacks: Arc<Mutex<RunLoopCallbacks>>,
     main_thread_id: std::thread::ThreadId,
 }
 
-impl std::fmt::Debug for AndroidJniContext {
+impl std::fmt::Debug for JniContext {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("AndroidJniContext").finish()
+        f.debug_struct("JniContext").finish()
     }
 }
 
-static CONTEXT: OnceCell<Result<AndroidJniContext, Error>> = OnceCell::new();
+static CONTEXT: OnceCell<Result<JniContext, Error>> = OnceCell::new();
 
-impl AndroidJniContext {
+impl JniContext {
     /// Returns JNI context for current dylib. Will fail with error if current
     /// library was not loaded using `System.loadLibrary` or was not loaded on
     /// main thread.
-    pub fn get() -> Result<&'static AndroidJniContext, Error> {
+    pub fn get() -> Result<&'static JniContext, Error> {
         match CONTEXT.get() {
             Some(Ok(context)) => Ok(context),
             Some(Err(e)) => Err(e.clone()),
@@ -64,7 +64,7 @@ impl AndroidJniContext {
     }
 
     /// Returns reference to current process JavaVM.
-    pub fn vm(&self) -> &JavaVM {
+    pub fn java_vm(&self) -> &JavaVM {
         &self.vm
     }
 
@@ -130,7 +130,7 @@ pub unsafe extern "C" fn JNI_OnLoad(
     let class_loader = get_class_loader(&vm);
 
     CONTEXT
-        .set(Ok(AndroidJniContext {
+        .set(Ok(JniContext {
             vm,
             class_loader,
             callbacks: mini_runloop.callbacks(),

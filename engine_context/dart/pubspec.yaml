@@ -1,6 +1,6 @@
 name: ironbird_engine_context
 description: Easy access to FlutterView, FlutterBinaryMessenger and FlutterTextureRegistry for FFI.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/nativeshell/ironbird
 
 environment:

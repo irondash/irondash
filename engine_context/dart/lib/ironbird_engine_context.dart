@@ -14,13 +14,13 @@ class EngineContext {
   ///
   /// Dart:
   /// ```dart
-  /// final handle = await IronbirdEngineContext.instance.getEngineHandle();
+  /// final handle = await EngineContext.instance.getEngineHandle();
   /// // pass the handle native code (i.e. through FFI).
   /// ```
   ///
   /// Native code:
   /// ```rust
-  /// let context = IronbirdEngineContext::new();
+  /// let context = EngineContext::new().unwrap();
   /// let flutter_view = context.get_flutter_view(handle);
   /// let texture_registry = contet.get_texture_registry(handle);
   /// ```

@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "jni_context",
+]
+
+[patch.crates-io]
+ironbird_jni_context = { path = "jni_context" }

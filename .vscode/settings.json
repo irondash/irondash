@@ -1,0 +1,17 @@
+{
+    // "rust-analyzer.cargo.target": "aarch64-apple-ios",
+    "rust-analyzer.cargo.target": "aarch64-linux-android",
+    "rust-analyzer.runnableEnv": {
+        "RUST_TEST_THREADS": 1,
+    },
+    // "rust-analyzer.checkOnSave.allTargets": false,
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "rust-analyzer.checkOnSave.allTargets": false,
+    // "rust-analyzer.cargo.unsetTest": [
+    //     "nativeshell_core",
+    // ],
+    "rust-analyzer.cargo.features": [
+        // "mock"
+    ],
+    "dart.runPubGetOnPubspecChanges": "never"
+}

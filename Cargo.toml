@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "engine_context/rust",
     "jni_context",
 ]
 

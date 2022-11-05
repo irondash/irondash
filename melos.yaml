@@ -1,0 +1,4 @@
+name: ironbird
+
+packages:
+  - engine_context/dart

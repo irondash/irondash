@@ -64,7 +64,7 @@ let handle = run_loop.schedule(Duration::from_secs(10), || {
 ```
 
 `RunLoop::schedule` returns a `Handle` instance. If handle is dropped before
-timer executes, it will be cancelled. If you don't want that, call `detach`
+timer executes, timer be cancelled. If you don't want that, call `detach`
 on the handle:
 
 ```rust

@@ -108,4 +108,4 @@ This slightly varies per platform.
 - On Linux, main thread is thread that owns default `GMainContext`, i.e. `g_main_context_is_owner(g_main_context_default)`.
 - On Android, main thread is the thread that the library was loaded from (`System.loadLibrary`). If library gets loaded from different thread things won't work as expected.
 - On Windows, main thread is the first thread created when application was launched, similar to macOS and iOS. If you create windows and pump the message loop on
-different thread, things will not work as expected.
+different thread, `RunLoop::main_thread_sender()` will not work as expected.

@@ -26,11 +26,11 @@ impl RunLoopSender {
     }
 
     /// Schedules the callback to be executed on run loop and returns immediately.
-    pub fn send<F>(&self, callback: F) -> bool
+    pub fn send<F>(&self, callback: F)
     where
         F: FnOnce() + 'static + Send,
     {
-        self.platform_sender.send(callback)
+        self.platform_sender.send(callback);
     }
 
     /// Schedules the callback on run loop and blocks until it is invoked.

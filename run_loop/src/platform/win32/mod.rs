@@ -392,7 +392,7 @@ impl PlatformRunLoopSender {
                 unsafe {
                     PostMessageW(FALLBACK_WINDOW, WM_USER as u32, callback as WPARAM, 0);
                 }
-                false
+                true
             }
         }
     }

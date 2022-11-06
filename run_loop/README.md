@@ -2,7 +2,7 @@
 
 This crate provides a consistent, platform independent interface to system run loop.
 
-Getting RunLoop for current thread:
+## Getting RunLoop for current thread
 
 ```rust
 let run_loop = RunLoop::current();

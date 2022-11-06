@@ -85,10 +85,10 @@ impl MiniRunLoop {
     }
 
     unsafe extern "C" fn looper_cb(
-        fd: ::std::os::raw::c_int,
-        _events: ::std::os::raw::c_int,
-        data: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int {
+        fd: ::std::ffi::c_int,
+        _events: ::std::ffi::c_int,
+        data: *mut ::std::ffi::c_void,
+    ) -> ::std::ffi::c_int {
         let mut buf = [0u8; 8];
         read(fd, buf.as_mut_ptr() as *mut _, buf.len());
 

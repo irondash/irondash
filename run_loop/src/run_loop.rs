@@ -14,7 +14,9 @@ pub struct RunLoop {
 static MAIN_THREAD_SENDER: OnceCell<RunLoopSender> = OnceCell::new();
 
 impl RunLoop {
-    pub fn new() -> Self {
+    /// Creates new RunLoop instance. This is not meant to be called directly.
+    /// Use [`RunLoop::for_thread()`] instead.
+    pub(crate) fn new() -> Self {
         let res = Self {
             platform_run_loop: Rc::new(PlatformRunLoop::new()),
         };
@@ -26,6 +28,13 @@ impl RunLoop {
         res
     }
 
+    /// Schedules callback to be executed after specified delay.
+    ///
+    /// Returns [`Handle'] that must be kept alive until callback is executed.
+    /// If handle is dropped earlier, callback will be unscheduled.
+    ///
+    /// * Call [`Handle::detach()`] to ensure callback is executed even after dropping handle.
+    /// * Call [`Handle::cancel()`] to to unschedule callback without dropping handle.
     #[must_use]
     pub fn schedule<F>(&self, in_time: Duration, callback: F) -> Handle
     where
@@ -39,6 +48,12 @@ impl RunLoop {
     }
 
     /// Convenience method to schedule callback on next run loop turn.
+    ///
+    /// Returns [`Handle'] that must be kept alive until callback is executed.
+    /// If handle is dropped earlier, callback will be unscheduled.
+    ///
+    /// * Call [`Handle::detach()`] to ensure callback is executed even after dropping handle.
+    /// * Call [`Handle::cancel()`] to to unschedule callback without dropping handle.
     #[must_use]
     pub fn schedule_next<F>(&self, callback: F) -> Handle
     where
@@ -47,7 +62,7 @@ impl RunLoop {
         self.schedule(Duration::from_secs(0), callback)
     }
 
-    /// Returns future that will complete in provided duration.
+    /// Returns future that will complete after provided duration.
     pub async fn wait(&self, duration: Duration) {
         let (future, completer) = FutureCompleter::<()>::new();
         self.schedule(duration, move || {
@@ -57,17 +72,23 @@ impl RunLoop {
         future.await
     }
 
+    /// Returns sender object that can be used to send callbacks to be executed
+    /// on this run loop from other threads.
+    /// The sender, unlike `RunLoop` itself is both `Send` and `Sync`.
     pub fn new_sender(&self) -> RunLoopSender {
         RunLoopSender::new(self.platform_run_loop.new_sender())
     }
 
-    /// Spawn the future with current run loop being the executor;
+    /// Spawn the future with current run loop being the executor.
     pub fn spawn<T: 'static>(&self, future: impl Future<Output = T> + 'static) -> JoinHandle<T> {
         let task = Arc::new(Task::new(self.new_sender(), future));
         ArcWake::wake_by_ref(&task);
         JoinHandle::new(task)
     }
 
+    /// Returns RunLoop for current thread. Each thread has its own RunLoop
+    /// instance. The instance is created on demand and destroyed when thread
+    /// exits.
     pub fn for_thread() -> Self {
         thread_local!(static RUN_LOOP: RunLoop = RunLoop::new());
         RUN_LOOP.with(|run_loop| RunLoop {
@@ -75,6 +96,8 @@ impl RunLoop {
         })
     }
 
+    /// Returns sender that can be used to send callbacks to main thread run
+    /// loop.
     pub fn sender_for_main_thread() -> RunLoopSender {
         MAIN_THREAD_SENDER
             .get()
@@ -82,14 +105,17 @@ impl RunLoop {
             .unwrap_or_else(|| RunLoopSender::new(PlatformRunLoop::main_thread_fallback_sender()))
     }
 
+    /// Returns whether current thread is main thread.
     pub fn is_main_thread() -> bool {
         PlatformRunLoop::is_main_thread()
     }
 
+    /// Runs the run loop until it is stopped.
     pub fn run(&self) {
         self.platform_run_loop.run()
     }
 
+    /// Stops the run loop.
     pub fn stop(&self) {
         self.platform_run_loop.stop()
     }

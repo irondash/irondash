@@ -1,8 +1,8 @@
 use std::{
+    ffi::{c_char, c_int},
     ffi::{c_void, CString},
     fmt::Display,
     mem::transmute,
-    os::raw::{c_char, c_int},
 };
 
 use crate::EngineContextResult;

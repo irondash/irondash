@@ -50,9 +50,9 @@ pub mod cocoa {
     pub const nil: id = 0 as id;
 
     #[cfg(target_pointer_width = "64")]
-    pub type CGFloat = std::os::raw::c_double;
+    pub type CGFloat = std::ffi::c_double;
     #[cfg(not(target_pointer_width = "64"))]
-    pub type CGFloat = std::os::raw::c_float;
+    pub type CGFloat = std::ffi::c_float;
 
     #[repr(C)]
     #[derive(Copy, Clone)]

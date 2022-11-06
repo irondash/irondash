@@ -1,0 +1,19 @@
+[package]
+name = "ironbird_run_loop"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures = { version = "0.3.17", default-features = false, features = ["std"] }
+once_cell = "1.8.0"
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
+core-foundation = "0.9"
+objc = "0.2.7"
+
+[[test]]
+name = "sender_for_main_thread"
+path = "src/tests/sender_for_main_thread.rs"
+harness = false

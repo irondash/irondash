@@ -36,8 +36,8 @@ thread::spawn(move||{
 });
 ```
 
-At any point, without a `RunLoop` instance, you can request sender that sends the
-closure to main thread.
+At any point, without needing a `RunLoop` instance, you can request sender that
+sends the closure to main thread.
 
 ```rust
 thread::spawn(move||{

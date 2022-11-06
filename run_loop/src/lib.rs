@@ -6,7 +6,7 @@ mod run_loop_sender;
 mod task;
 
 pub use handle::*;
-pub use crate::run_loop::*;
+pub use run_loop::*;
 pub use run_loop_sender::*;
 pub use task::*;
 

@@ -144,7 +144,7 @@ pub fn spawn<T: 'static>(future: impl Future<Output = T> + 'static) -> JoinHandl
 mod tests {
     use crate::{
         util::{Capsule, FutureCompleter},
-        RunLoop,
+        RunLoop, spawn,
     };
     use std::{
         cell::RefCell,
@@ -216,6 +216,19 @@ mod tests {
         run_loop.spawn(async move {
             w.await;
             run_loop_clone.stop();
+        });
+        let start = Instant::now();
+        run_loop.run();
+        assert!(start.elapsed() >= Duration::from_millis(50));
+    }
+
+    #[test]
+    fn test_async2() {
+        let run_loop = Rc::new(RunLoop::new());
+        spawn(async move {
+            RunLoop::current().wait(Duration::from_secs(10)).await;
+            // run_loop_clone.stop();
+            println!("AAA");
         });
         let start = Instant::now();
         run_loop.run();

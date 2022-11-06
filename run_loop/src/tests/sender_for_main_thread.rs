@@ -13,10 +13,10 @@ fn main() {
         // test fallback implementation.
         let sender = RunLoop::sender_for_main_thread();
         sender.send(|| {
-            RunLoop::for_thread().stop();
+            RunLoop::current().stop();
         });
         barrier_clone.wait();
     });
     barrier.wait();
-    RunLoop::for_thread().run();
+    RunLoop::current().run();
 }

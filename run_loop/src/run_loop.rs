@@ -15,7 +15,7 @@ static MAIN_THREAD_SENDER: OnceCell<RunLoopSender> = OnceCell::new();
 
 impl RunLoop {
     /// Creates new RunLoop instance. This is not meant to be called directly.
-    /// Use [`RunLoop::for_thread()`] instead.
+    /// Use [`RunLoop::current()`] instead.
     pub(crate) fn new() -> Self {
         let res = Self {
             platform_run_loop: Rc::new(PlatformRunLoop::new()),
@@ -89,7 +89,7 @@ impl RunLoop {
     /// Returns RunLoop for current thread. Each thread has its own RunLoop
     /// instance. The instance is created on demand and destroyed when thread
     /// exits.
-    pub fn for_thread() -> Self {
+    pub fn current() -> Self {
         thread_local!(static RUN_LOOP: RunLoop = RunLoop::new());
         RUN_LOOP.with(|run_loop| RunLoop {
             platform_run_loop: run_loop.platform_run_loop.clone(),
@@ -99,10 +99,13 @@ impl RunLoop {
     /// Returns sender that can be used to send callbacks to main thread run
     /// loop.
     pub fn sender_for_main_thread() -> RunLoopSender {
-        MAIN_THREAD_SENDER
-            .get()
-            .cloned()
-            .unwrap_or_else(|| RunLoopSender::new(PlatformRunLoop::main_thread_fallback_sender()))
+        MAIN_THREAD_SENDER.get().cloned().unwrap_or_else(|| {
+            if Self::is_main_thread() {
+                Self::current().new_sender()
+            } else {
+                RunLoopSender::new(PlatformRunLoop::main_thread_fallback_sender())
+            }
+        })
     }
 
     /// Returns whether current thread is main thread.

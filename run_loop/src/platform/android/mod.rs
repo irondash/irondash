@@ -3,8 +3,8 @@ mod sys;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
-    mem::ManuallyDrop,
     ffi::c_int,
+    mem::ManuallyDrop,
     rc::{Rc, Weak},
     sync::{Arc, Condvar, Mutex},
     time::{Duration, Instant},
@@ -15,6 +15,7 @@ pub const INVALID_HANDLE: HandleType = 0;
 
 use ironbird_jni_context::JniContext;
 
+use log::warn;
 use sys::{libc::*, ndk_sys::*};
 
 pub struct PlatformRunLoop {
@@ -339,11 +340,16 @@ impl PlatformRunLoopSender {
         match self {
             PlatformRunLoopSender::Regular(s) => s.send(callback),
             PlatformRunLoopSender::MainThreadFallback => {
-                if let Ok(context) = JniContext::get() {
-                    context.schedule_on_main_thread(callback);
-                    true
-                } else {
-                    false
+                let context = JniContext::get();
+                match context {
+                    Ok(context) => {
+                        context.schedule_on_main_thread(callback);
+                        true
+                    }
+                    Err(err) => {
+                        warn!("Failed to get JniContext: {}", err);
+                        false
+                    }
                 }
             }
         }

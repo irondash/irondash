@@ -64,7 +64,7 @@ let handle = run_loop.schedule(Duration::from_secs(10), || {
 ```
 
 `RunLoop::schedule` returns a `Handle` instance. If handle is dropped before
-timer executes, timer be cancelled. If you don't want that, call `detach`
+timer executes, timer will be cancelled. If you don't want that, call `detach`
 on the handle:
 
 ```rust
@@ -76,6 +76,8 @@ self.run_loop(Duration::from_secs(10), || {
 
 You can also call `handle.cancel()` to cancel the timer without dropping the
 handle.
+
+Timers do not repeat. Every scheduled timer will be executed at most once.
 
 ## Async support
 

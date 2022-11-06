@@ -328,6 +328,9 @@ fn is_main_thread() -> bool {
 #[cfg_attr(target_os = "windows", link_section = ".CRT$XCU")]
 static ON_LOAD: extern "C" fn() = {
     extern "C" fn on_load() {
+        // Remember initial thread and create a fallback window that we'll be
+        // used to schedule things on main thread in case there is no RunLoop
+        // created for main thread yet.
         unsafe { FIRST_THREAD = GetCurrentThreadId() };
         let fallback_window = FallbackWindow {}.create_window("Ironbird Fallback Window", 0, 0);
         unsafe { FALLBACK_WINDOW = fallback_window };

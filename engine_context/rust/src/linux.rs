@@ -1,6 +1,5 @@
 use std::{
-    ffi::{c_char, c_int},
-    ffi::{c_void, CString},
+    ffi::{c_char, c_int, c_void, CString},
     fmt::Display,
     mem::transmute,
 };

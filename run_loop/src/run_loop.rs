@@ -79,7 +79,7 @@ impl RunLoop {
         RunLoopSender::new(self.platform_run_loop.new_sender())
     }
 
-    /// Spawn the future with current run loop being the executor.
+    /// Spawn the future with this run loop being the executor.
     pub fn spawn<T: 'static>(&self, future: impl Future<Output = T> + 'static) -> JoinHandle<T> {
         let task = Arc::new(Task::new(self.new_sender(), future));
         ArcWake::wake_by_ref(&task);
@@ -132,6 +132,11 @@ impl RunLoop {
     pub fn stop_app(&self) {
         self.platform_run_loop.stop_app();
     }
+}
+
+/// Spawn the future with current thread run loop being the executor.
+pub fn spawn<T: 'static>(future: impl Future<Output = T> + 'static) -> JoinHandle<T> {
+    RunLoop::current().spawn(future)
 }
 
 #[cfg(test)]

@@ -135,6 +135,7 @@ impl RunLoop {
 }
 
 #[cfg(test)]
+#[allow(clippy::bool_assert_comparison)]
 mod tests {
     use crate::{
         util::{Capsule, FutureCompleter},

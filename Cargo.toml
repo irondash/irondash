@@ -1,8 +1,9 @@
 [workspace]
 
 members = [
-    "engine_context/rust",
+    "engine_context/rust", #
     "jni_context",
+    "run_loop",
 ]
 
 [patch.crates-io]

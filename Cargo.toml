@@ -1,10 +1,14 @@
 [workspace]
 
 members = [
-    "engine_context/rust", #
+    "engine_context/rust",  #
+    "message_channel/rust",
+    "dart_ffi",
     "jni_context",
     "run_loop",
 ]
 
 [patch.crates-io]
 ironbird_jni_context = { path = "jni_context" }
+ironbird_dart_ffi = { path = "dart_ffi" }
+ironbird_run_loop ={ path = "run_loop" }

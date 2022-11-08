@@ -10,7 +10,7 @@ use ironbird_dart_ffi::DartWeakPersistentHandle;
 use ironbird_run_loop::{util::Capsule, RunLoop, RunLoopSender};
 use once_cell::sync::OnceCell;
 
-use crate::IsolateId;
+use crate::{IsolateId, MessageChannel};
 
 ///
 /// FinalizableHandle can be used as payload in [`super::Value::FinalizableHandle`].
@@ -97,15 +97,7 @@ impl FinalizableHandle {
                 // The actual dart method to update isolate size must be called from
                 // Dart thread, so we ask message channel to relay the request,
                 // which should result in a call to 'update_persistent_handle_size'.
-                // - TODO(knopp): Request update
-                // RUN_LOOP_SENDER
-                //     .get()
-                //     .expect("MessageChannel was not initialized!")
-                //     .send(move || {
-                //         Context::get()
-                //             .message_channel()
-                //             .request_update_external_size(isolate_id, handle);
-                //     });
+                MessageChannel::get().request_update_external_size(isolate_id, handle);
             }
         }
     }
@@ -234,8 +226,6 @@ pub(crate) mod finalizable_handle_native {
     use std::ffi::c_void;
 
     use ironbird_dart_ffi::{DartFunctions, DartHandle};
-
-    use crate::IsolateId;
 
     use super::{FinalizableHandleState, Movable};
 

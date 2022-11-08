@@ -1,6 +1,16 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    rc::Rc,
+    sync::{Arc, Mutex},
+};
 
-use crate::{IsolateId, Value};
+use once_cell::sync::OnceCell;
+
+use crate::{
+    message_channel_inner::MessageChannelInner,
+    message_transport::{native, MessageTransport},
+    IsolateId, Value,
+};
 
 #[derive(Debug)]
 pub enum SendMessageError {
@@ -57,14 +67,70 @@ pub trait MessageChannelDelegate {
     fn on_isolate_exited(&self, isolate: IsolateId);
 }
 
-pub trait MessageChannelImpl: Sized {}
+pub type MessageChannel = MessageChannelBase<native::NativeMessageTransport>;
 
-pub struct MessageChannelBase<Impl: MessageChannelImpl> {
-    i: Impl,
+static MESSAGE_CHANNEL: OnceCell<MessageChannel> = OnceCell::new();
+
+pub struct MessageChannelBase<Transport: MessageTransport> {
+    inner: Arc<Mutex<MessageChannelInner<Transport>>>,
 }
 
-pub struct NativeImpl {}
+impl MessageChannel {
+    fn new() -> Self {
+        Self {
+            inner: MessageChannelInner::new(),
+        }
+    }
 
-impl MessageChannelImpl for NativeImpl {}
+    pub fn get() -> &'static Self {
+        MESSAGE_CHANNEL.get_or_init(Self::new)
+    }
 
-pub type MessageChannel = MessageChannelBase<NativeImpl>;
+    pub fn send_message<F>(
+        &self,
+        target_isolate: IsolateId,
+        channel: &str,
+        message: Value,
+        reply: F,
+    ) where
+        F: FnOnce(Result<Value, SendMessageError>) + 'static,
+    {
+        self.inner
+            .lock()
+            .unwrap()
+            .send_message(target_isolate, channel, message, reply)
+    }
+
+    pub fn post_message(
+        &self,
+        target_isolate: IsolateId,
+        channel: &str,
+        message: Value,
+    ) -> Result<(), PostMessageError> {
+        self.inner
+            .lock()
+            .unwrap()
+            .post_message(target_isolate, channel, message)
+    }
+
+    pub fn register_delegate<F>(&self, channel: &str, delegate: Rc<F>)
+    where
+        F: MessageChannelDelegate + 'static,
+    {
+        self.inner
+            .lock()
+            .unwrap()
+            .register_delegate(channel, delegate)
+    }
+
+    pub fn unregister_delegate(&self, channel: &str) {
+        self.inner.lock().unwrap().unregister_delegate(channel)
+    }
+
+    pub(crate) fn request_update_external_size(&self, target_isolate: IsolateId, handle: isize) {
+        self.inner
+            .lock()
+            .unwrap()
+            .request_update_external_size(target_isolate, handle);
+    }
+}

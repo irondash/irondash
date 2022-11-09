@@ -4,6 +4,7 @@
 #![allow(clippy::module_inception)]
 #![allow(clippy::bool_assert_comparison)]
 
+mod async_method_handler;
 mod codec;
 mod event_channel;
 mod finalizable_handle;
@@ -25,6 +26,7 @@ pub struct IsolateId(pub ffi::IsolateId);
 
 use std::ffi::c_void;
 
+pub use async_method_handler::*;
 pub use event_channel::*;
 pub use finalizable_handle::*;
 pub use late::*;
@@ -32,15 +34,16 @@ pub use message_channel::*;
 pub use method_handler::*;
 pub use value::*;
 
-pub mod derive_internal;
+#[cfg(any(target_os = "ios", target_os = "macos"))]
+pub mod value_darwin;
 
 use ironbird_dart_ffi::ironbird_init_ffi;
 
-#[cfg(feature = "nativeshell_derive")]
+#[cfg(feature = "ironbird_message_channel_derive")]
 pub mod derive_internal;
 
-#[cfg(feature = "nativeshell_derive")]
-pub use nativeshell_derive::*;
+#[cfg(feature = "ironbird_message_channel_derive")]
+pub use ironbird_message_channel_derive::*;
 
 use crate::message_transport::native::{post_message, register_isolate};
 

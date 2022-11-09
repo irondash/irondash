@@ -13,7 +13,12 @@ repository = "https://github.com/nativeshell/ironbird"
 once_cell = "1.16.0"
 ironbird_dart_ffi = "0.1.0"
 ironbird_run_loop = "0.1.0"
+async-trait = "0.1.51"
 ironbird_message_channel_derive = { version = "0.1.1", path = "../rust_derive", optional = true }
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
+core-foundation = "0.9"
+objc = "0.2.7"
 
 [features]
 derive = ["ironbird_message_channel_derive"]

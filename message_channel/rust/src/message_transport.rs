@@ -34,7 +34,7 @@ pub mod native {
     pub struct NativeMessageTransport {
         delegate: Arc<Mutex<dyn MessageTransportDelegate + Send>>,
         isolate_ports: Arc<Mutex<HashMap<IsolateId, DartPort>>>,
-        native_port: Option<NativePort>,
+        native_port: Mutex<Option<NativePort>>,
     }
 
     impl Debug for NativeMessageTransport {
@@ -47,7 +47,7 @@ pub mod native {
 
     impl NativeMessageTransport {
         fn register_isolate(&self, isolate_id: IsolateId, port: raw::DartPort) {
-            let native_port = self.native_port.as_ref().unwrap().as_send_port();
+            let native_port = self.native_port_as_send_port();
             let isolate_port = DartPort::new(port);
             isolate_port.send(native_port);
             self.isolate_ports
@@ -91,21 +91,29 @@ pub mod native {
         fn get() -> Option<Arc<Self>> {
             NATIVE_MESSAGE_TRANSPORT.get().cloned()
         }
-    }
 
-    impl MessageTransport for NativeMessageTransport {
-        fn new(delegate: Arc<Mutex<dyn MessageTransportDelegate + Send>>) -> Arc<Self> {
-            let mut res = Self {
-                delegate,
-                native_port: None,
-                isolate_ports: Arc::new(Mutex::new(HashMap::new())),
-            };
-            res.native_port
-                .replace(NativePort::new("MessageChannelPort", |_, v| {
+        fn native_port_as_send_port(&self) -> raw::DartCObjectSendPort {
+            // lazily initialize native port. This is necessary so that
+            // we delay accessing FFI functions until initialized from Dart.
+            let mut native_port = self.native_port.lock().unwrap();
+            if native_port.is_none() {
+                native_port.replace(NativePort::new("MessageChannelPort", |_, v| {
                     if let Some(transport) = NativeMessageTransport::get() {
                         transport.on_nativeport_value_received(v);
                     }
                 }));
+            }
+            native_port.as_ref().unwrap().as_send_port()
+        }
+    }
+
+    impl MessageTransport for NativeMessageTransport {
+        fn new(delegate: Arc<Mutex<dyn MessageTransportDelegate + Send>>) -> Arc<Self> {
+            let res = Self {
+                delegate,
+                native_port: Mutex::new(None),
+                isolate_ports: Arc::new(Mutex::new(HashMap::new())),
+            };
             let res = Arc::new(res);
             NATIVE_MESSAGE_TRANSPORT
                 .set(res.clone())

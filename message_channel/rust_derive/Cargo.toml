@@ -1,0 +1,16 @@
+[package]
+name = "ironbird_message_channel_derive"
+authors = ["Matej Knopp <matej.knopp@gmail.com>"]
+version = "0.1.1"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Derive proc-macros for NativeShell"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1.0" }
+quote = { version = "1.0" }
+proc-macro2 = { version = "1.0" }
+proc-macro-error = { version = "1.0", default-features = false }

@@ -27,11 +27,14 @@ use std::ffi::c_void;
 
 pub use event_channel::*;
 pub use finalizable_handle::*;
-use ironbird_dart_ffi::ironbird_init_ffi;
 pub use late::*;
 pub use message_channel::*;
 pub use method_handler::*;
 pub use value::*;
+
+pub mod derive_internal;
+
+use ironbird_dart_ffi::ironbird_init_ffi;
 
 #[cfg(feature = "nativeshell_derive")]
 pub mod derive_internal;

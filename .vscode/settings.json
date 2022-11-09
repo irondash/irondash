@@ -12,6 +12,7 @@
     // ],
     "rust-analyzer.cargo.features": [
         // "mock"
+        "ironbird_message_channel_derive",
     ],
     "dart.runPubGetOnPubspecChanges": "never"
 }

@@ -138,7 +138,7 @@ impl MethodInvoker {
 }
 
 pub struct MethodCallReply {
-    pub(crate) reply: Box<dyn FnOnce(Value) -> bool>,
+    pub(crate) reply: Box<dyn FnOnce(Value) -> bool + Send>,
 }
 
 impl MethodCallReply {
@@ -226,7 +226,7 @@ impl<T: MethodHandler> MessageChannelDelegate for RegisteredMethodHandlerInner<T
         &self,
         isolate: IsolateId,
         message: Value,
-        reply: Box<dyn FnOnce(Value) -> bool>,
+        reply: Box<dyn FnOnce(Value) -> bool + Send>,
     ) {
         if let Some(call) = unpack_method_call(message, isolate) {
             let reply = MethodCallReply { reply };

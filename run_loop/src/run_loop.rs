@@ -103,7 +103,7 @@ impl RunLoop {
             if Self::is_main_thread() {
                 Self::current().new_sender()
             } else {
-                RunLoopSender::new(PlatformRunLoop::main_thread_fallback_sender())
+                RunLoopSender::new_fallback(PlatformRunLoop::main_thread_fallback_sender())
             }
         })
     }

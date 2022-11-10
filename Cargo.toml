@@ -1,15 +1,21 @@
 [workspace]
 
 members = [
-    "engine_context/rust",
-    "message_channel/rust",
-    "message_channel/rust_derive",
     "dart_ffi",
+    "engine_context/rust",
     "jni_context",
-    "run_loop",
+    "message_channel/dart/example/rust",
+    "message_channel/rust_derive",
+    "message_channel/rust",
+    "run_loop"
 ]
 
+[profile.release]
+lto = true
+panic = "abort"
+
 [patch.crates-io]
-irondash_jni_context = { path = "jni_context" }
 irondash_dart_ffi = { path = "dart_ffi" }
+irondash_jni_context = { path = "jni_context" }
+irondash_message_channel = { path = "message_channel/rust" }
 irondash_run_loop = { path = "run_loop" }

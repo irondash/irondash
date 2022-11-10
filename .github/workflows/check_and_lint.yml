@@ -76,6 +76,10 @@ jobs:
       - name: Run cargo clippy (Android)
         if: (matrix.os == 'ubuntu-latest')
         uses: actions-rs/cargo@v1
+        env:
+          CC: /usr/local/lib/android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi30-clang
+          CXX: /usr/local/lib/android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi30-clang++
+          AR: /usr/local/lib/android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
         with:
           command: clippy
           args: --target=armv7-linux-androideabi -- -D warnings

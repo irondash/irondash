@@ -1,0 +1,21 @@
+PODS:
+  - example_rust (0.0.1)
+  - FlutterMacOS (1.0.0)
+
+DEPENDENCIES:
+  - example_rust (from `../rust`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+
+EXTERNAL SOURCES:
+  example_rust:
+    :path: "../rust"
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+
+SPEC CHECKSUMS:
+  example_rust: f98802abd5a395ff36ccc266e4d135e3b10f2a78
+  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+
+PODFILE CHECKSUM: d9e786773fee4dedad0bd380d9869363418f5f45
+
+COCOAPODS: 1.11.3

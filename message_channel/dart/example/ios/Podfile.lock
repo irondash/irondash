@@ -1,0 +1,21 @@
+PODS:
+  - example_rust (0.0.1)
+  - Flutter (1.0.0)
+
+DEPENDENCIES:
+  - example_rust (from `../rust`)
+  - Flutter (from `Flutter`)
+
+EXTERNAL SOURCES:
+  example_rust:
+    :path: "../rust"
+  Flutter:
+    :path: Flutter
+
+SPEC CHECKSUMS:
+  example_rust: f98802abd5a395ff36ccc266e4d135e3b10f2a78
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+
+PODFILE CHECKSUM: 54486487fd03e12b8b5d89a865ca5b3d6e185b24
+
+COCOAPODS: 1.11.3

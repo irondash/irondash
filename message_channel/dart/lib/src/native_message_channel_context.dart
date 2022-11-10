@@ -104,7 +104,11 @@ class NativeMessageChannelContext
   }
 
   void _postMessage(Object? message) {
-    delegate.postMessage(isolateId, message);
+    if (_ready) {
+      delegate.postMessage(isolateId, message);
+    } else {
+      _pendingMessages.add(message);
+    }
   }
 
   void handleMessage(List data) async {
@@ -150,22 +154,37 @@ class NativeMessageChannelContext
     }
   }
 
+  void ready() {
+    assert(!_ready);
+    _ready = true;
+
+    for (final message in _pendingMessages) {
+      delegate.postMessage(isolateId, message);
+    }
+  }
+
   void _onReceivePortMessage(dynamic message) {
     if (message is SendPort) {
       // NativeSend port is used to get notification on isolate exit
       Isolate.current
           .addOnExitListener(message, response: ['isolate_exit', isolateId]);
     } else {
-      if (message is List) {
+      if (message is String && message == "ready") {
+        ready();
+      } else if (message is List) {
         final d = message.last as Uint8List;
         final data = ByteData.view(d.buffer, d.offsetInBytes, d.length);
         final v = const Deserializer().deserialize(data, message, this);
         handleMessage(v as List);
+      } else {
+        throw StateError('Unknown message: $message');
       }
     }
   }
 
   int _nextReplyId = 0;
+  final _pendingMessages = <Object?>[];
+  bool _ready = false;
   final _pendingReplies = <int, Completer<dynamic>>{};
   final _channels = <String, MessageChannel>{};
   late final IsolateId isolateId;

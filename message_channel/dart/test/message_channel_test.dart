@@ -45,6 +45,7 @@ void main() {
     test('call1', () async {
       final delegate = MockNativeMessageChannelDelegate(isolateId: 1);
       final context = NativeMessageChannelContext(delegate);
+      context.ready();
       final channel = MessageChannel('channel1', context: context);
       {
         final future = channel.sendMessage('M1');
@@ -72,6 +73,7 @@ void main() {
     test('callNoChannel', () {
       final delegate = MockNativeMessageChannelDelegate(isolateId: 1);
       final context = NativeMessageChannelContext(delegate);
+      context.ready();
       final channel = MessageChannel('channel1', context: context);
       {
         final future = channel.sendMessage('M1');
@@ -88,6 +90,7 @@ void main() {
     test('handler', () async {
       final delegate = MockNativeMessageChannelDelegate(isolateId: 1);
       final context = NativeMessageChannelContext(delegate);
+      context.ready();
       final channel = MessageChannel('channel1', context: context);
       final messages = [];
       channel.setHandler((message) {

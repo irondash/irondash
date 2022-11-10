@@ -1,0 +1,24 @@
+name: ironbird_message_channel
+description: Dart interface to ironbird MessageChannel.
+version: 0.0.1+1
+homepage: https://github.com/nativeshell/ironbird
+
+environment:
+  sdk: ">=2.13.0 <3.0.0"
+  flutter: ">=2.2.1"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ffi: ^2.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^1.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:

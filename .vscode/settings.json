@@ -6,12 +6,13 @@
     },
     // "rust-analyzer.checkOnSave.allTargets": false,
     "rust-analyzer.checkOnSave.command": "clippy",
-    "rust-analyzer.checkOnSave.allTargets": false,
+    // "rust-analyzer.checkOnSave.allTargets": false,
     // "rust-analyzer.cargo.unsetTest": [
     //     "nativeshell_core",
     // ],
     "rust-analyzer.cargo.features": [
         // "mock"
+        "ironbird_message_channel_derive",
     ],
     "dart.runPubGetOnPubspecChanges": "never"
 }

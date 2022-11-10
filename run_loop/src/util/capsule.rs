@@ -117,6 +117,7 @@ impl<T: Clone> Clone for Capsule<T> {
 }
 
 unsafe impl<T> Send for Capsule<T> {}
+unsafe impl<T> Sync for Capsule<T> {}
 
 struct Carry<T>(T);
 

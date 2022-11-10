@@ -2,3 +2,4 @@ name: ironbird
 
 packages:
   - engine_context/dart
+  - message_channel/dart

@@ -53,7 +53,7 @@ impl PlatformContext {
     }
 
     pub fn get_flutter_view(&self, handle: i64) -> EngineContextResult<FlView> {
-        let proc = Self::get_proc("IronbirdEngineContextGetFlutterView");
+        let proc = Self::get_proc("IrondashEngineContextGetFlutterView");
         let proc: GetFlutterViewProc = unsafe { transmute(proc) };
         let view = unsafe { proc(handle) };
         if view.is_null() {
@@ -64,7 +64,7 @@ impl PlatformContext {
     }
 
     pub fn get_binary_messenger(&self, handle: i64) -> EngineContextResult<FlBinaryMessenger> {
-        let proc = Self::get_proc("IronbirdEngineContextGetBinaryMessenger");
+        let proc = Self::get_proc("IrondashEngineContextGetBinaryMessenger");
         let proc: GetFlutterBinaryMessengerProc = unsafe { transmute(proc) };
         let messenger = unsafe { proc(handle) };
         if messenger.is_null() {
@@ -75,7 +75,7 @@ impl PlatformContext {
     }
 
     pub fn get_texture_registry(&self, handle: i64) -> EngineContextResult<FlTextureRegistrar> {
-        let proc = Self::get_proc("IronbirdEngineContextGetTextureRegistrar");
+        let proc = Self::get_proc("IrondashEngineContextGetTextureRegistrar");
         let proc: GetFlutterTextureRegistrarProc = unsafe { transmute(proc) };
         let registry = unsafe { proc(handle) };
         if registry.is_null() {

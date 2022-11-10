@@ -6,26 +6,26 @@
 
 #include <memory>
 
-namespace ironbird_engine_context {
+namespace irondash_engine_context {
 
 size_t GetFlutterView(int64_t engine_handle);
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle);
 FlutterDesktopMessengerRef GetBinaryMessenger(int64_t engine_handle);
 
-class IronbirdEngineContextPlugin : public flutter::Plugin {
+class IrondashEngineContextPlugin : public flutter::Plugin {
 public:
   static void
   RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar,
                         FlutterDesktopPluginRegistrarRef raw_registrar);
 
-  IronbirdEngineContextPlugin(int64_t engine_handle);
+  IrondashEngineContextPlugin(int64_t engine_handle);
 
-  virtual ~IronbirdEngineContextPlugin();
+  virtual ~IrondashEngineContextPlugin();
 
   // Disallow copy and assign.
-  IronbirdEngineContextPlugin(const IronbirdEngineContextPlugin &) = delete;
-  IronbirdEngineContextPlugin &
-  operator=(const IronbirdEngineContextPlugin &) = delete;
+  IrondashEngineContextPlugin(const IrondashEngineContextPlugin &) = delete;
+  IrondashEngineContextPlugin &
+  operator=(const IrondashEngineContextPlugin &) = delete;
 
 private:
   int64_t engine_handle_;
@@ -36,6 +36,6 @@ private:
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 };
 
-} // namespace ironbird_engine_context
+} // namespace irondash_engine_context
 
 #endif // FLUTTER_PLUGIN_ENGINE_CONTEXT_PLUGIN_H_

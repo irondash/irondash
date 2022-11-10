@@ -3,7 +3,7 @@
 # Run `pod lib lint engine_context.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'ironbird_engine_context'
+  s.name             = 'irondash_engine_context'
   s.version          = '0.0.1'
   s.summary          = 'A new Flutter plugin project.'
   s.description      = <<-DESC

@@ -26,7 +26,7 @@ class NativeEventChannel {
         FlutterError.reportError(FlutterErrorDetails(
           exception: exception,
           stack: stack,
-          library: 'nativeshell core library',
+          library: 'irondash core library',
           context: ErrorDescription(
               'while activating platform stream on channel $name'),
         ));

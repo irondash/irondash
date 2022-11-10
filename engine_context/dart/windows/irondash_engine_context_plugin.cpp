@@ -1,4 +1,4 @@
-#include "ironbird_engine_context_plugin.h"
+#include "irondash_engine_context_plugin.h"
 
 // This must be included before many other Windows headers.
 #include <windows.h>
@@ -19,7 +19,7 @@ std::map<int64_t, EngineContext> contexts;
 int64_t next_handle = 1;
 } // namespace
 
-namespace ironbird_engine_context {
+namespace irondash_engine_context {
 
 size_t GetFlutterView(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
@@ -49,7 +49,7 @@ FlutterDesktopMessengerRef GetBinaryMessenger(int64_t engine_handle) {
 }
 
 // static
-void IronbirdEngineContextPlugin::RegisterWithRegistrar(
+void IrondashEngineContextPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar,
     FlutterDesktopPluginRegistrarRef raw_registrar) {
 
@@ -66,10 +66,10 @@ void IronbirdEngineContextPlugin::RegisterWithRegistrar(
 
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-          registrar->messenger(), "dev.nativeshell.ironbird.engine_context",
+          registrar->messenger(), "dev.irondash.engine_context",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<IronbirdEngineContextPlugin>(handle);
+  auto plugin = std::make_unique<IrondashEngineContextPlugin>(handle);
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
@@ -79,14 +79,14 @@ void IronbirdEngineContextPlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-IronbirdEngineContextPlugin::IronbirdEngineContextPlugin(int64_t engine_handle)
+IrondashEngineContextPlugin::IrondashEngineContextPlugin(int64_t engine_handle)
     : engine_handle_(engine_handle) {}
 
-IronbirdEngineContextPlugin::~IronbirdEngineContextPlugin() {
+IrondashEngineContextPlugin::~IrondashEngineContextPlugin() {
   contexts.erase(engine_handle_);
 }
 
-void IronbirdEngineContextPlugin::HandleMethodCall(
+void IrondashEngineContextPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name().compare("getEngineHandle") == 0) {
@@ -96,4 +96,4 @@ void IronbirdEngineContextPlugin::HandleMethodCall(
   }
 }
 
-} // namespace ironbird_engine_context
+} // namespace irondash_engine_context

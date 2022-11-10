@@ -1,7 +1,7 @@
 use std::rc::{Rc, Weak};
 
 use async_trait::async_trait;
-use ironbird_run_loop::{util::FutureCompleter, RunLoop};
+use irondash_run_loop::{util::FutureCompleter, RunLoop};
 
 use crate::{
     unpack_method_call, unpack_result, IsolateId, MessageChannel, MessageChannelDelegate,

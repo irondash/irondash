@@ -13,7 +13,7 @@ use std::{
 pub type HandleType = usize;
 pub const INVALID_HANDLE: HandleType = 0;
 
-use ironbird_jni_context::JniContext;
+use irondash_jni_context::JniContext;
 
 use log::warn;
 use sys::{libc::*, ndk_sys::*};

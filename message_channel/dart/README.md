@@ -1,4 +1,4 @@
-Dart interface to [NativeShell Core](https://github.com/nativeshell/nativeshell_ng), a Rust/FFI implementation of message channel.
+Dart interface to [Irondash Core](https://github.com/irondash/irondash_ng), a Rust/FFI implementation of message channel.
 
 ## Features
 

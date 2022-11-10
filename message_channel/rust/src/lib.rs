@@ -37,13 +37,13 @@ pub use value::*;
 #[cfg(any(target_os = "ios", target_os = "macos"))]
 pub mod value_darwin;
 
-use ironbird_dart_ffi::ironbird_init_ffi;
+use irondash_dart_ffi::irondash_init_ffi;
 
-#[cfg(feature = "ironbird_message_channel_derive")]
+#[cfg(feature = "irondash_message_channel_derive")]
 pub mod derive_internal;
 
-#[cfg(feature = "ironbird_message_channel_derive")]
-pub use ironbird_message_channel_derive::*;
+#[cfg(feature = "irondash_message_channel_derive")]
+pub use irondash_message_channel_derive::*;
 
 use crate::message_transport::native::{post_message, register_isolate};
 
@@ -55,7 +55,7 @@ pub enum FunctionResult {
 
 #[no_mangle]
 #[inline(never)]
-pub extern "C" fn ironbird_init_message_channel_context(_data: *mut c_void) -> FunctionResult {
+pub extern "C" fn irondash_init_message_channel_context(_data: *mut c_void) -> FunctionResult {
     #[cfg(not(feature = "mock"))]
     {
         #[repr(C)]
@@ -100,7 +100,7 @@ pub extern "C" fn ironbird_init_message_channel_context(_data: *mut c_void) -> F
             println!("Bad struct size");
             return FunctionResult::InvalidStructSize;
         }
-        ironbird_init_ffi(context.ffi_data);
+        irondash_init_ffi(context.ffi_data);
         context.register_isolate = register_isolate as *mut _;
         context.send_message = post_message as *mut _;
         context.attach_weak_persistent_handle = attach_weak_persistent_handle as *mut _;

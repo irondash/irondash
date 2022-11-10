@@ -1,4 +1,4 @@
-name: ironbird
+name: irondash
 
 packages:
   - engine_context/dart

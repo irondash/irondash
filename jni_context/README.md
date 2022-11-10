@@ -1,4 +1,4 @@
-# ironbird_jni_context
+# irondash_jni_context
 
 This crate can be used to get access to JavaVM from Rust code.
 

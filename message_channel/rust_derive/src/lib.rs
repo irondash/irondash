@@ -12,7 +12,7 @@ mod try_into;
 use from::*;
 use try_into::*;
 
-#[proc_macro_derive(IntoValue, attributes(ironbird))]
+#[proc_macro_derive(IntoValue, attributes(irondash))]
 #[proc_macro_error]
 pub fn into_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast = syn::parse_macro_input!(input as DeriveInput);
@@ -34,9 +34,9 @@ pub fn into_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let tokens = quote! {
         #[automatically_derived]
-        impl #impl_generics From<#name #ty_generics> for ::ironbird_message_channel::Value #where_clause {
+        impl #impl_generics From<#name #ty_generics> for ::irondash_message_channel::Value #where_clause {
             fn from(__ns_value: #name #ty_generics) -> Self {
-                use ::ironbird_message_channel::derive_internal::IsNone;
+                use ::irondash_message_channel::derive_internal::IsNone;
                 #token_stream
             }
         }
@@ -44,7 +44,7 @@ pub fn into_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     proc_macro::TokenStream::from(tokens)
 }
 
-#[proc_macro_derive(TryFromValue, attributes(ironbird))]
+#[proc_macro_derive(TryFromValue, attributes(irondash))]
 #[proc_macro_error]
 pub fn try_from_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast = syn::parse_macro_input!(input as DeriveInput);
@@ -66,10 +66,10 @@ pub fn try_from_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream
 
     let tokens = quote! {
         #[automatically_derived]
-        impl #impl_generics core::convert::TryFrom<::ironbird_message_channel::Value> for #name #ty_generics #where_clause {
-            type Error = ::ironbird_message_channel::TryFromError;
-            fn try_from(__ns_value: ::ironbird_message_channel::Value) -> Result<Self, Self::Error> {
-                use ::ironbird_message_channel::derive_internal::Assign;
+        impl #impl_generics core::convert::TryFrom<::irondash_message_channel::Value> for #name #ty_generics #where_clause {
+            type Error = ::irondash_message_channel::TryFromError;
+            fn try_from(__ns_value: ::irondash_message_channel::Value) -> Result<Self, Self::Error> {
+                use ::irondash_message_channel::derive_internal::Assign;
                 #token_stream
             }
         }

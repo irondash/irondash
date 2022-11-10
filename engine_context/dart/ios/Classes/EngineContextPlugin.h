@@ -1,4 +1,4 @@
 #import <Flutter/Flutter.h>
 
-@interface IronbirdEngineContextPlugin : NSObject<FlutterPlugin>
+@interface IrondashEngineContextPlugin : NSObject<FlutterPlugin>
 @end

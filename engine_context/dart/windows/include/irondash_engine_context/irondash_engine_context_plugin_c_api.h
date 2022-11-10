@@ -14,17 +14,17 @@
 extern "C" {
 #endif
 
-FLUTTER_PLUGIN_EXPORT void IronbirdEngineContextPluginCApiRegisterWithRegistrar(
+FLUTTER_PLUGIN_EXPORT void IrondashEngineContextPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar);
 
 FLUTTER_PLUGIN_EXPORT size_t
-IronbirdEngineContextGetFlutterView(int64_t engine_handle);
+IrondashEngineContextGetFlutterView(int64_t engine_handle);
 
 FLUTTER_PLUGIN_EXPORT FlutterDesktopTextureRegistrarRef
-IronbirdEngineContextGetTextureRegistrar(int64_t engine_handle);
+IrondashEngineContextGetTextureRegistrar(int64_t engine_handle);
 
 FLUTTER_PLUGIN_EXPORT FlutterDesktopMessengerRef
-IronbirdEngineContextGetBinaryMessenger(int64_t engine_handle);
+IrondashEngineContextGetBinaryMessenger(int64_t engine_handle);
 
 #if defined(__cplusplus)
 } // extern "C"

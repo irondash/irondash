@@ -1,7 +1,7 @@
-name: ironbird_message_channel
-description: Dart interface to ironbird MessageChannel.
+name: irondash_message_channel
+description: Dart interface to irondash MessageChannel.
 version: 0.0.1+1
-homepage: https://github.com/nativeshell/ironbird
+homepage: https://github.com/irondash/irondash
 
 environment:
   sdk: ">=2.13.0 <3.0.0"

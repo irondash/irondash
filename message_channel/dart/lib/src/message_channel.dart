@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ffi';
 
-import '../ironbird_message_channel.dart';
+import '../irondash_message_channel.dart';
 import 'native_functions.dart';
 import 'native_message_channel_context.dart';
 
@@ -74,7 +74,7 @@ abstract class MessageChannelContext {
   }
 
   /// Returns MessageChannelContext for given FFI function. The function must
-  /// call 'nativeshell_init_message_channel_context' with provided argument
+  /// call 'irondash_init_message_channel_context' with provided argument
   /// and return the result.
   /// This is necessary to do in Flutter plugins where each plugin may have its
   /// own context and thus must have uniquely named init function.

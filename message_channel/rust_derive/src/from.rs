@@ -42,7 +42,7 @@ fn insert_fields(
         };
         let token_stream = if attributes.skip_if_empty {
             quote! {
-                if (&&::ironbird_message_channel::derive_internal::Wrap(& #field_access)).is_none() == false {
+                if (&&::irondash_message_channel::derive_internal::Wrap(& #field_access)).is_none() == false {
                     #target.push( ( #string.into(), #field_access.into() ) );
                 }
             }
@@ -96,7 +96,7 @@ impl FromEnum {
                 )*
                 _ => {
                     // For skipped variants. Not ideal but we can't report errors here
-                    ::ironbird_message_channel::Value::Null
+                    ::irondash_message_channel::Value::Null
                 }
             }
         }
@@ -117,33 +117,33 @@ impl FromEnum {
                 }
                 let target = format_ident!("__ns_vec");
                 let create_vec = quote! {
-                    let mut #target = ::std::vec::Vec::<(::ironbird_message_channel::Value, ::ironbird_message_channel::Value)>::new();
+                    let mut #target = ::std::vec::Vec::<(::irondash_message_channel::Value, ::irondash_message_channel::Value)>::new();
                 };
                 let insert = insert_fields(&target, None, &fields, &attributes.rename_all);
                 let epilogue = match (&self.attributes.tag, &self.attributes.content) {
                     (None, None) => quote! {
-                        let __ns_value = ::ironbird_message_channel::Value::Map(#target.into());
+                        let __ns_value = ::irondash_message_channel::Value::Map(#target.into());
                         #create_vec;
                         #target.push((#ident_as_string.into(), __ns_value));
-                        ::ironbird_message_channel::Value::Map(#target.into())
+                        ::irondash_message_channel::Value::Map(#target.into())
                     },
                     (None, Some(_)) => panic!("Can't have content without tag"),
                     (Some(tag), None) => {
                         let tag = &tag.value;
                         quote! {
                             #target.push((#tag.into(), #ident_as_string.into()));
-                            ::ironbird_message_channel::Value::Map(#target.into())
+                            ::irondash_message_channel::Value::Map(#target.into())
                         }
                     }
                     (Some(tag), Some(content)) => {
                         let tag = &tag.value;
                         let content = &content.value;
                         quote! {
-                            let __ns_value = ::ironbird_message_channel::Value::Map(#target.into());
+                            let __ns_value = ::irondash_message_channel::Value::Map(#target.into());
                             #create_vec;
                             #target.push((#tag.into(), #ident_as_string.into()));
                             #target.push((#content.into(), __ns_value));
-                            ::ironbird_message_channel::Value::Map(#target.into())
+                            ::irondash_message_channel::Value::Map(#target.into())
                         }
                     }
                 };
@@ -181,11 +181,11 @@ impl FromEnum {
                 } else {
                     quote! {
                         {
-                            let mut __ns_vec = ::std::vec::Vec::<::ironbird_message_channel::Value>::new();
+                            let mut __ns_vec = ::std::vec::Vec::<::irondash_message_channel::Value>::new();
                             #(
                                 __ns_vec.push(#idents.into());
                             )*
-                            ::ironbird_message_channel::Value::List(__ns_vec)
+                            ::irondash_message_channel::Value::List(__ns_vec)
                         }
                     }
                 };
@@ -206,9 +206,9 @@ impl FromEnum {
                 Some(quote! {
                     #ident ( #( #idents, )* ) => {
                         let __ns_value = #value;
-                        let mut __ns_vec = ::std::vec::Vec::<(::ironbird_message_channel::Value, ::ironbird_message_channel::Value)>::new();
+                        let mut __ns_vec = ::std::vec::Vec::<(::irondash_message_channel::Value, ::irondash_message_channel::Value)>::new();
                         #insert
-                        ::ironbird_message_channel::Value::Map(__ns_vec.into())
+                        ::irondash_message_channel::Value::Map(__ns_vec.into())
                     }
                 })
             }
@@ -217,9 +217,9 @@ impl FromEnum {
                     // { 'tag': 'enumName' }
                     let tag = &tag.value;
                     quote! {
-                        let mut __ns_vec = ::std::vec::Vec::<(::ironbird_message_channel::Value, ::ironbird_message_channel::Value)>::new();
+                        let mut __ns_vec = ::std::vec::Vec::<(::irondash_message_channel::Value, ::irondash_message_channel::Value)>::new();
                         __ns_vec.push((#tag.into(), __ns_value));
-                        ::ironbird_message_channel::Value::Map(__ns_vec.into())
+                        ::irondash_message_channel::Value::Map(__ns_vec.into())
                     }
                 } else {
                     // just 'enumName'
@@ -229,7 +229,7 @@ impl FromEnum {
                 };
                 Some(quote! {
                     #ident => {
-                        let __ns_value = ::ironbird_message_channel::Value::String(#ident_as_string.into());
+                        let __ns_value = ::irondash_message_channel::Value::String(#ident_as_string.into());
                         #result
                     }
                 })
@@ -270,9 +270,9 @@ impl FromStruct {
                     &self.attributes.rename_all,
                 );
                 quote! {
-                    let mut #target = ::std::vec::Vec::<(::ironbird_message_channel::Value, ::ironbird_message_channel::Value)>::new();
+                    let mut #target = ::std::vec::Vec::<(::irondash_message_channel::Value, ::irondash_message_channel::Value)>::new();
                     #insert;
-                    ::ironbird_message_channel::Value::Map(#target.into())
+                    ::irondash_message_channel::Value::Map(#target.into())
                 }
             }
             syn::Fields::Unnamed(fields) => {
@@ -286,11 +286,11 @@ impl FromStruct {
                     }
                 } else {
                     quote! {
-                        let mut __ns_vec = ::std::vec::Vec::<::ironbird_message_channel::Value>::new();
+                        let mut __ns_vec = ::std::vec::Vec::<::irondash_message_channel::Value>::new();
                         #(
                             __ns_vec.push(__ns_value.#idents.into());
                         )*
-                        ::ironbird_message_channel::Value::List(__ns_vec)
+                        ::irondash_message_channel::Value::List(__ns_vec)
                     }
                 }
             }

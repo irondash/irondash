@@ -69,7 +69,7 @@ impl State {
 
     fn initialize(&self) {
         self.hwnd.set(self.create_window(
-            "Ironbird RunLoop Window",
+            "Irondash RunLoop Window",
             0, // WINDOW_STYLE
             0, // WINDOW_EX_STYLE
         ));
@@ -332,7 +332,7 @@ static ON_LOAD: extern "C" fn() = {
         // used to schedule things on main thread in case there is no RunLoop
         // created for main thread yet.
         unsafe { FIRST_THREAD = GetCurrentThreadId() };
-        let fallback_window = FallbackWindow {}.create_window("Ironbird Fallback Window", 0, 0);
+        let fallback_window = FallbackWindow {}.create_window("Irondash Fallback Window", 0, 0);
         unsafe { FALLBACK_WINDOW = fallback_window };
     }
     on_load

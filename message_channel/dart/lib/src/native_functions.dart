@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 
 typedef IsolateId = int;
 
-/// Provides access to NativeShell Core native functions.
+/// Provides access to Irondash Core native functions.
 class NativeFunctions {
   NativeFunctions._({
     required this.token,
@@ -64,9 +64,9 @@ class NativeFunctions {
 
   final VecResize<Uint8> vecResizeUint8;
 
-  /// Returns default NativeShell functions. This should only be used in
+  /// Returns default Irondash functions. This should only be used in
   /// application code, never for plugins. Each plugin should have own function,
-  /// which forwards to the NativeShell init call. Otherwise the functions may
+  /// which forwards to the Irondash init call. Otherwise the functions may
   /// be from wrong module and not have access to module state.
   static NativeFunctions getDefault() {
     final dylib = defaultTargetPlatform == TargetPlatform.windows
@@ -74,11 +74,11 @@ class NativeFunctions {
         : DynamicLibrary.process();
     final function =
         dylib.lookup<NativeFunction<Int64 Function(Pointer<Void>)>>(
-            "nativeshell_init_message_channel_context");
+            "irondash_init_message_channel_context");
     return get(function);
   }
 
-  /// Returns NativeShell functions for given init function.
+  /// Returns Irondash functions for given init function.
   /// Throws [NativeFunctionsException] in case something goes wrong.
   static NativeFunctions get(
       Pointer<NativeFunction<Int64 Function(Pointer<Void>)>>
@@ -219,7 +219,7 @@ extension Message on NativeFunctionsError {
       case NativeFunctionsError._noError:
         return "No Error";
       case NativeFunctionsError.invalidStructSize:
-        return "NativeShell init structure size differs between rust and dart.";
+        return "Irondash init structure size differs between rust and dart.";
     }
   }
 }

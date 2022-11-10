@@ -7,23 +7,23 @@
 @property(readwrite, nonatomic) FlutterEngine *flutterEngine;
 @end
 
-@interface _IronbirdEngineContext : NSObject {
+@interface _IrondashEngineContext : NSObject {
 @public
   __weak FlutterEngine *engine;
 }
 
 @end
 
-@implementation _IronbirdEngineContext
+@implementation _IrondashEngineContext
 
 @end
 
-@interface IronbirdEngineContextPlugin () {
+@interface IrondashEngineContextPlugin () {
   int64_t engineHandle;
 }
 @end
 
-@implementation IronbirdEngineContextPlugin
+@implementation IrondashEngineContextPlugin
 
 static NSMutableDictionary *registry;
 static int64_t nextHandle = 1;
@@ -33,20 +33,20 @@ static int64_t nextHandle = 1;
 }
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
-  IronbirdEngineContextPlugin *instance =
-      [[IronbirdEngineContextPlugin alloc] init];
+  IrondashEngineContextPlugin *instance =
+      [[IrondashEngineContextPlugin alloc] init];
   instance->engineHandle = nextHandle;
   ++nextHandle;
 
-  _IronbirdEngineContext *context = [_IronbirdEngineContext new];
+  _IrondashEngineContext *context = [_IrondashEngineContext new];
   context->engine = ((_FlutterPluginRegistrar *)registrar).flutterEngine;
   // There is no unregister callback on macOS, which means we'll leak
-  // an _IronbirdEngineContext instance for every engine. Fortunately the
+  // an _IrondashEngineContext instance for every engine. Fortunately the
   // instance is tiny and only uses weak pointers to reference engine artifacts.
   [registry setObject:context forKey:@(instance->engineHandle)];
 
   FlutterMethodChannel *channel = [FlutterMethodChannel
-      methodChannelWithName:@"dev.nativeshell.ironbird.engine_context"
+      methodChannelWithName:@"dev.irondash.engine_context"
             binaryMessenger:[registrar messenger]];
   [registrar addMethodCallDelegate:instance channel:channel];
 }
@@ -61,17 +61,17 @@ static int64_t nextHandle = 1;
 }
 
 + (UIView *)getFlutterView:(int64_t)engineHandle {
-  _IronbirdEngineContext *context = [registry objectForKey:@(engineHandle)];
+  _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
   return context->engine.viewController.view;
 }
 
 + (id<FlutterTextureRegistry>)getTextureRegistry:(int64_t)engineHandle {
-  _IronbirdEngineContext *context = [registry objectForKey:@(engineHandle)];
+  _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
   return context->engine;
 }
 
 + (id<FlutterBinaryMessenger>)getBinaryMessenger:(int64_t)engineHandle {
-  _IronbirdEngineContext *context = [registry objectForKey:@(engineHandle)];
+  _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
   return context->engine.binaryMessenger;
 }
 

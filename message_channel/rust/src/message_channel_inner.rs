@@ -4,7 +4,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use ironbird_run_loop::{util::Capsule, RunLoop, RunLoopSender};
+use irondash_run_loop::{util::Capsule, RunLoop, RunLoopSender};
 
 use crate::{
     message_transport::{MessageTransport, MessageTransportDelegate},

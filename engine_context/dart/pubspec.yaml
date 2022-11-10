@@ -1,7 +1,7 @@
-name: ironbird_engine_context
+name: irondash_engine_context
 description: Easy access to FlutterView, FlutterBinaryMessenger and FlutterTextureRegistry for FFI.
 version: 0.1.1+1
-homepage: https://github.com/nativeshell/ironbird
+homepage: https://github.com/irondash/irondash
 
 environment:
   sdk: ">=2.17.0 <3.0.0"
@@ -35,16 +35,16 @@ flutter:
   plugin:
     platforms:
       android:
-        package: dev.nativeshell.ironbird.engine_context
-        pluginClass: IronbirdEngineContextPlugin
+        package: dev.irondash.engine_context
+        pluginClass: IrondashEngineContextPlugin
       ios:
-        pluginClass: IronbirdEngineContextPlugin
+        pluginClass: IrondashEngineContextPlugin
       linux:
-        pluginClass: IronbirdEngineContextPlugin
+        pluginClass: IrondashEngineContextPlugin
       macos:
-        pluginClass: IronbirdEngineContextPlugin
+        pluginClass: IrondashEngineContextPlugin
       windows:
-        pluginClass: IronbirdEngineContextPluginCApi
+        pluginClass: IrondashEngineContextPluginCApi
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

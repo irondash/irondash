@@ -67,8 +67,8 @@ class NativeMessageChannelContext
         delegate.registerIsolate(port.sendPort.nativePort, _isolateIdObject);
     if (isolateId == -1) {
       throw const MessageChannelContextError(
-          "NativeShell Rust Context not initialized. "
-          "Please initialize context using nativeshell_core::Context::new() "
+          "Irondash Rust Context not initialized. "
+          "Please initialize context using irondash_core::Context::new() "
           "before callind dart code.");
     }
   }

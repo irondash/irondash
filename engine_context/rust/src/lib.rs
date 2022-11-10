@@ -37,7 +37,7 @@ pub struct EngineContext {
 }
 
 impl EngineContext {
-    /// Creates new IronbirdEngineContext instance.
+    /// Creates new IrondashEngineContext instance.
     /// Must be called on platform thread.
     pub fn new() -> EngineContextResult<Self> {
         Ok(Self {

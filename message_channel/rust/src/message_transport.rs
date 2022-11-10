@@ -21,7 +21,7 @@ pub mod native {
         sync::{Arc, Mutex},
     };
 
-    use ironbird_dart_ffi::{raw, DartPort, DartValue, NativePort};
+    use irondash_dart_ffi::{raw, DartPort, DartValue, NativePort};
     use once_cell::sync::OnceCell;
 
     use crate::{

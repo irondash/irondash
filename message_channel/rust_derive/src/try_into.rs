@@ -43,9 +43,9 @@ impl TryIntoEnum {
             Some(content) => {
                 let content = &content.value;
                 quote! {
-                    let mut __ns_value = ::ironbird_message_channel::Value::Null;
+                    let mut __ns_value = ::irondash_message_channel::Value::Null;
                     for __ns_row in __ns_map {
-                        if let ::ironbird_message_channel::Value::String(__ns_content_value) = __ns_row.0 {
+                        if let ::irondash_message_channel::Value::String(__ns_content_value) = __ns_row.0 {
                             if __ns_content_value == #content {
                                 __ns_value = __ns_row.1;
                                 break;
@@ -55,16 +55,16 @@ impl TryIntoEnum {
                 }
             }
             None => quote! {
-                let __ns_value = ::ironbird_message_channel::Value::Map(__ns_map);
+                let __ns_value = ::irondash_message_channel::Value::Map(__ns_map);
             },
         };
         quote! {
             match __ns_value {
-                ::ironbird_message_channel::Value::Map(__ns_map) => {
+                ::irondash_message_channel::Value::Map(__ns_map) => {
                     let mut __ns_tag_value = Option::<String>::None;
                     for __ns_row in __ns_map.iter() {
-                        if let (::ironbird_message_channel::Value::String(__ns_tag),
-                                ::ironbird_message_channel::Value::String(__ns_value)) = (&__ns_row.0, &__ns_row.1) {
+                        if let (::irondash_message_channel::Value::String(__ns_tag),
+                                ::irondash_message_channel::Value::String(__ns_value)) = (&__ns_row.0, &__ns_row.1) {
                             if __ns_tag == #tag {
                                 __ns_tag_value = Some(__ns_value.clone());
                             }
@@ -92,7 +92,7 @@ impl TryIntoEnum {
         quote! {
             #unit_enums
             match __ns_value {
-                ::ironbird_message_channel::Value::Map(__ns_map) => {
+                ::irondash_message_channel::Value::Map(__ns_map) => {
                     let __ns_row = __ns_map.into_iter().next().ok_or(Self::Error::OtherError("unexpected empty map".into()))?;
                     let __ns_key : String = __ns_row.0.try_into().map_err(|e|Self::Error::OtherError("enum type must be a String".into()))?;
                     let __ns_value = __ns_row.1;
@@ -159,7 +159,7 @@ impl TryIntoEnum {
         }
         let enum_name = &self.name;
         quote! {
-            if let ::ironbird_message_channel::Value::String(string) = __ns_value {
+            if let ::irondash_message_channel::Value::String(string) = __ns_value {
                 #(
                     if string == #strings {
                         return ::core::result::Result::Ok(#enum_name::#variants);
@@ -210,7 +210,7 @@ fn process_struct_unnamed(
         quote! {
             return Ok(#constructor ( {
                 let mut res = std::option::Option::<#ty>::None;
-                (&mut &mut &mut ::ironbird_message_channel::derive_internal::WrapMut(&mut res)).assign(__ns_value, false)?;
+                (&mut &mut &mut ::irondash_message_channel::derive_internal::WrapMut(&mut res)).assign(__ns_value, false)?;
                 res.unwrap()
             } ));
         }
@@ -221,7 +221,7 @@ fn process_struct_unnamed(
                 quote! {
                     {
                         let mut res = std::option::Option::<#ty>::None;
-                        (&mut &mut &mut ::ironbird_message_channel::derive_internal::WrapMut(&mut res)).assign(
+                        (&mut &mut &mut ::irondash_message_channel::derive_internal::WrapMut(&mut res)).assign(
                             iter.next().ok_or_else(||Self::Error::OtherError("missing value".into()))?,
                             false,
                         )?;
@@ -232,7 +232,7 @@ fn process_struct_unnamed(
             .collect();
         quote! {
             match __ns_value {
-                ::ironbird_message_channel::Value::List(entries) => {
+                ::irondash_message_channel::Value::List(entries) => {
                     let mut iter = entries.into_iter();
                     return Ok(#constructor(
                         #(
@@ -294,15 +294,15 @@ fn process_struct_named(
         )*;
 
         match __ns_value {
-            ::ironbird_message_channel::Value::Map(entries) => {
+            ::irondash_message_channel::Value::Map(entries) => {
                 for __ns_e in entries {
                     let __ns_name = match __ns_e.0 {
-                        ::ironbird_message_channel::Value::String(name) => name,
+                        ::irondash_message_channel::Value::String(name) => name,
                         _ => return Err(Self::Error::OtherError("key value must be a string.".into()))
                     };
                     #(
                         if __ns_name == #strings {
-                            (&mut &mut &mut ::ironbird_message_channel::derive_internal::WrapMut(&mut #fields)).assign(__ns_e.1, #skip_if_empty)?;
+                            (&mut &mut &mut ::irondash_message_channel::derive_internal::WrapMut(&mut #fields)).assign(__ns_e.1, #skip_if_empty)?;
                             continue;
                         }
                     )*;
@@ -314,7 +314,7 @@ fn process_struct_named(
         }
 
         #(
-            (&mut &mut &mut::ironbird_message_channel::derive_internal::WrapMut(&mut #fields)).set_optional_to_none();
+            (&mut &mut &mut::irondash_message_channel::derive_internal::WrapMut(&mut #fields)).set_optional_to_none();
         )*;
 
         let res = #constructor {

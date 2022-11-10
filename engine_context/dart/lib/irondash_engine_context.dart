@@ -4,8 +4,7 @@ class EngineContext {
   /// Shared instance for [EngineContext].
   static final instance = EngineContext();
 
-  final _methodChannel =
-      const MethodChannel('dev.nativeshell.ironbird.engine_context');
+  final _methodChannel = const MethodChannel('dev.irondash.engine_context');
 
   int? _engineHandle;
 

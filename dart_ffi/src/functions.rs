@@ -42,14 +42,14 @@ unsafe impl Sync for DartFunctions {}
 impl DartFunctions {
     /// Returns resolved FFI functions. Will panic if FFI has not been initialized yet.
     ///
-    /// See [`ironbird_init_ffi`].
+    /// See [`irondash_init_ffi`].
     pub fn get() -> Self {
         FUNCTIONS_TL.with(|m| {
             m.borrow_mut()
                 .get_or_insert_with(|| {
                     FUNCTIONS
                         .get()
-                        .expect("Ironbird FFI not initialized.")
+                        .expect("Irondash FFI not initialized.")
                         .clone()
                 })
                 .clone()
@@ -124,7 +124,7 @@ pub(super) fn init(ptr: *mut c_void) {
     if let Some(prev_functions) = FUNCTIONS.get() {
         if prev_functions != &functions {
             panic!(
-                "ironbird FFI is already initialized but with different set of function pointers"
+                "irondash FFI is already initialized but with different set of function pointers"
             );
         }
         return;
@@ -141,6 +141,6 @@ pub(super) fn init(ptr: *mut c_void) {
 ///
 #[no_mangle]
 #[inline(never)]
-pub extern "C" fn ironbird_init_ffi(ptr: *mut std::os::raw::c_void) {
+pub extern "C" fn irondash_init_ffi(ptr: *mut std::os::raw::c_void) {
     init(ptr);
 }

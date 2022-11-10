@@ -1,4 +1,4 @@
-group 'dev.nativeshell.ironbird.engine_context'
+group 'dev.irondash.engine_context'
 version '1.0'
 
 buildscript {

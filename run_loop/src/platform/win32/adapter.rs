@@ -21,7 +21,7 @@ impl WindowClass {
 
     fn new() -> Self {
         let res = WindowClass {
-            class_name: "IronbirdCoreMessageWindow".into(),
+            class_name: "IrondashCoreMessageWindow".into(),
         };
         res.register();
         res

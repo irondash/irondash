@@ -11,24 +11,24 @@ G_BEGIN_DECLS
 #define FLUTTER_PLUGIN_EXPORT
 #endif
 
-typedef struct _IronbirdEngineContextPlugin IronbirdEngineContextPlugin;
+typedef struct _IrondashEngineContextPlugin IrondashEngineContextPlugin;
 typedef struct {
   GObjectClass parent_class;
-} IronbirdEngineContextPluginClass;
+} IrondashEngineContextPluginClass;
 
-FLUTTER_PLUGIN_EXPORT GType ironbird_engine_context_plugin_get_type();
+FLUTTER_PLUGIN_EXPORT GType irondash_engine_context_plugin_get_type();
 
 FLUTTER_PLUGIN_EXPORT FlView *
-IronbirdEngineContextGetFlutterView(int64_t engine_handle);
+IrondashEngineContextGetFlutterView(int64_t engine_handle);
 
 FLUTTER_PLUGIN_EXPORT FlBinaryMessenger *
-IronbirdEngineContextGetBinaryMessenger(int64_t engine_handle);
+IrondashEngineContextGetBinaryMessenger(int64_t engine_handle);
 
 FLUTTER_PLUGIN_EXPORT FlTextureRegistrar *
-IronbirdEngineContextGetTextureRegistrar(int64_t engine_handle);
+IrondashEngineContextGetTextureRegistrar(int64_t engine_handle);
 
 FLUTTER_PLUGIN_EXPORT void
-ironbird_engine_context_plugin_register_with_registrar(
+irondash_engine_context_plugin_register_with_registrar(
     FlPluginRegistrar *registrar);
 
 G_END_DECLS

@@ -7,7 +7,7 @@ use crate::case::RenameRule;
 #[derive(Copy, Clone)]
 pub struct Symbol(&'static str);
 
-pub const IRONBIRD: Symbol = Symbol("ironbird");
+pub const IRONDASH: Symbol = Symbol("irondash");
 pub const RENAME: Symbol = Symbol("rename");
 pub const RENAME_ALL: Symbol = Symbol("rename_all");
 pub const SKIP: Symbol = Symbol("skip");
@@ -40,14 +40,14 @@ impl<'a> PartialEq<Symbol> for &'a Path {
     }
 }
 
-fn extract_ironbird_meta(atts: &[Attribute]) -> Vec<Meta> {
+fn extract_irondash_meta(atts: &[Attribute]) -> Vec<Meta> {
     let mut res = Vec::new();
     for attr in atts {
         let meta = attr.parse_meta();
         match meta {
             Ok(meta) => {
                 if let Meta::List(list) = meta {
-                    if list.path == IRONBIRD {
+                    if list.path == IRONDASH {
                         for n in list.nested {
                             if let NestedMeta::Meta(meta) = n {
                                 res.push(meta.clone())
@@ -128,7 +128,7 @@ fn rename_rule_from_lit(lit: &Lit) -> RenameRule {
 
 pub fn parse_enum_attributes(attrs: &[Attribute]) -> EnumAttributes {
     let mut res = EnumAttributes::default();
-    let meta = extract_ironbird_meta(attrs);
+    let meta = extract_irondash_meta(attrs);
     for m in &meta {
         match m {
             Meta::NameValue(nv) => {
@@ -163,7 +163,7 @@ pub fn parse_enum_attributes(attrs: &[Attribute]) -> EnumAttributes {
 
 pub fn parse_enum_variant_attributes(attrs: &[Attribute]) -> EnumVariantAttribute {
     let mut res = EnumVariantAttribute::default();
-    let meta = extract_ironbird_meta(attrs);
+    let meta = extract_irondash_meta(attrs);
     for m in &meta {
         match m {
             Meta::NameValue(nv) => {
@@ -193,7 +193,7 @@ pub fn parse_enum_variant_attributes(attrs: &[Attribute]) -> EnumVariantAttribut
 
 pub fn parse_struct_attributes(attrs: &[Attribute]) -> StructAttributes {
     let mut res = StructAttributes::default();
-    let meta = extract_ironbird_meta(attrs);
+    let meta = extract_irondash_meta(attrs);
     for m in &meta {
         match m {
             Meta::NameValue(nv) => {
@@ -214,7 +214,7 @@ pub fn parse_struct_attributes(attrs: &[Attribute]) -> StructAttributes {
 
 pub fn parse_field_attributes(attrs: &[Attribute]) -> FieldAttributes {
     let mut res = FieldAttributes::default();
-    let meta = extract_ironbird_meta(attrs);
+    let meta = extract_irondash_meta(attrs);
     for m in &meta {
         match m {
             Meta::NameValue(nv) => {

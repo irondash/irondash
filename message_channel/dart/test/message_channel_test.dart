@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ironbird_message_channel/ironbird_message_channel.dart';
-import 'package:ironbird_message_channel/src/native_functions.dart';
-import 'package:ironbird_message_channel/src/native_message_channel_context.dart';
+import 'package:irondash_message_channel/irondash_message_channel.dart';
+import 'package:irondash_message_channel/src/native_functions.dart';
+import 'package:irondash_message_channel/src/native_message_channel_context.dart';
 
 class MockNativeMessageChannelDelegate extends NativeMessageChannelDelegate {
   MockNativeMessageChannelDelegate({required this.isolateId});

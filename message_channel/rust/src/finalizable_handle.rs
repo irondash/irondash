@@ -6,8 +6,8 @@ use std::{
     },
 };
 
-use ironbird_dart_ffi::DartWeakPersistentHandle;
-use ironbird_run_loop::{util::Capsule, RunLoop, RunLoopSender};
+use irondash_dart_ffi::DartWeakPersistentHandle;
+use irondash_run_loop::{util::Capsule, RunLoop, RunLoopSender};
 use once_cell::sync::OnceCell;
 
 use crate::{IsolateId, MessageChannel};
@@ -225,7 +225,7 @@ impl Drop for FinalizableObjectState {
 pub(crate) mod finalizable_handle_native {
     use std::ffi::c_void;
 
-    use ironbird_dart_ffi::{DartFunctions, DartHandle};
+    use irondash_dart_ffi::{DartFunctions, DartHandle};
 
     use super::{FinalizableHandleState, Movable};
 

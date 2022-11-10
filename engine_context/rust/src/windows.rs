@@ -55,14 +55,14 @@ impl PlatformContext {
     }
 
     fn get_proc(name: &str) -> *mut c_void {
-        let module_name = CString::new("ironbird_engine_context_plugin.dll").unwrap();
+        let module_name = CString::new("irondash_engine_context_plugin.dll").unwrap();
         let module = unsafe { GetModuleHandleA(module_name.as_ptr()) };
         let proc_name = CString::new(name).unwrap();
         unsafe { GetProcAddress(module, proc_name.as_ptr()) }
     }
 
     pub fn get_flutter_view(&self, handle: i64) -> EngineContextResult<HWND> {
-        let proc = Self::get_proc("IronbirdEngineContextGetFlutterView");
+        let proc = Self::get_proc("IrondashEngineContextGetFlutterView");
         let proc: GetFlutterViewProc = unsafe { transmute(proc) };
         let view = unsafe { proc(handle) };
         if view == 0 {
@@ -76,7 +76,7 @@ impl PlatformContext {
         &self,
         handle: i64,
     ) -> EngineContextResult<FlutterDesktopTextureRegistrarRef> {
-        let proc = Self::get_proc("IronbirdEngineContextGetTextureRegistrar");
+        let proc = Self::get_proc("IrondashEngineContextGetTextureRegistrar");
         let proc: GetTextureRegistrarProc = unsafe { transmute(proc) };
         let registry = unsafe { proc(handle) };
         if registry.is_null() {
@@ -90,7 +90,7 @@ impl PlatformContext {
         &self,
         handle: i64,
     ) -> EngineContextResult<FlutterDesktopMessengerRef> {
-        let proc = Self::get_proc("IronbirdEngineContextGetBinaryMessenger");
+        let proc = Self::get_proc("IrondashEngineContextGetBinaryMessenger");
         let proc: GetMessengerProc = unsafe { transmute(proc) };
         let messenger = unsafe { proc(handle) };
         if messenger.is_null() {

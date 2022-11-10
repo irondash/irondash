@@ -1,4 +1,4 @@
-package dev.nativeshell.ironbird.engine_context;
+package dev.irondash.engine_context;
 
 import android.app.Activity;
 
@@ -19,10 +19,10 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.view.TextureRegistry;
 
-/** IronbirdEngineContextPlugin */
+/** IrondashEngineContextPlugin */
 // used from JNI
 @SuppressWarnings("UnusedDeclaration")
-public class IronbirdEngineContextPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
+public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -36,7 +36,7 @@ public class IronbirdEngineContextPlugin implements FlutterPlugin, MethodCallHan
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     handle = registry.registerPlugin(this);
     this.flutterPluginBinding = flutterPluginBinding;
-    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "dev.nativeshell.ironbird.engine_context");
+    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "dev.irondash.engine_context");
     channel.setMethodCallHandler(this);
   }
 
@@ -73,7 +73,7 @@ public class IronbirdEngineContextPlugin implements FlutterPlugin, MethodCallHan
   }
 
   static public Activity getActivity(int handle) {
-    final IronbirdEngineContextPlugin plugin = registry.getPlugin(handle);
+    final IrondashEngineContextPlugin plugin = registry.getPlugin(handle);
     if (plugin != null && plugin.activityPluginBinding != null) {
       return plugin.activityPluginBinding.getActivity();
     } else {
@@ -91,7 +91,7 @@ public class IronbirdEngineContextPlugin implements FlutterPlugin, MethodCallHan
   }
 
   static public BinaryMessenger getBinaryMessenger(int handle) {
-    final IronbirdEngineContextPlugin plugin = registry.getPlugin(handle);
+    final IrondashEngineContextPlugin plugin = registry.getPlugin(handle);
     if (plugin != null && plugin.flutterPluginBinding != null) {
       return plugin.flutterPluginBinding.getBinaryMessenger();
     } else {
@@ -100,7 +100,7 @@ public class IronbirdEngineContextPlugin implements FlutterPlugin, MethodCallHan
   }
 
   static public TextureRegistry getTextureRegistry(int handle) {
-    final IronbirdEngineContextPlugin plugin = registry.getPlugin(handle);
+    final IrondashEngineContextPlugin plugin = registry.getPlugin(handle);
     if (plugin != null && plugin.flutterPluginBinding != null) {
       return plugin.flutterPluginBinding.getTextureRegistry();
     } else {
@@ -109,14 +109,14 @@ public class IronbirdEngineContextPlugin implements FlutterPlugin, MethodCallHan
   }
 
   static class Registry {
-    int registerPlugin(IronbirdEngineContextPlugin plugin) {
+    int registerPlugin(IrondashEngineContextPlugin plugin) {
       final int res = nextHandle;
       ++nextHandle;
       plugins.put(res, plugin);
       return res;
     }
 
-    IronbirdEngineContextPlugin getPlugin(int handle) {
+    IrondashEngineContextPlugin getPlugin(int handle) {
       return plugins.get(handle);
     }
 
@@ -124,7 +124,7 @@ public class IronbirdEngineContextPlugin implements FlutterPlugin, MethodCallHan
       plugins.remove(handle);
     }
 
-    private final Map<Integer, IronbirdEngineContextPlugin> plugins = new HashMap<>();
+    private final Map<Integer, IrondashEngineContextPlugin> plugins = new HashMap<>();
     private int nextHandle = 1;
   }
 

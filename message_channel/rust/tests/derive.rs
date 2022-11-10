@@ -1,9 +1,9 @@
-#[cfg(feature = "ironbird_message_channel_derive")]
+#[cfg(feature = "irondash_message_channel_derive")]
 mod tests {
     use std::collections::HashMap;
 
-    use ironbird_message_channel::{TryFromError, Value};
-    use ironbird_message_channel_derive::{IntoValue, TryFromValue};
+    use irondash_message_channel::{TryFromError, Value};
+    use irondash_message_channel_derive::{IntoValue, TryFromValue};
 
     #[derive(PartialEq, Debug, Clone)]
     struct Unserializable {}
@@ -14,19 +14,19 @@ mod tests {
         E: Into<TryFromError> + PartialEq,
     > {
         Unit1,
-        #[ironbird(rename = "yyy")]
+        #[irondash(rename = "yyy")]
         Unit2,
         SingleValue(String),
         DoubleValue(String, String),
         SingleValueT(T),
         DoubleValueT(T, T),
-        #[ironbird(skip)]
+        #[irondash(skip)]
         _Unserializable(Unserializable),
-        #[ironbird(rename = "_Xyz")]
+        #[irondash(rename = "_Xyz")]
         Xyz {
-            #[ironbird(rename = "xabc")]
+            #[irondash(rename = "xabc")]
             a: String,
-            #[ironbird(skip)]
+            #[irondash(skip)]
             b: i64,
             c: Value,
             d: T,
@@ -172,12 +172,12 @@ mod tests {
     }
 
     #[derive(PartialEq, IntoValue, TryFromValue, Debug, Clone)]
-    #[ironbird(tag = "t")]
+    #[irondash(tag = "t")]
     enum Enum2CustomTag {
         Abc,
-        #[ironbird(rename = "_Def")]
+        #[irondash(rename = "_Def")]
         Def,
-        #[ironbird(rename_all = "UPPERCASE")]
+        #[irondash(rename_all = "UPPERCASE")]
         Xyz {
             x: i64,
             s: String,
@@ -224,20 +224,20 @@ mod tests {
     }
 
     #[derive(PartialEq, IntoValue, TryFromValue, Debug, Clone)]
-    #[ironbird(tag = "t", content = "c")]
-    #[ironbird(rename_all = "UPPERCASE")]
+    #[irondash(tag = "t", content = "c")]
+    #[irondash(rename_all = "UPPERCASE")]
     enum Enum3CustomTagContent {
         Abc,
-        #[ironbird(rename = "_Def")]
+        #[irondash(rename = "_Def")]
         Def,
         SingleValue(i64),
-        #[ironbird(rename = "_DoubleValue")]
+        #[irondash(rename = "_DoubleValue")]
         DoubleValue(f64, f64),
         Xyz {
             x: i64,
             s: String,
             z1: Option<i64>,
-            #[ironbird(skip_if_empty)]
+            #[irondash(skip_if_empty)]
             z2: Option<i64>,
             z3: Option<f64>,
         },
@@ -500,27 +500,27 @@ mod tests {
     struct Struct1 {
         s1: String,
         i: Option<i64>,
-        #[ironbird(rename = "abc")]
+        #[irondash(rename = "abc")]
         v: Value,
         v2: Option<Value>,
         e: EnumInStruct1,
         e2: Option<EnumInStruct1>,
-        #[ironbird(skip_if_empty)]
+        #[irondash(skip_if_empty)]
         e3: Option<EnumInStruct1>,
         e4: Option<EnumInStruct1>,
     }
 
     #[derive(Clone, PartialEq, Debug, IntoValue, TryFromValue)]
-    #[ironbird(rename_all = "UPPERCASE")]
+    #[irondash(rename_all = "UPPERCASE")]
     struct StructGeneric<
         T: std::fmt::Debug + PartialEq + Into<Value> + TryFrom<Value, Error = E>,
         E: Into<TryFromError> + PartialEq,
     > {
         t: T,
         t2: Option<T>,
-        #[ironbird(skip_if_empty)]
+        #[irondash(skip_if_empty)]
         t3: Option<T>,
-        #[ironbird(rename = "_T4")]
+        #[irondash(rename = "_T4")]
         t4: Option<T>,
     }
 
@@ -529,9 +529,9 @@ mod tests {
     // it will deserialize as Some(Value::Null)
     #[derive(Clone, PartialEq, Debug, IntoValue, TryFromValue)]
     struct StructOptionalValue {
-        #[ironbird(skip_if_empty)]
+        #[irondash(skip_if_empty)]
         v1: Option<Value>,
-        #[ironbird(skip_if_empty)]
+        #[irondash(skip_if_empty)]
         v2: Option<Value>,
     }
 

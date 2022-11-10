@@ -1,10 +1,10 @@
 [package]
-name = "ironbird_message_channel_derive"
+name = "irondash_message_channel_derive"
 authors = ["Matej Knopp <matej.knopp@gmail.com>"]
 version = "0.1.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-description = "Derive proc-macros for NativeShell"
+description = "Derive proc-macros for Irondash"
 
 [lib]
 proc-macro = true

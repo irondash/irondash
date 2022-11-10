@@ -33,7 +33,7 @@ impl PlatformContext {
 
     pub fn get_flutter_view(&self, handle: i64) -> EngineContextResult<FlutterView> {
         unsafe {
-            let view: id = msg_send![class!(IronbirdEngineContextPlugin), getFlutterView: handle];
+            let view: id = msg_send![class!(IrondashEngineContextPlugin), getFlutterView: handle];
             if view == nil {
                 Err(Error::InvalidHandle)
             } else {
@@ -45,7 +45,7 @@ impl PlatformContext {
     pub fn get_texture_registry(&self, handle: i64) -> EngineContextResult<FlutterTextureRegistry> {
         unsafe {
             let registry: id = msg_send![
-                class!(IronbirdEngineContextPlugin),
+                class!(IrondashEngineContextPlugin),
                 getTextureRegistry: handle
             ];
             if registry == nil {
@@ -59,7 +59,7 @@ impl PlatformContext {
     pub fn get_binary_messenger(&self, handle: i64) -> EngineContextResult<FlutterBinaryMessenger> {
         unsafe {
             let messenger: id = msg_send![
-                class!(IronbirdEngineContextPlugin),
+                class!(IrondashEngineContextPlugin),
                 getBinaryMessenger: handle
             ];
             if messenger == nil {

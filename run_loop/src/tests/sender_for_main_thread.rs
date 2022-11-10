@@ -3,7 +3,7 @@ use std::{
     thread,
 };
 
-use ironbird_run_loop::RunLoop;
+use irondash_run_loop::RunLoop;
 
 fn main() {
     let barrier = Arc::new(Barrier::new(2));

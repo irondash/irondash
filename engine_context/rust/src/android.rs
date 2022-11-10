@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use ironbird_jni_context::JniContext;
+use irondash_jni_context::JniContext;
 use jni::{objects::JObject, sys::jint};
 
 use crate::EngineContextResult;
@@ -15,7 +15,7 @@ pub enum Error {
     InvalidHandle,
     MissingClassLoader,
     JNIError(jni::errors::Error),
-    JniContextError(ironbird_jni_context::Error),
+    JniContextError(irondash_jni_context::Error),
 }
 
 pub(crate) type FlutterView = jni::objects::GlobalRef;
@@ -42,8 +42,8 @@ impl From<jni::errors::Error> for Error {
     }
 }
 
-impl From<ironbird_jni_context::Error> for Error {
-    fn from(err: ironbird_jni_context::Error) -> Self {
+impl From<irondash_jni_context::Error> for Error {
+    fn from(err: irondash_jni_context::Error) -> Self {
         Error::JniContextError(err)
     }
 }
@@ -71,9 +71,7 @@ impl PlatformContext {
                 "loadClass",
                 "(Ljava/lang/String;)Ljava/lang/Class;",
                 &[env
-                    .new_string(
-                        "dev/nativeshell/ironbird/engine_context/IronbirdEngineContextPlugin",
-                    )?
+                    .new_string("dev/irondash/engine_context/IrondashEngineContextPlugin")?
                     .into()],
             )?
             .l()?;

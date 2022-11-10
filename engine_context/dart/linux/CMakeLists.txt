@@ -4,19 +4,19 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project-level configuration.
-set(PROJECT_NAME "ironbird_engine_context")
+set(PROJECT_NAME "irondash_engine_context")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 # This value is used when generating builds using this plugin, so it must
 # not be changed.
-set(PLUGIN_NAME "ironbird_engine_context_plugin")
+set(PLUGIN_NAME "irondash_engine_context_plugin")
 
 # Define the plugin library target. Its name must not be changed (see comment
 # on PLUGIN_NAME above).
 #
 # Any new source files that you add to the plugin should be added here.
 add_library(${PLUGIN_NAME} SHARED
-  "ironbird_engine_context_plugin.cc"
+  "irondash_engine_context_plugin.cc"
 )
 
 # Apply a standard set of build settings that are configured in the
@@ -41,7 +41,7 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
-set(ironbird_engine_context_bundled_libraries
+set(irondash_engine_context_bundled_libraries
   ""
   PARENT_SCOPE
 )

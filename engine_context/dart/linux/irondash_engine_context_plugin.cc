@@ -1,4 +1,4 @@
-#include "include/ironbird_engine_context/ironbird_engine_context_plugin.h"
+#include "include/irondash_engine_context/irondash_engine_context_plugin.h"
 
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
@@ -7,9 +7,9 @@
 #include <cstring>
 #include <map>
 
-#define IRONBIRD_ENGINE_CONTEXT_PLUGIN(obj)                                     \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), ironbird_engine_context_plugin_get_type(), \
-                              IronbirdEngineContextPlugin))
+#define IRONDASH_ENGINE_CONTEXT_PLUGIN(obj)                                     \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), irondash_engine_context_plugin_get_type(), \
+                              IrondashEngineContextPlugin))
 
 namespace {
 struct EngineContext {
@@ -22,7 +22,7 @@ int64_t next_handle = 1;
 } // namespace
 
 extern "C" {
-FlView *IronbirdEngineContextGetFlutterView(int64_t engine_handle) {
+FlView *IrondashEngineContextGetFlutterView(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
   if (context != contexts.end()) {
     return (context->second.view);
@@ -32,7 +32,7 @@ FlView *IronbirdEngineContextGetFlutterView(int64_t engine_handle) {
 }
 
 FlBinaryMessenger *
-IronbirdEngineContextGetBinaryMessenger(int64_t engine_handle) {
+IrondashEngineContextGetBinaryMessenger(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
   if (context != contexts.end()) {
     return (context->second.binary_messenger);
@@ -42,7 +42,7 @@ IronbirdEngineContextGetBinaryMessenger(int64_t engine_handle) {
 }
 
 FlTextureRegistrar *
-IronbirdEngineContextGetTextureRegistrar(int64_t engine_handle) {
+IrondashEngineContextGetTextureRegistrar(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
   if (context != contexts.end()) {
     return (context->second.texture_registrar);
@@ -52,17 +52,17 @@ IronbirdEngineContextGetTextureRegistrar(int64_t engine_handle) {
 }
 }
 
-struct _IronbirdEngineContextPlugin {
+struct _IrondashEngineContextPlugin {
   GObject parent_instance;
   int64_t handle;
 };
 
-G_DEFINE_TYPE(IronbirdEngineContextPlugin, ironbird_engine_context_plugin,
+G_DEFINE_TYPE(IrondashEngineContextPlugin, irondash_engine_context_plugin,
               g_object_get_type())
 
 // Called when a method call is received from Flutter.
-static void ironbird_engine_context_plugin_handle_method_call(
-    IronbirdEngineContextPlugin *self, FlMethodCall *method_call) {
+static void irondash_engine_context_plugin_handle_method_call(
+    IrondashEngineContextPlugin *self, FlMethodCall *method_call) {
   g_autoptr(FlMethodResponse) response = nullptr;
 
   const gchar *method = fl_method_call_get_name(method_call);
@@ -77,30 +77,30 @@ static void ironbird_engine_context_plugin_handle_method_call(
   fl_method_call_respond(method_call, response, nullptr);
 }
 
-static void ironbird_engine_context_plugin_dispose(GObject *object) {
-  IronbirdEngineContextPlugin *plugin = IRONBIRD_ENGINE_CONTEXT_PLUGIN(object);
+static void irondash_engine_context_plugin_dispose(GObject *object) {
+  IrondashEngineContextPlugin *plugin = IRONDASH_ENGINE_CONTEXT_PLUGIN(object);
   contexts.erase(plugin->handle);
-  G_OBJECT_CLASS(ironbird_engine_context_plugin_parent_class)->dispose(object);
+  G_OBJECT_CLASS(irondash_engine_context_plugin_parent_class)->dispose(object);
 }
 
-static void ironbird_engine_context_plugin_class_init(
-    IronbirdEngineContextPluginClass *klass) {
-  G_OBJECT_CLASS(klass)->dispose = ironbird_engine_context_plugin_dispose;
+static void irondash_engine_context_plugin_class_init(
+    IrondashEngineContextPluginClass *klass) {
+  G_OBJECT_CLASS(klass)->dispose = irondash_engine_context_plugin_dispose;
 }
 
 static void
-ironbird_engine_context_plugin_init(IronbirdEngineContextPlugin *self) {}
+irondash_engine_context_plugin_init(IrondashEngineContextPlugin *self) {}
 
 static void method_call_cb(FlMethodChannel *channel, FlMethodCall *method_call,
                            gpointer user_data) {
-  IronbirdEngineContextPlugin *plugin = IRONBIRD_ENGINE_CONTEXT_PLUGIN(user_data);
-  ironbird_engine_context_plugin_handle_method_call(plugin, method_call);
+  IrondashEngineContextPlugin *plugin = IRONDASH_ENGINE_CONTEXT_PLUGIN(user_data);
+  irondash_engine_context_plugin_handle_method_call(plugin, method_call);
 }
 
-void ironbird_engine_context_plugin_register_with_registrar(
+void irondash_engine_context_plugin_register_with_registrar(
     FlPluginRegistrar *registrar) {
-  IronbirdEngineContextPlugin *plugin = IRONBIRD_ENGINE_CONTEXT_PLUGIN(
-      g_object_new(ironbird_engine_context_plugin_get_type(), nullptr));
+  IrondashEngineContextPlugin *plugin = IRONDASH_ENGINE_CONTEXT_PLUGIN(
+      g_object_new(irondash_engine_context_plugin_get_type(), nullptr));
 
   plugin->handle = next_handle;
   ++next_handle;
@@ -115,7 +115,7 @@ void ironbird_engine_context_plugin_register_with_registrar(
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   g_autoptr(FlMethodChannel) channel = fl_method_channel_new(
       fl_plugin_registrar_get_messenger(registrar),
-      "dev.nativeshell.ironbird.engine_context", FL_METHOD_CODEC(codec));
+      "dev.irondash.engine_context", FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(
       channel, method_call_cb, g_object_ref(plugin), g_object_unref);
 

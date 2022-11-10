@@ -61,7 +61,7 @@ impl State {
             timers: HashMap::new(),
             timer: None,
             source: None,
-            run_loop_mode: to_nsstring("NativeShellRunLoopMode"),
+            run_loop_mode: to_nsstring("IrondashRunLoopMode"),
             run_loop,
         }
     }

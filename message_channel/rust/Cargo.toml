@@ -1,26 +1,26 @@
 [package]
-name = "ironbird_message_channel"
+name = "irondash_message_channel"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Rust interface to ironbird MessageChannel."
+description = "Rust interface to irondash MessageChannel."
 authors = ["Matej Knopp <matej.knopp@gmail.com>"]
-repository = "https://github.com/nativeshell/ironbird"
+repository = "https://github.com/irondash/irondash"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 once_cell = "1.16.0"
-ironbird_dart_ffi = "0.1.0"
-ironbird_run_loop = "0.1.0"
+irondash_dart_ffi = "0.1.0"
+irondash_run_loop = "0.1.0"
 async-trait = "0.1.51"
-ironbird_message_channel_derive = { version = "0.1.1", path = "../rust_derive", optional = true }
+irondash_message_channel_derive = { version = "0.1.1", path = "../rust_derive", optional = true }
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 core-foundation = "0.9"
 objc = "0.2.7"
 
 [features]
-derive = ["ironbird_message_channel_derive"]
+derive = ["irondash_message_channel_derive"]
 # Allows mocking MessageChannel in unit tests
 mock = []

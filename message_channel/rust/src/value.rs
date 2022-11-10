@@ -3,7 +3,7 @@ use std::{
     hash::Hash, num::TryFromIntError, ops::Deref, sync::Arc,
 };
 
-use ironbird_dart_ffi::raw;
+use irondash_dart_ffi::raw;
 
 use crate::FinalizableHandle;
 
@@ -416,7 +416,7 @@ impl From<ValueTupleList> for HashMap<Value, Value> {
     }
 }
 
-impl From<DartObject> for ironbird_dart_ffi::DartValue {
+impl From<DartObject> for irondash_dart_ffi::DartValue {
     fn from(object: DartObject) -> Self {
         match object {
             DartObject::SendPort(port) => port.into(),

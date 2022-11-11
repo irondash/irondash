@@ -1,11 +1,11 @@
 use std::{fmt::Debug, thread::ThreadId};
 
-use crate::{platform::PlatformRunLoopSender, util::BlockingVariable};
+use crate::{platform::PlatformRunLoopSender, util::BlockingVariable, RunLoop};
 
 // Can be used to send callbacks from other threads to be executed on run loop thread
 #[derive(Clone)]
 pub struct RunLoopSender {
-    thread_id: ThreadId,
+    thread_id: Option<ThreadId>,
     platform_sender: PlatformRunLoopSender,
 }
 
@@ -20,8 +20,15 @@ impl Debug for RunLoopSender {
 impl RunLoopSender {
     pub(crate) fn new(platform_sender: PlatformRunLoopSender) -> Self {
         Self {
-            thread_id: std::thread::current().id(),
+            thread_id: Some(std::thread::current().id()),
             platform_sender,
+        }
+    }
+
+    pub(crate) fn new_fallback(fallback_platform_sender: PlatformRunLoopSender) -> Self {
+        Self {
+            thread_id: None,
+            platform_sender: fallback_platform_sender,
         }
     }
 
@@ -41,7 +48,10 @@ impl RunLoopSender {
         F: FnOnce() -> R + 'static + Send,
         R: Send + 'static,
     {
-        if std::thread::current().id() == self.thread_id {
+        if Some(std::thread::current().id()) == self.thread_id
+            // this is fallback main thread sender and we're on main thread
+            || self.thread_id.is_none() && RunLoop::is_main_thread()
+        {
             callback()
         } else {
             let var = BlockingVariable::<R>::new();

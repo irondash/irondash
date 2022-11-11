@@ -1,0 +1,3 @@
+[submodule "message_channel/dart/example/cargokit"]
+	path = message_channel/dart/example/cargokit
+	url = https://github.com/irondash/cargokit.git

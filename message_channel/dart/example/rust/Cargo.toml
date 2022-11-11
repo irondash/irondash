@@ -1,0 +1,39 @@
+[package]
+name = "example_rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+log = "0.4"
+simple_logger = "2.1"
+async-trait = "0.1"
+tokio = { version = "1", features = ["full"] }
+thiserror = "1.0"
+irondash_message_channel = { version = "0.1.0", features = ["derive"] }
+irondash_run_loop = { version = "0.1.0" }
+
+# reqwest uses different options per platform
+
+[target.'cfg(any(target_os = "macos", target_os = "windows", target_os = "ios"))'.dependencies]
+reqwest = { version = "0.11", default-features = false, features = [
+    "native-tls",
+] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+reqwest = { version = "0.11", default-features = false, features = [
+    "native-tls-vendored",
+] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.11"
+reqwest = { version = "0.11", default-features = false, features = [
+    "rustls-tls",
+] }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+oslog = "0.2.0"

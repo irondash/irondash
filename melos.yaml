@@ -3,3 +3,4 @@ name: irondash
 packages:
   - engine_context/dart
   - message_channel/dart
+  - message_channel/dart/example

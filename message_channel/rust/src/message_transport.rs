@@ -16,17 +16,18 @@ pub trait MessageTransportDelegate {
 pub mod native {
     use std::{
         collections::HashMap,
-        ffi::c_void,
+        ffi::{c_void, CString},
         fmt::Debug,
         sync::{Arc, Mutex},
     };
 
     use irondash_dart_ffi::{raw, DartPort, DartValue, NativePort};
+    use irondash_run_loop::RunLoop;
     use once_cell::sync::OnceCell;
 
     use crate::{
         codec::{Deserializer, Serializer},
-        IsolateId, Value,
+        IsolateId, MessageChannel, Value,
     };
 
     use super::{MessageTransport, MessageTransportDelegate};
@@ -53,9 +54,17 @@ pub mod native {
             self.isolate_ports
                 .lock()
                 .unwrap()
-                .insert(isolate_id, isolate_port);
+                .insert(isolate_id, isolate_port.clone());
             let mut delegate = self.delegate.lock().unwrap();
             delegate.on_isolate_joined(isolate_id);
+
+            // Make one hop over to platform thread before telling the
+            // Dart counterpart we're ready.
+            // It is possible there is some initializaton pending.
+            RunLoop::sender_for_main_thread().send(move || {
+                let value = DartValue::String(CString::new("ready").unwrap());
+                isolate_port.send(value);
+            });
         }
 
         fn handle_message(&self, isolate_id: IsolateId, message: Value) {
@@ -135,6 +144,10 @@ pub mod native {
 
     // Accepts port, returns isolate id
     pub(crate) extern "C" fn register_isolate(port: i64, isolate_id: *mut c_void) -> i64 {
+        // Ensure message channel is initialized, otherwise there is no transport
+        // and the isolate gets lost.
+        MessageChannel::get();
+
         let isolate_id = isolate_id as i64;
         if let Some(transport) = NativeMessageTransport::get() {
             let isolate_id = IsolateId(isolate_id);

@@ -5,12 +5,24 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
+            "name": "message_channel example",
+            "cwd": "message_channel/dart/example",
             "request": "launch",
-            "name": "Debug",
-            "program": "${workspaceFolder}/<executable file>",
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "type": "dart"
+        },
+        {
+            "name": "message_channel example (profile mode)",
+            "cwd": "message_channel/dart/example",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "message_channel example (release mode)",
+            "cwd": "message_channel/dart/example",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
         }
     ]
 }

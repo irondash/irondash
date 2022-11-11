@@ -203,7 +203,7 @@ impl<T: AsyncMethodHandler> MessageChannelDelegate for RegisteredAsyncMethodHand
         &self,
         isolate: IsolateId,
         message: Value,
-        reply: Box<dyn FnOnce(Value) -> bool>,
+        reply: Box<dyn FnOnce(Value) -> bool + Send>,
     ) {
         if let Some(call) = unpack_method_call(message, isolate) {
             let handler = self.handler.clone();

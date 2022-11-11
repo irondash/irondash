@@ -63,7 +63,12 @@ impl std::error::Error for PostMessageError {}
 
 pub trait MessageChannelDelegate {
     fn on_isolate_joined(&self, isolate: IsolateId);
-    fn on_message(&self, isolate: IsolateId, message: Value, reply: Box<dyn FnOnce(Value) -> bool>);
+    fn on_message(
+        &self,
+        isolate: IsolateId,
+        message: Value,
+        reply: Box<dyn FnOnce(Value) -> bool + Send>,
+    );
     fn on_isolate_exited(&self, isolate: IsolateId);
 }
 

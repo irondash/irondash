@@ -1,15 +1,11 @@
 use std::{mem::ManuallyDrop, thread, time::Duration};
 
-use irondash_message_channel::{MethodHandler, Value};
+use irondash_message_channel::{MethodCall, MethodCallReply, MethodHandler, Value};
 
 struct Slow {}
 
 impl MethodHandler for Slow {
-    fn on_method_call(
-        &self,
-        call: irondash_message_channel::MethodCall,
-        reply: irondash_message_channel::MethodCallReply,
-    ) {
+    fn on_method_call(&self, call: MethodCall, reply: MethodCallReply) {
         match call.method.as_str() {
             "getMeaningOfUniverse" => {
                 // 'reply' (MethodCallReply) is Send, we can move it to another

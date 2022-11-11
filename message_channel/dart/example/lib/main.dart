@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:irondash_message_channel/irondash_message_channel.dart';
 
-// Returns context for current library.
-MessageChannelContext _getLibraryContext() {
+/// initialize context for Native library.
+MessageChannelContext _initNativeContext() {
   final dylib = defaultTargetPlatform == TargetPlatform.android
       ? DynamicLibrary.open("libexample_rust.so")
       : (defaultTargetPlatform == TargetPlatform.windows
@@ -23,7 +23,7 @@ MessageChannelContext _getLibraryContext() {
   return MessageChannelContext.forInitFunction(function);
 }
 
-final nativeContext = _getLibraryContext();
+final nativeContext = _initNativeContext();
 
 final _channel =
     NativeMethodChannel('addition_channel', context: nativeContext);

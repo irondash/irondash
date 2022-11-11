@@ -63,7 +63,7 @@ pub extern "C" fn my_example_init_message_channel_context(data: *mut c_void) -> 
 
 ### Simple usage
 
-After the setup, you can use the Dart `NativeMethodChannel` similar to flutter's `PlatformChannel`:
+After the setup, you can use the Dart `NativeMethodChannel` similar to Flutter's `PlatformChannel`:
 
 ```dart
 
@@ -150,7 +150,7 @@ struct MyHandler {
 #[async_trait(?Send)]
 impl AsyncMethodHandler for MyHandler {
     // This will be called right after method channel registration.
-    // You can you invoker to call Dart methods handlers.
+    // You can use invoker to call Dart methods handlers.
     fn assign_invoker(&self, invoker: AsyncMethodInvoker) {
         self.invoker.set(invoker);
     }
@@ -179,3 +179,58 @@ To see message channel in action look at the [example project](https://github.co
 
 `MethodInvoker` is `Send`. It can be passed between threads and the response to method call will be received on same thread as the request was sent. Again, the thread must have a `RunLoop` running.
 
+## Converting to and from Value
+
+[`Value`](https://github.com/irondash/irondash/blob/message_channel_example/message_channel/rust/src/value.rs) is represents all types that can be sent between Rust and Dart. To simplify serialization and deserialization on Rust side, `irondash_message_channel` provides `IntoValue` and `TryFromValue` proc macros, that generate [`TryInto<YourStruct>`](https://doc.rust-lang.org/std/convert/trait.TryInto.html) and [`From<YourStruct>`](https://doc.rust-lang.org/std/convert/trait.From.html) traits for `Value`. This is an optional feature:
+
+```toml
+[dependencies]
+irondash_message_channel = { version = "0.1.0", features = ["derive"] }
+```
+
+```rust
+#[derive(TryFromValue, IntoValue)]
+struct AdditionRequest {
+    a: f64,
+    b: f64,
+}
+
+#[derive(IntoValue)]
+struct AdditionResponse {
+    result: f64,
+    request: AdditionRequest,
+}
+
+let value: Value = get_value_from_somewhere();
+let request: AdditionRequest = value.try_into()?;
+let response: Value = AdditionResponse {
+    result: request.a + request.b,
+    request,
+}.into();
+```
+
+More advanced mapping options are also supported, for example:
+
+```rust
+#[derive(IntoValue, TryFromValue)]
+#[irondash(tag = "t", content = "c")]
+#[irondash(rename_all = "UPPERCASE")]
+enum Enum3CustomTagContent {
+    Abc,
+    #[irondash(rename = "_Def")]
+    Def,
+    SingleValue(i64),
+    #[irondash(rename = "_DoubleValue")]
+    DoubleValue(f64, f64),
+    Xyz {
+        x: i64,
+        s: String,
+        z1: Option<i64>,
+        #[irondash(skip_if_empty)]
+        z2: Option<i64>,
+        z3: Option<f64>,
+    },
+}
+```
+
+Unlike serde, `.into()` and `try_into()` consume the original value, making it possible for zero-copy serialization and deserializaton.

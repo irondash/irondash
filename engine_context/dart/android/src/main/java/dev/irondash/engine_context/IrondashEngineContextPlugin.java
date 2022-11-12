@@ -4,7 +4,9 @@ import android.app.Activity;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.flutter.embedding.android.FlutterActivity;
@@ -28,7 +30,7 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
-  private int handle;
+  private long handle;
   FlutterPluginBinding flutterPluginBinding;
   ActivityPluginBinding activityPluginBinding;
 
@@ -72,7 +74,7 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
   public void onDetachedFromActivity() {
   }
 
-  static public Activity getActivity(int handle) {
+  static public Activity getActivity(long handle) {
     final IrondashEngineContextPlugin plugin = registry.getPlugin(handle);
     if (plugin != null && plugin.activityPluginBinding != null) {
       return plugin.activityPluginBinding.getActivity();
@@ -81,7 +83,7 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
     }
   }
 
-  static public FlutterView getFlutterView(int handle) {
+  static public FlutterView getFlutterView(long handle) {
     final Activity activity = getActivity(handle);
     if (activity != null) {
       return activity.findViewById(FlutterActivity.FLUTTER_VIEW_ID);
@@ -90,7 +92,7 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
     }
   }
 
-  static public BinaryMessenger getBinaryMessenger(int handle) {
+  static public BinaryMessenger getBinaryMessenger(long handle) {
     final IrondashEngineContextPlugin plugin = registry.getPlugin(handle);
     if (plugin != null && plugin.flutterPluginBinding != null) {
       return plugin.flutterPluginBinding.getBinaryMessenger();
@@ -99,7 +101,7 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
     }
   }
 
-  static public TextureRegistry getTextureRegistry(int handle) {
+  static public TextureRegistry getTextureRegistry(long handle) {
     final IrondashEngineContextPlugin plugin = registry.getPlugin(handle);
     if (plugin != null && plugin.flutterPluginBinding != null) {
       return plugin.flutterPluginBinding.getTextureRegistry();
@@ -108,24 +110,37 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
     }
   }
 
+  static public void registerDestroyListener(Notifier notifier) {
+    registry.registerDestroyNotifier(notifier);
+  }
+
   static class Registry {
-    int registerPlugin(IrondashEngineContextPlugin plugin) {
-      final int res = nextHandle;
+    long registerPlugin(IrondashEngineContextPlugin plugin) {
+      final long res = nextHandle;
       ++nextHandle;
       plugins.put(res, plugin);
       return res;
     }
 
-    IrondashEngineContextPlugin getPlugin(int handle) {
+    IrondashEngineContextPlugin getPlugin(long handle) {
       return plugins.get(handle);
     }
 
-    void unregisterPlugin(int handle) {
-      plugins.remove(handle);
+    void registerDestroyNotifier(Notifier notifier) {
+      destroyNotifiers.add(notifier);
     }
 
-    private final Map<Integer, IrondashEngineContextPlugin> plugins = new HashMap<>();
-    private int nextHandle = 1;
+    void unregisterPlugin(long handle) {
+      plugins.remove(handle);
+      List<Notifier> copy = new ArrayList<>(destroyNotifiers);
+      for (Notifier notifier : copy) {
+        notifier.onNotify(handle);
+      }
+    }
+
+    private final Map<Long, IrondashEngineContextPlugin> plugins = new HashMap<>();
+    private final List<Notifier> destroyNotifiers = new ArrayList<>();
+    private long nextHandle = 1;
   }
 
   private static final Registry registry = new Registry();

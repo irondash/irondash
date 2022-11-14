@@ -295,7 +295,6 @@ extern "C" fn copy_pixel_buffer(this: &Object, _: Sel) -> CVPixelBufferRef {
 }
 
 extern "C" fn on_texture_unregistered(this: &mut Object, _: Sel, _: id) {
-    println!("Texture unregistered");
     unsafe {
         let ptr: *mut c_void = *this.get_ivar("imState");
         this.set_ivar("imState", std::ptr::null_mut() as *mut c_void);
@@ -308,6 +307,7 @@ extern "C" fn dealloc(this: &Object, _: Sel) {
     unsafe {
         let ptr: *mut c_void = *this.get_ivar("imState");
         if !ptr.is_null() {
+            // seems to be bug in macOS embedder?
             warn!("onTextureUnregistered was not called on texture object");
             let ptr = ptr as *mut Arc<dyn PayloadProvider<IOSurface>>;
             let _ = Box::from_raw(ptr);

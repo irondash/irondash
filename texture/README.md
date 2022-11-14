@@ -49,7 +49,7 @@ Other than `PixelBuffer`, there are platform specific payload types that can be 
 To use GPU texture on Android, instead of setting payload, you can request JNI `Surface` or NDK `ANativeWindow` from the texture:
 
 ```rust
-let texture = Texture::new::<NativeWindow>(engine_handle)?;
+let texture = Texture::<NativeWindow>::new(engine_handle)?;
 let native_window = texture.get()?;
 ```
 
@@ -57,7 +57,7 @@ let native_window = texture.get()?;
 
 `PayloadProvider` must be `Send` and `Sync`, the texture payload will be requested on platform thread.
 
-Texture itself must be created on platform thread. However once the texture is
+`Texture` itself must be created on platform thread. However once the texture is
 created, you can convert it to `SendableTexture`, which can be moved between threads:
 
 ```rust

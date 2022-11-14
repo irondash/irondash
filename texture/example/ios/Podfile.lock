@@ -1,0 +1,27 @@
+PODS:
+  - Flutter (1.0.0)
+  - irondash_engine_context (0.0.1):
+    - Flutter
+  - texture_example (0.0.1)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - irondash_engine_context (from `.symlinks/plugins/irondash_engine_context/ios`)
+  - texture_example (from `../rust`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  irondash_engine_context:
+    :path: ".symlinks/plugins/irondash_engine_context/ios"
+  texture_example:
+    :path: "../rust"
+
+SPEC CHECKSUMS:
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  irondash_engine_context: 3458bf979b90d616ffb8ae03a150bafe2e860cc9
+  texture_example: db6744c6a227c2a0f0a16a5a948a78a2d0808991
+
+PODFILE CHECKSUM: f4e42519c88c204263491c0a4fc6a16a0db82afd
+
+COCOAPODS: 1.11.3

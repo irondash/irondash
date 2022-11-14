@@ -8,6 +8,9 @@
 #include <flutter/standard_method_codec.h>
 
 #include <map>
+#include <vector>
+
+namespace irondash_engine_context {
 
 namespace {
 struct EngineContext {
@@ -17,9 +20,8 @@ struct EngineContext {
 };
 std::map<int64_t, EngineContext> contexts;
 int64_t next_handle = 1;
+std::vector<EngineDestroyedCallback> engine_destroyed_callbacks;
 } // namespace
-
-namespace irondash_engine_context {
 
 size_t GetFlutterView(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
@@ -46,6 +48,10 @@ FlutterDesktopMessengerRef GetBinaryMessenger(int64_t engine_handle) {
   } else {
     return nullptr;
   }
+}
+
+void RegisterDestroyNotification(EngineDestroyedCallback callback) {
+  engine_destroyed_callbacks.push_back(callback);
 }
 
 // static
@@ -84,6 +90,10 @@ IrondashEngineContextPlugin::IrondashEngineContextPlugin(int64_t engine_handle)
 
 IrondashEngineContextPlugin::~IrondashEngineContextPlugin() {
   contexts.erase(engine_handle_);
+  auto callbacks(engine_destroyed_callbacks);
+  for (const auto &callback : callbacks) {
+    callback(engine_handle_);
+  }
 }
 
 void IrondashEngineContextPlugin::HandleMethodCall(

@@ -48,4 +48,3 @@ apply_cargokit(${BINARY_NAME}
     # any exported symbol from the library (used to force linking of the DLL):
     example_rust_init_message_channel_context
 )
-

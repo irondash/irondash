@@ -22,7 +22,6 @@ late int texture;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   texture = await initNative();
-  print('TextureId $texture');
   runApp(const MyApp());
 }
 
@@ -124,6 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
+            const CircularProgressIndicator(),
             SizedBox.square(
               dimension: 200,
               child: Texture(textureId: texture),

@@ -26,6 +26,10 @@ IrondashEngineContextGetTextureRegistrar(int64_t engine_handle);
 FLUTTER_PLUGIN_EXPORT FlutterDesktopMessengerRef
 IrondashEngineContextGetBinaryMessenger(int64_t engine_handle);
 
+typedef void (*EngineDestroyedCallback)(int64_t);
+FLUTTER_PLUGIN_EXPORT void
+IrondashEngineContextRegisterDestroyNotification(EngineDestroyedCallback callback);
+
 #if defined(__cplusplus)
 } // extern "C"
 #endif

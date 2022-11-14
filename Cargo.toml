@@ -4,7 +4,7 @@ members = [
     "dart_ffi",
     "engine_context/rust",
     "jni_context",
-    # "message_channel/dart/example/rust",
+    "message_channel/dart/example/rust",
     "message_channel/rust_derive",
     "message_channel/rust",
     "run_loop",

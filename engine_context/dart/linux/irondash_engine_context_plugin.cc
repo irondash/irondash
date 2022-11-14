@@ -6,9 +6,11 @@
 
 #include <cstring>
 #include <map>
+#include <vector>
 
-#define IRONDASH_ENGINE_CONTEXT_PLUGIN(obj)                                     \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), irondash_engine_context_plugin_get_type(), \
+#define IRONDASH_ENGINE_CONTEXT_PLUGIN(obj)                                    \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),                                           \
+                              irondash_engine_context_plugin_get_type(),       \
                               IrondashEngineContextPlugin))
 
 namespace {
@@ -19,6 +21,7 @@ struct EngineContext {
 };
 std::map<int64_t, EngineContext> contexts;
 int64_t next_handle = 1;
+std::vector<EngineDestroyedCallback> engine_destroyed_callbacks;
 } // namespace
 
 extern "C" {
@@ -50,6 +53,11 @@ IrondashEngineContextGetTextureRegistrar(int64_t engine_handle) {
     return 0;
   }
 }
+
+void IrondashEngineContextRegisterDestroyNotification(
+    EngineDestroyedCallback callback) {
+  engine_destroyed_callbacks.push_back(callback);
+}
 }
 
 struct _IrondashEngineContextPlugin {
@@ -80,6 +88,10 @@ static void irondash_engine_context_plugin_handle_method_call(
 static void irondash_engine_context_plugin_dispose(GObject *object) {
   IrondashEngineContextPlugin *plugin = IRONDASH_ENGINE_CONTEXT_PLUGIN(object);
   contexts.erase(plugin->handle);
+  auto callbacks(engine_destroyed_callbacks);
+  for (const auto &callback : callbacks) {
+    callback(plugin->handle);
+  }
   G_OBJECT_CLASS(irondash_engine_context_plugin_parent_class)->dispose(object);
 }
 
@@ -93,7 +105,8 @@ irondash_engine_context_plugin_init(IrondashEngineContextPlugin *self) {}
 
 static void method_call_cb(FlMethodChannel *channel, FlMethodCall *method_call,
                            gpointer user_data) {
-  IrondashEngineContextPlugin *plugin = IRONDASH_ENGINE_CONTEXT_PLUGIN(user_data);
+  IrondashEngineContextPlugin *plugin =
+      IRONDASH_ENGINE_CONTEXT_PLUGIN(user_data);
   irondash_engine_context_plugin_handle_method_call(plugin, method_call);
 }
 

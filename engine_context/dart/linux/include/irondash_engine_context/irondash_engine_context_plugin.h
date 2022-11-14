@@ -27,6 +27,10 @@ IrondashEngineContextGetBinaryMessenger(int64_t engine_handle);
 FLUTTER_PLUGIN_EXPORT FlTextureRegistrar *
 IrondashEngineContextGetTextureRegistrar(int64_t engine_handle);
 
+typedef void (*EngineDestroyedCallback)(int64_t);
+FLUTTER_PLUGIN_EXPORT void IrondashEngineContextRegisterDestroyNotification(
+    EngineDestroyedCallback callback);
+
 FLUTTER_PLUGIN_EXPORT void
 irondash_engine_context_plugin_register_with_registrar(
     FlPluginRegistrar *registrar);

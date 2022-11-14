@@ -136,3 +136,17 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
+
+include("../cargokit/cmake/cargokit.cmake")
+apply_cargokit(${BINARY_NAME}
+    # relative path to folder containing cargo manifest:
+    ../rust
+    # cargo package name:
+    texture_example
+    # any_symbol_name (not used on linux)
+    ""
+)
+
+install(FILES "${${BINARY_NAME}_cargokit_lib}"
+       DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+       COMPONENT Runtime)

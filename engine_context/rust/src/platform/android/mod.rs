@@ -1,57 +1,20 @@
-use std::fmt::Display;
-
 use irondash_jni_context::JniContext;
 use jni::objects::JObject;
 
 mod notifier;
 use notifier::*;
 
-use crate::{EngineContext, Result};
-
-pub(crate) struct PlatformContext {
-    java_vm: &'static jni::JavaVM,
-    class_loader: jni::objects::GlobalRef,
-    destroy_notifier: Option<Notifier>,
-}
-
-#[derive(Debug)]
-pub enum Error {
-    InvalidHandle,
-    InvalidThread,
-    MissingClassLoader,
-    JNIError(jni::errors::Error),
-    JniContextError(irondash_jni_context::Error),
-}
+use crate::{EngineContext, Error, Result};
 
 pub(crate) type FlutterView = jni::objects::GlobalRef;
 pub(crate) type FlutterTextureRegistry = jni::objects::GlobalRef;
 pub(crate) type FlutterBinaryMessenger = jni::objects::GlobalRef;
 pub(crate) type Activity = jni::objects::GlobalRef;
 
-impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::InvalidThread => write!(f, "Invalid thread"),
-            Error::JNIError(e) => e.fmt(f),
-            Error::MissingClassLoader => write!(f, "missing class loader"),
-            Error::InvalidHandle => write!(f, "invalid engine handle"),
-            Error::JniContextError(e) => e.fmt(f),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-
-impl From<jni::errors::Error> for Error {
-    fn from(err: jni::errors::Error) -> Self {
-        Error::JNIError(err)
-    }
-}
-
-impl From<irondash_jni_context::Error> for Error {
-    fn from(err: irondash_jni_context::Error) -> Self {
-        Error::JniContextError(err)
-    }
+pub(crate) struct PlatformContext {
+    java_vm: &'static jni::JavaVM,
+    class_loader: jni::objects::GlobalRef,
+    destroy_notifier: Option<Notifier>,
 }
 
 impl PlatformContext {
@@ -72,12 +35,15 @@ impl PlatformContext {
 
     fn initialize(&mut self) -> Result<()> {
         let notifier = Notifier::new(move |env, data| {
-            let value = env
+            let handle = env
                 .call_method(*data, "longValue", "()J", &[])
-                .unwrap()
-                .j()
-                .unwrap();
-            EngineContext::get().unwrap().on_engine_destroyed(value);
+                .ok()
+                .and_then(|v| v.j().ok());
+            if let (Some(handle), Some(engine_context)) = //
+                (handle, EngineContext::try_get())
+            {
+                engine_context.on_engine_destroyed(handle);
+            }
         })?;
         let env = self.java_vm.get_env()?;
         let class = self.get_plugin_class(&env)?;
@@ -92,16 +58,21 @@ impl PlatformContext {
     }
 
     fn get_plugin_class<'a>(&'a self, env: &jni::JNIEnv<'a>) -> Result<jni::objects::JClass<'a>> {
-        let plugin_class = env
-            .call_method(
-                self.class_loader.as_obj(),
-                "loadClass",
-                "(Ljava/lang/String;)Ljava/lang/Class;",
-                &[env
-                    .new_string("dev/irondash/engine_context/IrondashEngineContextPlugin")?
-                    .into()],
-            )?
-            .l()?;
+        let plugin_class = env.call_method(
+            self.class_loader.as_obj(),
+            "loadClass",
+            "(Ljava/lang/String;)Ljava/lang/Class;",
+            &[env
+                .new_string("dev/irondash/engine_context/IrondashEngineContextPlugin")?
+                .into()],
+        );
+
+        if env.exception_check()? {
+            env.exception_clear()?;
+            return Err(Error::PluginNotLoaded);
+        }
+
+        let plugin_class = plugin_class?.l()?;
         Ok(plugin_class.into())
     }
 

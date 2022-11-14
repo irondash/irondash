@@ -8,9 +8,12 @@
 
 namespace irondash_engine_context {
 
+typedef void (*EngineDestroyedCallback)(int64_t);
+
 size_t GetFlutterView(int64_t engine_handle);
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle);
 FlutterDesktopMessengerRef GetBinaryMessenger(int64_t engine_handle);
+void RegisterDestroyNotification(EngineDestroyedCallback callback);
 
 class IrondashEngineContextPlugin : public flutter::Plugin {
 public:

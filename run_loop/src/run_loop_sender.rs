@@ -32,6 +32,13 @@ impl RunLoopSender {
         }
     }
 
+    /// Retruns true if sender would send the callback to current thread.
+    pub fn is_same_thread(&self) -> bool {
+        Some(std::thread::current().id()) == self.thread_id
+            // this is fallback main thread sender and we're on main thread
+            || self.thread_id.is_none() && RunLoop::is_main_thread()
+    }
+
     /// Schedules the callback to be executed on run loop and returns immediately.
     pub fn send<F>(&self, callback: F)
     where
@@ -48,10 +55,7 @@ impl RunLoopSender {
         F: FnOnce() -> R + 'static + Send,
         R: Send + 'static,
     {
-        if Some(std::thread::current().id()) == self.thread_id
-            // this is fallback main thread sender and we're on main thread
-            || self.thread_id.is_none() && RunLoop::is_main_thread()
-        {
+        if self.is_same_thread() {
             callback()
         } else {
             let var = BlockingVariable::<R>::new();

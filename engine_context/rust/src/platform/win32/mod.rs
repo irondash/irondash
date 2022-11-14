@@ -1,25 +1,9 @@
 use std::{
     ffi::{c_void, CString},
-    fmt::Display,
     mem::transmute,
 };
 
-use crate::EngineContextResult;
-
-#[derive(Debug)]
-pub enum Error {
-    InvalidHandle,
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::InvalidHandle => write!(f, "invalid engine handle"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
+use crate::{Error, Result};
 
 pub struct PlatformContext {}
 
@@ -46,23 +30,38 @@ type FlutterDesktopTextureRegistrarRef = *mut c_void;
 type FlutterDesktopMessengerRef = *mut c_void;
 
 type GetFlutterViewProc = unsafe extern "C" fn(i64) -> isize;
+type RegisterDestroyNotificationProc = unsafe extern "C" fn(extern "C" fn(i64)) -> ();
 type GetTextureRegistrarProc = unsafe extern "C" fn(i64) -> FlutterDesktopTextureRegistrarRef;
 type GetMessengerProc = unsafe extern "C" fn(i64) -> FlutterDesktopMessengerRef;
 
 impl PlatformContext {
-    pub fn new() -> EngineContextResult<Self> {
-        Ok(Self {})
+    pub fn new() -> Result<Self> {
+        let res = Self {};
+        res.initialize()?;
+        Ok(res)
     }
 
-    fn get_proc(name: &str) -> *mut c_void {
+    fn initialize(&self) -> Result<()> {
+        let proc = Self::get_proc("IrondashEngineContextRegisterDestroyNotification")?;
+        let proc: RegisterDestroyNotificationProc = unsafe { std::mem::transmute(proc) };
+        unsafe { proc(on_engine_destroyed) };
+        Ok(())
+    }
+
+    fn get_proc(name: &str) -> Result<*mut c_void> {
         let module_name = CString::new("irondash_engine_context_plugin.dll").unwrap();
         let module = unsafe { GetModuleHandleA(module_name.as_ptr()) };
         let proc_name = CString::new(name).unwrap();
-        unsafe { GetProcAddress(module, proc_name.as_ptr()) }
+        let res = unsafe { GetProcAddress(module, proc_name.as_ptr()) };
+        if res.is_null() {
+            Err(Error::PluginNotLoaded)
+        } else {
+            Ok(res)
+        }
     }
 
-    pub fn get_flutter_view(&self, handle: i64) -> EngineContextResult<HWND> {
-        let proc = Self::get_proc("IrondashEngineContextGetFlutterView");
+    pub fn get_flutter_view(&self, handle: i64) -> Result<HWND> {
+        let proc = Self::get_proc("IrondashEngineContextGetFlutterView")?;
         let proc: GetFlutterViewProc = unsafe { transmute(proc) };
         let view = unsafe { proc(handle) };
         if view == 0 {
@@ -72,11 +71,8 @@ impl PlatformContext {
         }
     }
 
-    pub fn get_texture_registry(
-        &self,
-        handle: i64,
-    ) -> EngineContextResult<FlutterDesktopTextureRegistrarRef> {
-        let proc = Self::get_proc("IrondashEngineContextGetTextureRegistrar");
+    pub fn get_texture_registry(&self, handle: i64) -> Result<FlutterDesktopTextureRegistrarRef> {
+        let proc = Self::get_proc("IrondashEngineContextGetTextureRegistrar")?;
         let proc: GetTextureRegistrarProc = unsafe { transmute(proc) };
         let registry = unsafe { proc(handle) };
         if registry.is_null() {
@@ -86,11 +82,8 @@ impl PlatformContext {
         }
     }
 
-    pub fn get_binary_messenger(
-        &self,
-        handle: i64,
-    ) -> EngineContextResult<FlutterDesktopMessengerRef> {
-        let proc = Self::get_proc("IrondashEngineContextGetBinaryMessenger");
+    pub fn get_binary_messenger(&self, handle: i64) -> Result<FlutterDesktopMessengerRef> {
+        let proc = Self::get_proc("IrondashEngineContextGetBinaryMessenger")?;
         let proc: GetMessengerProc = unsafe { transmute(proc) };
         let messenger = unsafe { proc(handle) };
         if messenger.is_null() {
@@ -98,5 +91,11 @@ impl PlatformContext {
         } else {
             Ok(messenger)
         }
+    }
+}
+
+extern "C" fn on_engine_destroyed(handle: i64) {
+    if let Some(engine_context) = crate::EngineContext::try_get() {
+        engine_context.on_engine_destroyed(handle);
     }
 }

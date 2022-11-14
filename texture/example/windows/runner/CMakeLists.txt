@@ -38,3 +38,13 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
+
+include("../../cargokit/cmake/cargokit.cmake")
+apply_cargokit(${BINARY_NAME}
+    # relative path to folder containing cargo manifest:
+    ../../rust
+    # cargo package name:
+    texture_example
+    # any exported symbol from the library (used to force linking of the DLL):
+    init_texture_example
+)

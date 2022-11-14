@@ -9,23 +9,11 @@ use std::{
 use irondash_run_loop::RunLoop;
 use once_cell::sync::OnceCell;
 
-#[cfg(target_os = "android")]
-#[path = "android/mod.rs"]
-pub mod platform;
+mod platform;
 
-#[cfg(target_os = "windows")]
-#[path = "windows.rs"]
-pub mod platform;
+mod error;
+pub use error::Error;
 
-#[cfg(target_os = "linux")]
-#[path = "linux.rs"]
-pub mod platform;
-
-#[cfg(any(target_os = "ios", target_os = "macos"))]
-#[path = "darwin.rs"]
-pub mod platform;
-
-pub type Error = platform::Error;
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub type FlutterView = platform::FlutterView;
@@ -66,16 +54,6 @@ impl EngineContext {
         Ok(ENGINE_CONTEXT.get().unwrap())
     }
 
-    /// Creates new IrondashEngineContext instance.
-    /// Must be called on platform thread.
-    fn new() -> Result<Self> {
-        Ok(Self {
-            platform_context: platform::PlatformContext::new()?,
-            destroy_notifications: RefCell::new(Vec::new()),
-            next_notification_handle: Cell::new(1),
-        })
-    }
-
     /// Registers callback to be invoked when engine gets destroyed.
     /// EngineHandle will be passed to provided callback.
     /// Returns handle that can be passed to `unregister_destroy_notification`.
@@ -99,23 +77,56 @@ impl EngineContext {
 
     /// Returns flutter view for given engine handle.
     pub fn get_flutter_view(&self, handle: i64) -> Result<platform::FlutterView> {
+        let handle = Self::strip_version(handle)?;
         self.platform_context.get_flutter_view(handle)
     }
 
     /// Returns texture registry for given engine handle.
     pub fn get_texture_registry(&self, handle: i64) -> Result<FlutterTextureRegistry> {
+        let handle = Self::strip_version(handle)?;
         self.platform_context.get_texture_registry(handle)
     }
 
     /// Returns binary messenger for given engine handle.
     pub fn get_binary_messenger(&self, handle: i64) -> Result<FlutterBinaryMessenger> {
+        let handle = Self::strip_version(handle)?;
         self.platform_context.get_binary_messenger(handle)
     }
 
     /// Returns android activity for given handle.
     #[cfg(target_os = "android")]
     pub fn get_activity(&self, handle: i64) -> Result<Activity> {
+        let handle = Self::strip_version(handle)?;
         self.platform_context.get_activity(handle)
+    }
+
+    /// Creates new IrondashEngineContext instance.
+    /// Must be called on platform thread.
+    fn new() -> Result<Self> {
+        Ok(Self {
+            platform_context: platform::PlatformContext::new()?,
+            destroy_notifications: RefCell::new(Vec::new()),
+            next_notification_handle: Cell::new(1),
+        })
+    }
+
+    pub(crate) fn try_get() -> Option<&'static Self> {
+        assert!(RunLoop::is_main_thread());
+        ENGINE_CONTEXT.get()
+    }
+
+    fn strip_version(handle: i64) -> Result<i64> {
+        // this must be same as version in `irondash_engine_context.dart`.
+        let expected_version = 3i64;
+        let version_shift = 48;
+        let version_mask = 0xFFi64 << version_shift;
+        let handle_version = (handle & version_mask) >> version_shift;
+
+        if handle_version != expected_version {
+            return Err(Error::InvalidVersion);
+        }
+        let handle = handle & !version_mask;
+        Ok(handle)
     }
 
     pub(crate) fn on_engine_destroyed(&self, handle: i64) {

@@ -25,3 +25,8 @@ FlutterDesktopMessengerRef
 IrondashEngineContextGetBinaryMessenger(int64_t engine_handle) {
   return irondash_engine_context::GetBinaryMessenger(engine_handle);
 }
+
+void
+IrondashEngineContextRegisterDestroyNotification(EngineDestroyedCallback callback) {
+  return irondash_engine_context::RegisterDestroyNotification(callback);
+}

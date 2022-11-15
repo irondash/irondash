@@ -1,11 +1,14 @@
-use std::{fmt::Debug, thread::ThreadId};
+use std::fmt::Debug;
 
-use crate::{platform::PlatformRunLoopSender, util::BlockingVariable, RunLoop};
+use crate::{
+    get_system_thread_id, platform::PlatformRunLoopSender, util::BlockingVariable, RunLoop,
+    SystemThreadId,
+};
 
 // Can be used to send callbacks from other threads to be executed on run loop thread
 #[derive(Clone)]
 pub struct RunLoopSender {
-    thread_id: Option<ThreadId>,
+    thread_id: Option<SystemThreadId>,
     platform_sender: PlatformRunLoopSender,
 }
 
@@ -20,7 +23,7 @@ impl Debug for RunLoopSender {
 impl RunLoopSender {
     pub(crate) fn new(platform_sender: PlatformRunLoopSender) -> Self {
         Self {
-            thread_id: Some(std::thread::current().id()),
+            thread_id: Some(get_system_thread_id()),
             platform_sender,
         }
     }
@@ -34,7 +37,7 @@ impl RunLoopSender {
 
     /// Retruns true if sender would send the callback to current thread.
     pub fn is_same_thread(&self) -> bool {
-        Some(std::thread::current().id()) == self.thread_id
+        Some(get_system_thread_id()) == self.thread_id
             // this is fallback main thread sender and we're on main thread
             || self.thread_id.is_none() && RunLoop::is_main_thread()
     }

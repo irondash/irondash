@@ -5,7 +5,6 @@ use std::{
     collections::HashMap,
     os::raw::c_uint,
     rc::Rc,
-    thread::{self, ThreadId},
     time::Duration,
 };
 
@@ -256,7 +255,7 @@ unsafe impl<T> Sync for Movable<T> {}
 #[derive(Clone)]
 pub struct PlatformRunLoopSender {
     context: ContextHolder,
-    thread_id: ThreadId,
+    thread_id: SystemThreadId,
 }
 
 #[allow(unused_variables)]
@@ -264,7 +263,7 @@ impl PlatformRunLoopSender {
     fn new(context: ContextHolder) -> Self {
         Self {
             context,
-            thread_id: thread::current().id(),
+            thread_id: get_system_thread_id(),
         }
     }
 
@@ -275,7 +274,7 @@ impl PlatformRunLoopSender {
         // This is to ensure consistent behavior on all platforms. When invoked on main thread
         // the code below (g_main_context_invoke_full) would call the function synchronously,
         // which is not expected and may lead to deadlocks.
-        if thread::current().id() == self.thread_id {
+        if get_system_thread_id() == self.thread_id {
             assert!(unsafe { g_main_context_is_owner(self.context.0) == GTRUE });
             let run_loop = RunLoop::current();
             run_loop.schedule(Duration::from_secs(0), callback).detach();

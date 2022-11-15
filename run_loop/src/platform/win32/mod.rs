@@ -400,3 +400,9 @@ impl PlatformRunLoopSender {
         }
     }
 }
+
+pub type PlatformThreadId = u32;
+
+pub fn get_system_thread_id() -> PlatformThreadId {
+    unsafe { GetCurrentThreadId() }
+}

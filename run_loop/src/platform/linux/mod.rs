@@ -95,10 +95,10 @@ fn context_remove_source(context: *mut GMainContext, source_id: SourceId) {
     }
 }
 
-static mut FIRST_THREAD: usize = 0;
+static mut FIRST_THREAD: PlatformThreadId = 0;
 
 fn is_main_thread() -> bool {
-    unsafe { FIRST_THREAD == pthread_self() }
+    unsafe { FIRST_THREAD == get_system_thread_id() }
 }
 
 #[used]
@@ -112,7 +112,7 @@ static ON_LOAD: extern "C" fn() = {
         link_section = ".text.startup"
     )]
     extern "C" fn on_load() {
-        unsafe { FIRST_THREAD = pthread_self() };
+        unsafe { FIRST_THREAD = get_system_thread_id() };
     }
     on_load
 };
@@ -206,7 +206,9 @@ impl PlatformRunLoop {
     }
 
     pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
-        PlatformRunLoopSender::new(unsafe { ContextHolder::retain(g_main_context_default()) })
+        PlatformRunLoopSender::new_fallback(unsafe {
+            ContextHolder::retain(g_main_context_default())
+        })
     }
 
     pub fn new_sender(self: &Rc<Self>) -> PlatformRunLoopSender {
@@ -266,6 +268,13 @@ impl PlatformRunLoopSender {
         Self {
             context,
             thread_id: get_system_thread_id(),
+        }
+    }
+
+    fn new_fallback(context: ContextHolder) -> Self {
+        Self {
+            context,
+            thread_id: unsafe { FIRST_THREAD },
         }
     }
 

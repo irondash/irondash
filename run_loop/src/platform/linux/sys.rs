@@ -20,8 +20,6 @@ pub mod glib {
 
     #[link(name = "glib-2.0")]
     extern "C" {
-        pub fn pthread_self() -> usize;
-
         pub fn g_main_loop_new(context: *mut GMainContext, is_running: gboolean) -> *mut GMainLoop;
         pub fn g_main_loop_unref(loop_: *mut GMainLoop);
         pub fn g_main_loop_run(loop_: *mut GMainLoop);

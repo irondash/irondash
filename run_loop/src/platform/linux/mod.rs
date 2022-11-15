@@ -259,7 +259,7 @@ unsafe impl<T> Sync for Movable<T> {}
 #[derive(Clone)]
 pub struct PlatformRunLoopSender {
     context: ContextHolder,
-    thread_id: u64,
+    thread_id: PlatformThreadId,
 }
 
 #[allow(unused_variables)]

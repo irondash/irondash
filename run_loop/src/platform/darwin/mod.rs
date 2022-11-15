@@ -21,7 +21,7 @@ use core_foundation::{
 };
 use objc::rc::{autoreleasepool, StrongPtr};
 
-use self::sys::{dispatch_async_f, dispatch_get_main_queue, to_nsstring};
+use self::sys::{dispatch_async_f, dispatch_get_main_queue, pthread_threadid_np, to_nsstring};
 
 mod sys;
 
@@ -482,4 +482,12 @@ impl PlatformRunLoopSender {
         let callback = unsafe { Box::from_raw(callback) };
         callback();
     }
+}
+
+pub(crate) type PlatformThreadId = u64;
+
+pub(crate) fn get_system_thread_id() -> PlatformThreadId {
+    let mut id = 0u64;
+    unsafe { pthread_threadid_np(std::ptr::null_mut(), &mut id as *mut _) };
+    id
 }

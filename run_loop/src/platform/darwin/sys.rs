@@ -3,7 +3,7 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 
-use std::ffi::c_void;
+use std::ffi::{c_int, c_void};
 
 use objc::{class, msg_send, rc::StrongPtr, sel, sel_impl};
 
@@ -32,6 +32,7 @@ pub fn dispatch_get_main_queue() -> dispatch_queue_t {
     not(any(target_os = "macos", target_os = "ios")),
     link(name = "dispatch", kind = "dylib")
 )]
+
 extern "C" {
     static _dispatch_main_q: dispatch_object_s;
     pub fn dispatch_async_f(
@@ -39,6 +40,11 @@ extern "C" {
         context: *mut c_void,
         work: dispatch_function_t,
     );
+}
+
+#[link(name = "pthread")]
+extern "C" {
+    pub fn pthread_threadid_np(thread: *mut c_void, thread_id: *mut u64) -> c_int;
 }
 
 pub mod cocoa {
@@ -96,6 +102,13 @@ pub mod cocoa {
             msg_send![self, stop: sender]
         }
     }
+}
+
+#[allow(non_camel_case_types)]
+#[allow(non_upper_case_globals)]
+pub mod libc {
+    pub const SYS_gettid: c_long = 186;
+    pub fn syscall(num: c_long, ...) -> c_long;
 }
 
 const UTF8_ENCODING: usize = 4;

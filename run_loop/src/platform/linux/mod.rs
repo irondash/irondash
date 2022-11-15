@@ -286,3 +286,9 @@ impl PlatformRunLoopSender {
         true
     }
 }
+
+pub(crate) type PlatformThreadId = u64;
+
+pub(crate) fn get_system_thread_id() -> PlatformThreadId {
+    unsafe { libc::syscall(libc::SYS_gettid) as u64 }
+}

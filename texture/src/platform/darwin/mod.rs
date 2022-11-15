@@ -31,7 +31,7 @@ use crate::{
         kIOSurfaceBytesPerElement, kIOSurfaceBytesPerRow, kIOSurfaceHeight, kIOSurfacePixelFormat,
         kIOSurfaceWidth,
     },
-    BoxedPayload, IntoBoxedPayload, PayloadProvider, PixelBuffer, PixelFormat,
+    BoxedIOSurface, BoxedPixelBuffer, IOSurfaceProvider, PayloadProvider, PixelFormat,
     PlatformTextureWithProvider, Result,
 };
 
@@ -52,10 +52,13 @@ impl<Type> PlatformTexture<Type> {
     }
 }
 
-impl<Type> PlatformTexture<Type> {
-    pub(crate) const PIXEL_BUFFER_FORMAT: PixelFormat = PixelFormat::RGBA;
+pub(crate) const PIXEL_BUFFER_FORMAT: PixelFormat = PixelFormat::RGBA;
 
-    pub fn new(engine_handle: i64, provider: Arc<dyn PayloadProvider<IOSurface>>) -> Result<Self> {
+impl<Type> PlatformTexture<Type> {
+    pub fn new(
+        engine_handle: i64,
+        provider: Arc<dyn PayloadProvider<BoxedIOSurface>>,
+    ) -> Result<Self> {
         let update_requested = Arc::new(AtomicBool::new(false));
         let provider = Arc::new(SurfaceCache::new(provider, update_requested.clone()));
         let texture_objc = create_texture_objc(provider);
@@ -90,24 +93,34 @@ impl<Type> Drop for PlatformTexture<Type> {
     }
 }
 
-impl PlatformTextureWithProvider for PixelBuffer {
+impl PlatformTextureWithProvider for BoxedPixelBuffer {
     fn create_texture(
         engine_handle: i64,
-        payload_provider: Arc<dyn PayloadProvider<PixelBuffer>>,
-    ) -> Result<PlatformTexture<PixelBuffer>> {
-        PlatformTexture::<PixelBuffer>::new(
+        payload_provider: Arc<dyn PayloadProvider<BoxedPixelBuffer>>,
+    ) -> Result<PlatformTexture<BoxedPixelBuffer>> {
+        PlatformTexture::<BoxedPixelBuffer>::new(
             engine_handle,
             Arc::new(SurfaceAdapter::new(payload_provider)),
         )
     }
 }
 
-impl PlatformTextureWithProvider for IOSurface {
+impl PlatformTextureWithProvider for BoxedIOSurface {
     fn create_texture(
         engine_handle: i64,
-        payload_provider: Arc<dyn PayloadProvider<IOSurface>>,
-    ) -> Result<PlatformTexture<IOSurface>> {
-        PlatformTexture::<IOSurface>::new(engine_handle, payload_provider)
+        payload_provider: Arc<dyn PayloadProvider<BoxedIOSurface>>,
+    ) -> Result<PlatformTexture<BoxedIOSurface>> {
+        PlatformTexture::<BoxedIOSurface>::new(engine_handle, payload_provider)
+    }
+}
+
+struct IOSurfaceHolder {
+    surface: IOSurface,
+}
+
+impl IOSurfaceProvider for IOSurfaceHolder {
+    fn get(&self) -> &IOSurface {
+        &self.surface
     }
 }
 
@@ -117,14 +130,14 @@ impl PlatformTextureWithProvider for IOSurface {
 /// regardless of mark_frame_available this reuses existing surface until next
 /// call to mark_frame_available.
 struct SurfaceCache {
-    surface: Mutex<Option<BoxedPayload<IOSurface>>>,
-    parent_provider: Arc<dyn PayloadProvider<IOSurface>>,
+    surface: Mutex<Option<IOSurface>>,
+    parent_provider: Arc<dyn PayloadProvider<BoxedIOSurface>>,
     update_requested: Arc<AtomicBool>,
 }
 
 impl SurfaceCache {
     fn new(
-        parent_provider: Arc<dyn PayloadProvider<IOSurface>>,
+        parent_provider: Arc<dyn PayloadProvider<BoxedIOSurface>>,
         update_requested: Arc<AtomicBool>,
     ) -> Self {
         Self {
@@ -135,26 +148,28 @@ impl SurfaceCache {
     }
 }
 
-impl PayloadProvider<IOSurface> for SurfaceCache {
-    fn get_payload(&self) -> BoxedPayload<IOSurface> {
+impl PayloadProvider<BoxedIOSurface> for SurfaceCache {
+    fn get_payload(&self) -> BoxedIOSurface {
         let mut surface = self.surface.lock().unwrap();
         if self.update_requested.load(Ordering::Acquire) {
             surface.take();
             self.update_requested.store(false, Ordering::Release);
         }
-        let surface = surface.get_or_insert_with(|| self.parent_provider.get_payload());
-        let surface = surface.get().clone();
-        surface.into_boxed_payload()
+        let surface =
+            surface.get_or_insert_with(|| self.parent_provider.get_payload().get().clone());
+        Box::new(IOSurfaceHolder {
+            surface: surface.clone(),
+        })
     }
 }
 
 struct SurfaceAdapter {
-    pixel_provider: Arc<dyn PayloadProvider<PixelBuffer>>,
+    pixel_provider: Arc<dyn PayloadProvider<BoxedPixelBuffer>>,
     cached_surface: Mutex<Option<IOSurface>>,
 }
 
 impl SurfaceAdapter {
-    fn new(pixel_provider: Arc<dyn PayloadProvider<PixelBuffer>>) -> Self {
+    fn new(pixel_provider: Arc<dyn PayloadProvider<BoxedPixelBuffer>>) -> Self {
         Self {
             pixel_provider,
             cached_surface: Mutex::new(None),
@@ -179,13 +194,13 @@ impl SurfaceAdapter {
     }
 }
 
-impl PayloadProvider<IOSurface> for SurfaceAdapter {
-    fn get_payload(&self) -> BoxedPayload<IOSurface> {
+impl PayloadProvider<BoxedIOSurface> for SurfaceAdapter {
+    fn get_payload(&self) -> BoxedIOSurface {
         let buffer = self.pixel_provider.get_payload();
         let buffer = buffer.get();
         let surface = self.surface_for_pixel_buffer(buffer.width, buffer.height);
-        surface.upload(&buffer.data);
-        surface.into_boxed_payload()
+        surface.upload(buffer.data);
+        Box::new(IOSurfaceHolder { surface })
     }
 }
 
@@ -201,7 +216,7 @@ extern "C" {
     ) -> i32;
 }
 
-fn do_copy_pixel_buffer(provider: &Arc<dyn PayloadProvider<IOSurface>>) -> CVPixelBufferRef {
+fn do_copy_pixel_buffer(provider: &Arc<dyn PayloadProvider<BoxedIOSurface>>) -> CVPixelBufferRef {
     let surface = provider.get_payload();
     let surface = surface.get();
     let mut buffer: CVPixelBufferRef = std::ptr::null_mut();
@@ -216,7 +231,7 @@ fn do_copy_pixel_buffer(provider: &Arc<dyn PayloadProvider<IOSurface>>) -> CVPix
     buffer
 }
 
-fn create_texture_objc(provider: Arc<dyn PayloadProvider<IOSurface>>) -> StrongPtr {
+fn create_texture_objc(provider: Arc<dyn PayloadProvider<BoxedIOSurface>>) -> StrongPtr {
     let provider = Box::new(provider);
     unsafe {
         let object: id = msg_send![*TEXTURE_CLASS, new];
@@ -288,7 +303,7 @@ static TEXTURE_CLASS: Lazy<&'static Class> = Lazy::new(|| unsafe {
 extern "C" fn copy_pixel_buffer(this: &Object, _: Sel) -> CVPixelBufferRef {
     let state = unsafe {
         let ptr: *mut c_void = *this.get_ivar("imState");
-        let ptr = ptr as *mut Arc<dyn PayloadProvider<IOSurface>>;
+        let ptr = ptr as *mut Arc<dyn PayloadProvider<BoxedIOSurface>>;
         ManuallyDrop::new(Box::from_raw(ptr))
     };
     do_copy_pixel_buffer(&state)
@@ -298,7 +313,7 @@ extern "C" fn on_texture_unregistered(this: &mut Object, _: Sel, _: id) {
     unsafe {
         let ptr: *mut c_void = *this.get_ivar("imState");
         this.set_ivar("imState", std::ptr::null_mut() as *mut c_void);
-        let ptr = ptr as *mut Arc<dyn PayloadProvider<IOSurface>>;
+        let ptr = ptr as *mut Arc<dyn PayloadProvider<BoxedIOSurface>>;
         let _ = Box::from_raw(ptr);
     }
 }
@@ -309,7 +324,7 @@ extern "C" fn dealloc(this: &Object, _: Sel) {
         if !ptr.is_null() {
             // seems to be bug in macOS embedder?
             warn!("onTextureUnregistered was not called on texture object");
-            let ptr = ptr as *mut Arc<dyn PayloadProvider<IOSurface>>;
+            let ptr = ptr as *mut Arc<dyn PayloadProvider<BoxedIOSurface>>;
             let _ = Box::from_raw(ptr);
         }
     }

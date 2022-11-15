@@ -3,7 +3,6 @@
 
 use std::sync::{Arc, Mutex};
 
-use bytes::Bytes;
 use irondash_run_loop::{util::Capsule, RunLoop, RunLoopSender};
 use platform::PlatformTexture;
 
@@ -54,25 +53,7 @@ pub trait Payload<Type: Send>: Send {
     fn get(&self) -> &Type;
 }
 
-/// Boxed version of [`Payload`].
 ///
-/// To turn arbitrary values into `BoxedPayload` you can use [`IntoBoxedPayload`].
-pub type BoxedPayload<Type> = Box<dyn Payload<Type>>;
-
-pub trait IntoBoxedPayload<Type> {
-    /// Turns 'self' into boxed payload.
-    fn into_boxed_payload(self) -> BoxedPayload<Self>;
-}
-
-impl<Type> IntoBoxedPayload<Type> for Type
-where
-    Type: Send + 'static,
-{
-    fn into_boxed_payload(self) -> BoxedPayload<Self> {
-        Box::new(SimplePayload { payload: self })
-    }
-}
-
 /// Trait that implemented by objects that provide texture contents.
 pub trait PayloadProvider<Type>: Send + Sync {
     /// Called by the engine to get the latest texture payload. This will
@@ -83,7 +64,7 @@ pub trait PayloadProvider<Type>: Send + Sync {
     /// be useful in situation where the provider needs to know when Flutter
     /// is done with the payload (i.e. by implementing Drop trait on the payload
     /// object).
-    fn get_payload(&self) -> BoxedPayload<Type>;
+    fn get_payload(&self) -> Type;
 }
 
 impl<Type: PlatformTextureWithProvider> Texture<Type> {
@@ -139,15 +120,48 @@ pub enum PixelFormat {
 /// Pixel buffer is supported payload type on every platform, but the expected
 /// PixelFormat may differ. You can [`PixelBuffer::FORMAT`] to query expected
 /// pixel format.
-#[derive(Clone)]
-pub struct PixelBuffer {
+pub struct PixelData<'a> {
     pub width: i32,
     pub height: i32,
-    pub data: Bytes,
+    pub data: &'a [u8],
 }
 
-impl PixelBuffer {
-    pub const FORMAT: PixelFormat = PlatformTexture::<PixelBuffer>::PIXEL_BUFFER_FORMAT;
+impl<'a> PixelData<'a> {
+    pub const FORMAT: PixelFormat = platform::PIXEL_BUFFER_FORMAT;
+}
+
+pub trait PixelBuffer {
+    fn get(&self) -> PixelData;
+}
+
+/// Actual type for pixel buffer payload.
+pub type BoxedPixelBuffer = Box<dyn PixelBuffer>;
+
+/// Convenience implementation for pixel buffer texture.
+pub struct SimplePixelBuffer {
+    width: i32,
+    height: i32,
+    data: Vec<u8>,
+}
+
+impl SimplePixelBuffer {
+    pub fn boxed(width: i32, height: i32, data: Vec<u8>) -> Box<Self> {
+        Box::new(Self {
+            width,
+            height,
+            data,
+        })
+    }
+}
+
+impl PixelBuffer for SimplePixelBuffer {
+    fn get(&self) -> PixelData {
+        PixelData {
+            width: self.width,
+            height: self.height,
+            data: &self.data,
+        }
+    }
 }
 
 //
@@ -164,9 +178,20 @@ mod android {
 pub use android::*;
 
 #[cfg(any(target_os = "ios", target_os = "macos"))]
-pub mod io_surface {
-    pub use crate::platform::io_surface::*;
+mod darwin {
+    pub mod io_surface {
+        pub use crate::platform::io_surface::*;
+    }
+    pub trait IOSurfaceProvider {
+        fn get(&self) -> &io_surface::IOSurface;
+    }
+
+    /// Payload type for IOSurface backed texture.
+    pub type BoxedIOSurface = Box<dyn IOSurfaceProvider>;
 }
+
+#[cfg(any(target_os = "ios", target_os = "macos"))]
+pub use darwin::*;
 
 #[cfg(target_os = "linux")]
 pub struct GLTexture {

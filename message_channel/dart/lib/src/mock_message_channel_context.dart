@@ -87,6 +87,8 @@ extension MockEventChannel on MockMessageChannelContext {
   }) {
     registerMockMethodCallHandler(channel, (call) {
       if (call.method == 'listen') {
+        // onListen is responsible for closing the sink
+        // ignore: close_sinks
         final sink = _Sink((msg) => sendMessage(channel, msg));
         onListen(sink, call.arguments);
       } else if (call.method == 'cancel') {

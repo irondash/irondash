@@ -33,6 +33,7 @@ class NativeEventChannel {
       }
     }, onCancel: () async {
       messageChannel.setHandler(null);
+      controller.close();
       try {
         await methodChannel.invokeMethod<void>('cancel');
       } catch (exception, stack) {

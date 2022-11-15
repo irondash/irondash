@@ -4,14 +4,14 @@ use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
     os::raw::c_uint,
-    rc::{Rc, Weak},
-    sync::{Arc, Mutex},
+    rc::Rc,
+    thread::{self, ThreadId},
     time::Duration,
 };
 
 use sys::glib::*;
 
-use crate::util::Capsule;
+use crate::RunLoop;
 
 type SourceId = c_uint;
 
@@ -205,14 +205,11 @@ impl PlatformRunLoop {
     }
 
     pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
-        PlatformRunLoopSender::new(
-            unsafe { ContextHolder::retain(g_main_context_default()) },
-            None,
-        )
+        PlatformRunLoopSender::new(unsafe { ContextHolder::retain(g_main_context_default()) })
     }
 
     pub fn new_sender(self: &Rc<Self>) -> PlatformRunLoopSender {
-        PlatformRunLoopSender::new(self.context.clone(), Some(Rc::downgrade(self)))
+        PlatformRunLoopSender::new(self.context.clone())
     }
 }
 
@@ -251,18 +248,23 @@ impl Drop for ContextHolder {
     }
 }
 
+struct Movable<T>(T);
+
+unsafe impl<T> Send for Movable<T> {}
+unsafe impl<T> Sync for Movable<T> {}
+
 #[derive(Clone)]
 pub struct PlatformRunLoopSender {
     context: ContextHolder,
-    run_loop: Option<Arc<Mutex<Capsule<Weak<PlatformRunLoop>>>>>,
+    thread_id: ThreadId,
 }
 
 #[allow(unused_variables)]
 impl PlatformRunLoopSender {
-    fn new(context: ContextHolder, run_loop: Option<Weak<PlatformRunLoop>>) -> Self {
+    fn new(context: ContextHolder) -> Self {
         Self {
             context,
-            run_loop: run_loop.map(|c| Arc::new(Mutex::new(Capsule::new(c)))),
+            thread_id: thread::current().id(),
         }
     }
 
@@ -273,16 +275,10 @@ impl PlatformRunLoopSender {
         // This is to ensure consistent behavior on all platforms. When invoked on main thread
         // the code below (g_main_context_invoke_full) would call the function synchronously,
         // which is not expected and may lead to deadlocks.
-        if unsafe { g_main_context_is_owner(self.context.0) == GTRUE } {
-            let run_loop = self
-                .run_loop
-                .as_ref()
-                .expect("send() called from run-loop thread, yet run-loop is missing");
-            let run_loop = run_loop.lock().unwrap();
-            let run_loop = run_loop.get_ref().unwrap();
-            if let Some(run_loop) = run_loop.upgrade() {
-                let _ = run_loop.schedule(Duration::from_secs(0), callback);
-            }
+        if thread::current().id() == self.thread_id {
+            assert!(unsafe { g_main_context_is_owner(self.context.0) == GTRUE });
+            let run_loop = RunLoop::current();
+            run_loop.schedule(Duration::from_secs(0), callback).detach();
             return true;
         }
 

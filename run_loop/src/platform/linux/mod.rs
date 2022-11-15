@@ -5,13 +5,14 @@ use std::{
     collections::HashMap,
     os::raw::c_uint,
     rc::Rc,
-    thread::{self, ThreadId},
     time::Duration,
 };
 
 use sys::glib::*;
 
 use crate::RunLoop;
+
+use self::sys::libc;
 
 type SourceId = c_uint;
 
@@ -94,10 +95,10 @@ fn context_remove_source(context: *mut GMainContext, source_id: SourceId) {
     }
 }
 
-static mut FIRST_THREAD: usize = 0;
+static mut FIRST_THREAD: PlatformThreadId = 0;
 
 fn is_main_thread() -> bool {
-    unsafe { FIRST_THREAD == pthread_self() }
+    unsafe { FIRST_THREAD == get_system_thread_id() }
 }
 
 #[used]
@@ -111,7 +112,7 @@ static ON_LOAD: extern "C" fn() = {
         link_section = ".text.startup"
     )]
     extern "C" fn on_load() {
-        unsafe { FIRST_THREAD = pthread_self() };
+        unsafe { FIRST_THREAD = get_system_thread_id() };
     }
     on_load
 };
@@ -205,7 +206,9 @@ impl PlatformRunLoop {
     }
 
     pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
-        PlatformRunLoopSender::new(unsafe { ContextHolder::retain(g_main_context_default()) })
+        PlatformRunLoopSender::new_fallback(unsafe {
+            ContextHolder::retain(g_main_context_default())
+        })
     }
 
     pub fn new_sender(self: &Rc<Self>) -> PlatformRunLoopSender {
@@ -256,7 +259,7 @@ unsafe impl<T> Sync for Movable<T> {}
 #[derive(Clone)]
 pub struct PlatformRunLoopSender {
     context: ContextHolder,
-    thread_id: ThreadId,
+    thread_id: PlatformThreadId,
 }
 
 #[allow(unused_variables)]
@@ -264,7 +267,14 @@ impl PlatformRunLoopSender {
     fn new(context: ContextHolder) -> Self {
         Self {
             context,
-            thread_id: thread::current().id(),
+            thread_id: get_system_thread_id(),
+        }
+    }
+
+    fn new_fallback(context: ContextHolder) -> Self {
+        Self {
+            context,
+            thread_id: unsafe { FIRST_THREAD },
         }
     }
 
@@ -275,7 +285,7 @@ impl PlatformRunLoopSender {
         // This is to ensure consistent behavior on all platforms. When invoked on main thread
         // the code below (g_main_context_invoke_full) would call the function synchronously,
         // which is not expected and may lead to deadlocks.
-        if thread::current().id() == self.thread_id {
+        if get_system_thread_id() == self.thread_id {
             assert!(unsafe { g_main_context_is_owner(self.context.0) == GTRUE });
             let run_loop = RunLoop::current();
             run_loop.schedule(Duration::from_secs(0), callback).detach();
@@ -286,4 +296,10 @@ impl PlatformRunLoopSender {
 
         true
     }
+}
+
+pub(crate) type PlatformThreadId = u64;
+
+pub(crate) fn get_system_thread_id() -> PlatformThreadId {
+    unsafe { libc::gettid() }
 }

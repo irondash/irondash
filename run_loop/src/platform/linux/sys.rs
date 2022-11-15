@@ -20,8 +20,6 @@ pub mod glib {
 
     #[link(name = "glib-2.0")]
     extern "C" {
-        pub fn pthread_self() -> usize;
-
         pub fn g_main_loop_new(context: *mut GMainContext, is_running: gboolean) -> *mut GMainLoop;
         pub fn g_main_loop_unref(loop_: *mut GMainLoop);
         pub fn g_main_loop_run(loop_: *mut GMainLoop);
@@ -62,5 +60,12 @@ pub mod glib {
         pub fn gtk_main();
         pub fn gtk_main_iteration();
         pub fn gtk_main_quit();
+    }
+}
+
+#[allow(non_camel_case_types)]
+pub mod libc {
+    extern "C" {
+        pub fn gettid() -> u64;
     }
 }

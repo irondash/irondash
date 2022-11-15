@@ -43,5 +43,6 @@ pub mod libc {
         pub fn pipe(fds: *mut c_int) -> c_int;
         pub fn close(fd: c_int) -> c_int;
         pub fn write(fd: c_int, buf: *const c_void, count: usize) -> isize;
+        pub fn gettid() -> u64;
     }
 }

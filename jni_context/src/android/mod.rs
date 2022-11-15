@@ -11,7 +11,10 @@ use std::{
 use jni::{objects::GlobalRef, JavaVM};
 use once_cell::sync::OnceCell;
 
-use self::mini_run_loop::{MiniRunLoop, RunLoopCallbacks};
+use self::{
+    mini_run_loop::{MiniRunLoop, RunLoopCallbacks},
+    sys::libc,
+};
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -40,7 +43,7 @@ pub struct JniContext {
     vm: JavaVM,
     class_loader: Option<GlobalRef>,
     callbacks: Arc<Mutex<RunLoopCallbacks>>,
-    main_thread_id: std::thread::ThreadId,
+    main_thread_id: u64,
 }
 
 impl std::fmt::Debug for JniContext {
@@ -91,7 +94,8 @@ impl JniContext {
 
     /// Returns true if current thread is the main thread, false otherwise.
     pub fn is_main_thread(&self) -> bool {
-        std::thread::current().id() == self.main_thread_id
+        let current_thread_id = unsafe { libc::gettid() };
+        current_thread_id == self.main_thread_id
     }
 }
 
@@ -134,7 +138,7 @@ pub unsafe extern "C" fn JNI_OnLoad(
             vm,
             class_loader,
             callbacks: mini_runloop.callbacks(),
-            main_thread_id: std::thread::current().id(),
+            main_thread_id: unsafe { libc::gettid() },
         }))
         .unwrap();
     jni::sys::JNI_VERSION_1_6

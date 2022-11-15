@@ -18,6 +18,8 @@ use irondash_jni_context::JniContext;
 use log::warn;
 use sys::{libc::*, ndk_sys::*};
 
+use self::sys::libc;
+
 pub struct PlatformRunLoop {
     looper: *mut ALooper,
     pipes: [c_int; 2],
@@ -386,4 +388,10 @@ impl PlatformRunLoopSenderRegular {
             false
         }
     }
+}
+
+pub(crate) type PlatformThreadId = u64;
+
+pub(crate) fn get_system_thread_id() -> PlatformThreadId {
+    unsafe { libc::gettid() }
 }

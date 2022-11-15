@@ -104,13 +104,6 @@ pub mod cocoa {
     }
 }
 
-#[allow(non_camel_case_types)]
-#[allow(non_upper_case_globals)]
-pub mod libc {
-    pub const SYS_gettid: c_long = 186;
-    pub fn syscall(num: c_long, ...) -> c_long;
-}
-
 const UTF8_ENCODING: usize = 4;
 
 pub fn to_nsstring(string: &str) -> StrongPtr {

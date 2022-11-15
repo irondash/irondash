@@ -12,6 +12,8 @@ use sys::glib::*;
 
 use crate::RunLoop;
 
+use self::sys::libc;
+
 type SourceId = c_uint;
 
 pub type HandleType = usize;
@@ -255,7 +257,7 @@ unsafe impl<T> Sync for Movable<T> {}
 #[derive(Clone)]
 pub struct PlatformRunLoopSender {
     context: ContextHolder,
-    thread_id: SystemThreadId,
+    thread_id: u64,
 }
 
 #[allow(unused_variables)]
@@ -290,5 +292,5 @@ impl PlatformRunLoopSender {
 pub(crate) type PlatformThreadId = u64;
 
 pub(crate) fn get_system_thread_id() -> PlatformThreadId {
-    unsafe { libc::syscall(libc::SYS_gettid) as u64 }
+    unsafe { libc::gettid() }
 }

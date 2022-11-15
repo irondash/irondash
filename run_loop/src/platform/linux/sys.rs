@@ -64,3 +64,10 @@ pub mod glib {
         pub fn gtk_main_quit();
     }
 }
+
+#[allow(non_camel_case_types)]
+pub mod libc {
+    extern "C" {
+        pub fn gettid() -> u64;
+    }
+}

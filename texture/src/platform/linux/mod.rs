@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    log::OkLog, Error, GLTexture, Payload, PayloadProvider, PixelBuffer, PixelFormat,
+    log::OkLog, BoxedGLTexture, BoxedPixelData, Error, PayloadProvider, PixelFormat,
     PlatformTextureWithProvider, Result,
 };
 
@@ -32,7 +32,7 @@ struct Inner<Type> {
     // We're providing pointer to data to the engine so we need to cache
     // the value here. There are no lifecycle notifications on Linux so
     // we keep the value until next one is requested.
-    current_value: Option<Box<dyn Payload<Type>>>,
+    current_value: Option<Type>,
 }
 
 impl<Type> Inner<Type> {
@@ -44,9 +44,9 @@ impl<Type> Inner<Type> {
     }
 }
 
-impl<Type> PlatformTexture<Type> {
-    pub(crate) const PIXEL_BUFFER_FORMAT: PixelFormat = PixelFormat::RGBA;
+pub(crate) const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
 
+impl<Type> PlatformTexture<Type> {
     pub fn id(&self) -> i64 {
         self.id
     }
@@ -97,29 +97,29 @@ impl<Type> PlatformTexture<Type> {
         Ok(())
     }
 
-    fn create_pixel_buffer_texture(texture: Arc<Mutex<Inner<PixelBuffer>>>) -> GObjectWrapper {
+    fn create_pixel_buffer_texture(texture: Arc<Mutex<Inner<BoxedPixelData>>>) -> GObjectWrapper {
         new_pixel_buffer_texture(move || {
             let mut texture = texture.lock().unwrap();
-            let pixel_buffer = texture.provider.get_payload();
-            let buffer = pixel_buffer.get();
+            let pixel_data = texture.provider.get_payload();
+            let buffer = pixel_data.get();
             let res = (
                 buffer.data.as_ptr(),
                 buffer.width as u32,
                 buffer.height as u32,
             );
-            texture.current_value = Some(pixel_buffer);
+            texture.current_value = Some(pixel_data);
             res
         })
     }
 
-    fn create_gl_texture(texture: Arc<Mutex<Inner<GLTexture>>>) -> GObjectWrapper {
+    fn create_gl_texture(texture: Arc<Mutex<Inner<BoxedGLTexture>>>) -> GObjectWrapper {
         new_texture_gl(move || {
             let mut texture = texture.lock().unwrap();
             let gl_texture = texture.provider.get_payload();
             let values = gl_texture.get();
             let res = (
                 values.target,
-                values.name,
+                *values.name,
                 values.width as u32,
                 values.height as u32,
             );
@@ -135,24 +135,24 @@ impl<Type> Drop for PlatformTexture<Type> {
     }
 }
 
-impl PlatformTextureWithProvider for PixelBuffer {
+impl PlatformTextureWithProvider for BoxedPixelData {
     fn create_texture(
         engine_handle: i64,
         payload_provider: Arc<dyn PayloadProvider<Self>>,
     ) -> Result<PlatformTexture<Self>> {
         let inner = Inner::new(payload_provider);
-        let texture = PlatformTexture::<PixelBuffer>::create_pixel_buffer_texture(inner);
+        let texture = PlatformTexture::<BoxedPixelData>::create_pixel_buffer_texture(inner);
         PlatformTexture::new(engine_handle, texture)
     }
 }
 
-impl PlatformTextureWithProvider for GLTexture {
+impl PlatformTextureWithProvider for BoxedGLTexture {
     fn create_texture(
         engine_handle: i64,
         payload_provider: Arc<dyn PayloadProvider<Self>>,
     ) -> Result<PlatformTexture<Self>> {
         let inner = Inner::new(payload_provider);
-        let texture = PlatformTexture::<GLTexture>::create_gl_texture(inner);
+        let texture = PlatformTexture::<BoxedGLTexture>::create_gl_texture(inner);
         PlatformTexture::new(engine_handle, texture)
     }
 }

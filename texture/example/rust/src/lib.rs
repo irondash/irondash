@@ -1,7 +1,7 @@
 use std::{cell::Cell, iter::repeat_with, rc::Rc, sync::Arc, time::Duration};
 
 use irondash_run_loop::RunLoop;
-use irondash_texture::{BoxedPixelBuffer, PayloadProvider, SimplePixelBuffer, Texture};
+use irondash_texture::{BoxedPixelData, PayloadProvider, SimplePixelData, Texture};
 use log::error;
 
 #[cfg(target_os = "android")]
@@ -27,7 +27,7 @@ fn init_logging() {
 }
 
 struct Animator {
-    texture: Texture<BoxedPixelBuffer>,
+    texture: Texture<BoxedPixelData>,
     counter: Cell<u32>,
 }
 
@@ -39,15 +39,15 @@ impl PixelBufferSource {
     }
 }
 
-impl PayloadProvider<BoxedPixelBuffer> for PixelBufferSource {
-    fn get_payload(&self) -> BoxedPixelBuffer {
+impl PayloadProvider<BoxedPixelData> for PixelBufferSource {
+    fn get_payload(&self) -> BoxedPixelData {
         let rng = fastrand::Rng::new();
         let width = 100i32;
         let height = 100i32;
         let bytes: Vec<u8> = repeat_with(|| rng.u8(..))
             .take((width * height * 4) as usize)
             .collect();
-        SimplePixelBuffer::boxed(width, height, bytes)
+        SimplePixelData::boxed(width, height, bytes)
     }
 }
 

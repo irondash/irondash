@@ -7,8 +7,8 @@ use std::{
 use irondash_engine_context::EngineContext;
 
 use crate::{
-    log::OkLog, DxgiSharedHandle, ID3D11Texture2D, Payload, PayloadProvider, PixelBuffer,
-    PixelFormat, PlatformTextureWithProvider, Result, TextureDescriptor,
+    log::OkLog, BoxedPixelData, BoxedTextureDescriptor, DxgiSharedHandle, ID3D11Texture2D,
+    PayloadProvider, PixelFormat, PlatformTextureWithProvider, Result,
 };
 
 use self::sys::{
@@ -32,9 +32,9 @@ pub struct PlatformTexture<Type> {
     texture_raw: *const Mutex<Texture<Type>>,
 }
 
-impl<Type> PlatformTexture<Type> {
-    pub const PIXEL_BUFFER_FORMAT: PixelFormat = PixelFormat::RGBA;
+pub const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
 
+impl<Type> PlatformTexture<Type> {
     fn new<T: TextureInfoProvider<Type>>(
         engine_handle: i64,
         payload_provider: Arc<dyn PayloadProvider<Type>>,
@@ -103,7 +103,7 @@ trait TextureInfoProvider<Type>: Sized {
 }
 
 struct PayloadHolder<Type, FlutterType> {
-    _payload: Box<dyn Payload<Type>>,
+    _payload: Type,
     flutter_payload: FlutterType,
 }
 
@@ -118,7 +118,7 @@ unsafe extern "C" fn pixel_buffer_texture_callback(
     _height: usize,
     user_data: *mut ::std::os::raw::c_void,
 ) -> *const FlutterDesktopPixelBuffer {
-    let texture: Arc<Mutex<Texture<PixelBuffer>>> = Arc::from_raw(user_data as *mut _);
+    let texture: Arc<Mutex<Texture<BoxedPixelData>>> = Arc::from_raw(user_data as *mut _);
     let texture = ManuallyDrop::new(texture);
     let texture = texture.lock().unwrap();
     let pixel_buffer = texture.payload_provider.get_payload();
@@ -130,7 +130,7 @@ unsafe extern "C" fn pixel_buffer_texture_callback(
             width: data.width as usize,
             height: data.height as usize,
             release_callback: Some(
-                release_payload_holder::<PixelBuffer, FlutterDesktopPixelBuffer>,
+                release_payload_holder::<BoxedPixelData, FlutterDesktopPixelBuffer>,
             ),
             release_context: std::ptr::null_mut(), // will be set later
         },
@@ -143,7 +143,7 @@ unsafe extern "C" fn pixel_buffer_texture_callback(
     pixel_buffer as *mut _
 }
 
-impl TextureInfoProvider<Self> for PixelBuffer {
+impl TextureInfoProvider<Self> for BoxedPixelData {
     fn create_texture_info(texture: *const Mutex<Texture<Self>>) -> FlutterDesktopTextureInfo {
         FlutterDesktopTextureInfo {
             type_: FlutterDesktopTextureType_kFlutterDesktopPixelBufferTexture,
@@ -162,7 +162,7 @@ unsafe extern "C" fn d3d11texture2d_callback(
     _height: usize,
     user_data: *mut ::std::os::raw::c_void,
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
-    let texture: Arc<Mutex<Texture<TextureDescriptor<ID3D11Texture2D>>>> =
+    let texture: Arc<Mutex<Texture<BoxedTextureDescriptor<ID3D11Texture2D>>>> =
         Arc::from_raw(user_data as *mut _);
     let texture = ManuallyDrop::new(texture);
     let texture = texture.lock().unwrap();
@@ -183,7 +183,7 @@ unsafe extern "C" fn d3d11texture2d_callback(
             },
             release_callback: Some(
                 release_payload_holder::<
-                    TextureDescriptor<ID3D11Texture2D>,
+                    BoxedTextureDescriptor<ID3D11Texture2D>,
                     FlutterDesktopGpuSurfaceDescriptor,
                 >,
             ),
@@ -198,7 +198,7 @@ unsafe extern "C" fn d3d11texture2d_callback(
     flutter_descriptor as *mut _
 }
 
-impl TextureInfoProvider<Self> for TextureDescriptor<ID3D11Texture2D> {
+impl TextureInfoProvider<Self> for BoxedTextureDescriptor<ID3D11Texture2D> {
     fn create_texture_info(texture: *const Mutex<Texture<Self>>) -> FlutterDesktopTextureInfo {
         FlutterDesktopTextureInfo {
             type_: FlutterDesktopTextureType_kFlutterDesktopGpuSurfaceTexture,
@@ -219,7 +219,7 @@ unsafe extern "C" fn dxgi_callback(
     _height: usize,
     user_data: *mut ::std::os::raw::c_void,
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
-    let texture: Arc<Mutex<Texture<TextureDescriptor<DxgiSharedHandle>>>> =
+    let texture: Arc<Mutex<Texture<BoxedTextureDescriptor<DxgiSharedHandle>>>> =
         Arc::from_raw(user_data as *mut _);
     let texture = ManuallyDrop::new(texture);
     let texture = texture.lock().unwrap();
@@ -240,7 +240,7 @@ unsafe extern "C" fn dxgi_callback(
             },
             release_callback: Some(
                 release_payload_holder::<
-                    TextureDescriptor<DxgiSharedHandle>,
+                    BoxedTextureDescriptor<DxgiSharedHandle>,
                     FlutterDesktopGpuSurfaceDescriptor,
                 >,
             ),
@@ -255,7 +255,7 @@ unsafe extern "C" fn dxgi_callback(
     flutter_descriptor as *mut _
 }
 
-impl TextureInfoProvider<Self> for TextureDescriptor<DxgiSharedHandle> {
+impl TextureInfoProvider<Self> for BoxedTextureDescriptor<DxgiSharedHandle> {
     fn create_texture_info(texture: *const Mutex<Texture<Self>>) -> FlutterDesktopTextureInfo {
         FlutterDesktopTextureInfo {
             type_: FlutterDesktopTextureType_kFlutterDesktopGpuSurfaceTexture,
@@ -272,17 +272,7 @@ impl TextureInfoProvider<Self> for TextureDescriptor<DxgiSharedHandle> {
     }
 }
 
-unsafe impl<TextureHandle> Send for TextureDescriptor<TextureHandle> {}
-
-impl<TextureHandle> Drop for TextureDescriptor<TextureHandle> {
-    fn drop(&mut self) {
-        if let Some(callback) = self.release_callback.take() {
-            callback(&self.handle);
-        }
-    }
-}
-
-impl PlatformTextureWithProvider for PixelBuffer {
+impl PlatformTextureWithProvider for BoxedPixelData {
     fn create_texture(
         engine_handle: i64,
         payload_provider: Arc<dyn PayloadProvider<Self>>,

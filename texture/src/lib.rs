@@ -17,9 +17,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Native texture.
 ///
 /// `Type` parameters specifies the payload type of the texture.
-/// It can be [`PixelBuffer`], which is supported on all platforms, or
-/// one of the platform specific types such as `IOSurface`, `GLTexture`
-/// or `TextureDescriptor`.
+/// It can be [`BoxedPixelData`], which is supported on all platforms, or
+/// one of the platform specific types such as `BoxedIOSurface`,
+/// `BoxedGLTexture` or `BoxedTextureDescriptor`.
 pub struct Texture<Type> {
     platform_texture: PlatformTexture<Type>,
 }
@@ -48,11 +48,6 @@ impl<Type> Texture<Type> {
     }
 }
 
-/// Trait representing single texture frame.
-pub trait Payload<Type: Send>: Send {
-    fn get(&self) -> &Type;
-}
-
 ///
 /// Trait that implemented by objects that provide texture contents.
 pub trait PayloadProvider<Type>: Send + Sync {
@@ -70,15 +65,15 @@ pub trait PayloadProvider<Type>: Send + Sync {
 impl<Type: PlatformTextureWithProvider> Texture<Type> {
     /// Creates new texture for given engine with specified payload provider.
     ///
-    /// Creating PixelBuffer backed texture is supported on all platforms:
+    /// Creating PixelData backed texture is supported on all platforms:
     ///
     /// ```ignore
-    /// // Assume PixelBufferProvier implements PayloadProvider<PixelBuffer>
-    /// let provider = Arc::new(PixelBufferProvider::new());
+    /// // Assume MyPixelDataProvider implements PayloadProvider<BoxedPixelData>
+    /// let provider = Arc::new(MyPixelDataProvider::new());
     ///
     /// let texture = Texture::new_with_provider(engine_handle, provider)?;
     ///
-    /// // This will cause flutter to request a PixelBuffer during next
+    /// // This will cause flutter to request a PixelData during next
     /// // frame rasterization.
     /// texture.mark_frame_available()?;
     /// ```
@@ -117,8 +112,8 @@ pub enum PixelFormat {
     RGBA,
 }
 
-/// Pixel buffer is supported payload type on every platform, but the expected
-/// PixelFormat may differ. You can [`PixelBuffer::FORMAT`] to query expected
+/// Pixel data is supported payload type on every platform, but the expected
+/// PixelFormat may differ. You can [`PixelData::FORMAT`] to query expected
 /// pixel format.
 pub struct PixelData<'a> {
     pub width: i32,
@@ -127,24 +122,24 @@ pub struct PixelData<'a> {
 }
 
 impl<'a> PixelData<'a> {
-    pub const FORMAT: PixelFormat = platform::PIXEL_BUFFER_FORMAT;
+    pub const FORMAT: PixelFormat = platform::PIXEL_DATA_FORMAT;
 }
 
-pub trait PixelBuffer {
+pub trait PixelDataProvider {
     fn get(&self) -> PixelData;
 }
 
 /// Actual type for pixel buffer payload.
-pub type BoxedPixelBuffer = Box<dyn PixelBuffer>;
+pub type BoxedPixelData = Box<dyn PixelDataProvider>;
 
 /// Convenience implementation for pixel buffer texture.
-pub struct SimplePixelBuffer {
+pub struct SimplePixelData {
     width: i32,
     height: i32,
     data: Vec<u8>,
 }
 
-impl SimplePixelBuffer {
+impl SimplePixelData {
     pub fn boxed(width: i32, height: i32, data: Vec<u8>) -> Box<Self> {
         Box::new(Self {
             width,
@@ -154,7 +149,7 @@ impl SimplePixelBuffer {
     }
 }
 
-impl PixelBuffer for SimplePixelBuffer {
+impl PixelDataProvider for SimplePixelData {
     fn get(&self) -> PixelData {
         PixelData {
             width: self.width,
@@ -182,6 +177,7 @@ mod darwin {
     pub mod io_surface {
         pub use crate::platform::io_surface::*;
     }
+
     pub trait IOSurfaceProvider {
         fn get(&self) -> &io_surface::IOSurface;
     }
@@ -194,27 +190,44 @@ mod darwin {
 pub use darwin::*;
 
 #[cfg(target_os = "linux")]
-pub struct GLTexture {
-    pub target: u32, // texture target (i.e. GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE)
-    pub name: u32,   // OpenGL texture name
-    pub width: i32,
-    pub height: i32,
+mod linux {
+    pub struct GLTexture<'a> {
+        pub target: u32,   // texture target (i.e. GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE)
+        pub name: &'a u32, // OpenGL texture name
+        pub width: i32,
+        pub height: i32,
+    }
+
+    pub trait GLTextureProvider {
+        fn get(&self) -> GLTexture;
+    }
+
+    /// Payload type for IOSurface backed texture.
+    pub type BoxedGLTexture = Box<dyn GLTextureProvider>;
 }
+
+#[cfg(target_os = "linux")]
+pub use linux::*;
 
 #[cfg(target_os = "windows")]
 mod windows {
     use std::ffi::c_void;
 
     /// Texture descriptor for native texture.
-    pub struct TextureDescriptor<TextureHandle> {
-        pub handle: TextureHandle,
+    pub struct TextureDescriptor<'a, HandleType> {
+        pub handle: &'a HandleType,
         pub width: i32,
         pub height: i32,
         pub visible_width: i32,
         pub visible_height: i32,
         pub pixel_format: super::PixelFormat,
-        pub release_callback: Option<Box<dyn FnOnce(&TextureHandle) + 'static + Send>>,
     }
+
+    pub trait TextureDescriptorProvider<HandleType> {
+        fn get(&self) -> TextureDescriptor<HandleType>;
+    }
+
+    pub type BoxedTextureDescriptor<HandleType> = Box<dyn TextureDescriptorProvider<HandleType>>;
 
     /// Wrapper around `ID3D11Texture2D`, can be used as `TextureHandle` in
     /// `TextureDescriptor`.
@@ -267,14 +280,4 @@ pub trait PlatformTextureWithoutProvider: Sized {
     fn create_texture(engine_handle: i64) -> Result<PlatformTexture<Self>>;
 
     fn get(texture: &PlatformTexture<Self>) -> Self;
-}
-
-struct SimplePayload<Type> {
-    payload: Type,
-}
-
-impl<Type: Send> Payload<Type> for SimplePayload<Type> {
-    fn get(&self) -> &Type {
-        &self.payload
-    }
 }

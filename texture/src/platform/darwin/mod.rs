@@ -31,7 +31,7 @@ use crate::{
         kIOSurfaceBytesPerElement, kIOSurfaceBytesPerRow, kIOSurfaceHeight, kIOSurfacePixelFormat,
         kIOSurfaceWidth,
     },
-    BoxedIOSurface, BoxedPixelBuffer, IOSurfaceProvider, PayloadProvider, PixelFormat,
+    BoxedIOSurface, BoxedPixelData, IOSurfaceProvider, PayloadProvider, PixelFormat,
     PlatformTextureWithProvider, Result,
 };
 
@@ -52,7 +52,7 @@ impl<Type> PlatformTexture<Type> {
     }
 }
 
-pub(crate) const PIXEL_BUFFER_FORMAT: PixelFormat = PixelFormat::RGBA;
+pub(crate) const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
 
 impl<Type> PlatformTexture<Type> {
     pub fn new(
@@ -93,12 +93,12 @@ impl<Type> Drop for PlatformTexture<Type> {
     }
 }
 
-impl PlatformTextureWithProvider for BoxedPixelBuffer {
+impl PlatformTextureWithProvider for BoxedPixelData {
     fn create_texture(
         engine_handle: i64,
-        payload_provider: Arc<dyn PayloadProvider<BoxedPixelBuffer>>,
-    ) -> Result<PlatformTexture<BoxedPixelBuffer>> {
-        PlatformTexture::<BoxedPixelBuffer>::new(
+        payload_provider: Arc<dyn PayloadProvider<BoxedPixelData>>,
+    ) -> Result<PlatformTexture<BoxedPixelData>> {
+        PlatformTexture::<BoxedPixelData>::new(
             engine_handle,
             Arc::new(SurfaceAdapter::new(payload_provider)),
         )
@@ -164,12 +164,12 @@ impl PayloadProvider<BoxedIOSurface> for SurfaceCache {
 }
 
 struct SurfaceAdapter {
-    pixel_provider: Arc<dyn PayloadProvider<BoxedPixelBuffer>>,
+    pixel_provider: Arc<dyn PayloadProvider<BoxedPixelData>>,
     cached_surface: Mutex<Option<IOSurface>>,
 }
 
 impl SurfaceAdapter {
-    fn new(pixel_provider: Arc<dyn PayloadProvider<BoxedPixelBuffer>>) -> Self {
+    fn new(pixel_provider: Arc<dyn PayloadProvider<BoxedPixelData>>) -> Self {
         Self {
             pixel_provider,
             cached_surface: Mutex::new(None),

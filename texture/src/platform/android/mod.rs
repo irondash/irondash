@@ -10,7 +10,7 @@ use ndk_sys::{
 };
 
 use crate::{
-    log::OkLog, PayloadProvider, PixelBuffer, PixelFormat, PlatformTextureWithProvider,
+    log::OkLog, BoxedPixelData, PayloadProvider, PixelFormat, PlatformTextureWithProvider,
     PlatformTextureWithoutProvider, Result,
 };
 
@@ -27,20 +27,20 @@ pub struct PlatformTexture<Type> {
     surface: GlobalRef,
     native_window: *mut ANativeWindow,
     last_geometry: RefCell<Option<Geometry>>,
-    pixel_buffer_provider: Option<Arc<dyn PayloadProvider<PixelBuffer>>>,
+    pixel_data_provider: Option<Arc<dyn PayloadProvider<BoxedPixelData>>>,
     _phantom: PhantomData<Type>,
 }
 
-impl<Type> PlatformTexture<Type> {
-    pub(crate) const PIXEL_BUFFER_FORMAT: PixelFormat = PixelFormat::RGBA;
+pub(crate) const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
 
+impl<Type> PlatformTexture<Type> {
     pub fn id(&self) -> i64 {
         self.id
     }
 
     fn new(
         engine_handle: i64,
-        pixel_buffer_provider: Option<Arc<dyn PayloadProvider<PixelBuffer>>>,
+        pixel_buffer_provider: Option<Arc<dyn PayloadProvider<BoxedPixelData>>>,
     ) -> Result<Self> {
         let java_vm = JniContext::get()?.java_vm();
         let env = java_vm.attach_current_thread()?;
@@ -83,7 +83,7 @@ impl<Type> PlatformTexture<Type> {
             surface: env.new_global_ref(surface)?,
             native_window,
             last_geometry: RefCell::new(None),
-            pixel_buffer_provider,
+            pixel_data_provider: pixel_buffer_provider,
             _phantom: PhantomData {},
         };
         env.pop_local_frame(JObject::null())?;
@@ -101,7 +101,7 @@ impl<Type> PlatformTexture<Type> {
     }
 
     pub fn mark_frame_available(&self) -> Result<()> {
-        if let Some(provider) = self.pixel_buffer_provider.as_ref() {
+        if let Some(provider) = self.pixel_data_provider.as_ref() {
             let payload = provider.get_payload();
             let payload = payload.get();
             let geometry = Geometry {
@@ -136,7 +136,7 @@ impl<Type> PlatformTexture<Type> {
             assert!(buf.stride == buf.width);
             assert!(buf.stride * buf.height * 4 == payload.data.len() as i32);
 
-            data.copy_from_slice(&payload.data);
+            data.copy_from_slice(payload.data);
 
             unsafe { ANativeWindow_unlockAndPost(self.native_window) };
         }
@@ -150,11 +150,11 @@ impl<Type> Drop for PlatformTexture<Type> {
     }
 }
 
-impl PlatformTextureWithProvider for PixelBuffer {
+impl PlatformTextureWithProvider for BoxedPixelData {
     fn create_texture(
         engine_handle: i64,
         payload_provider: Arc<dyn PayloadProvider<Self>>,
-    ) -> Result<PlatformTexture<PixelBuffer>> {
+    ) -> Result<PlatformTexture<BoxedPixelData>> {
         PlatformTexture::new(engine_handle, Some(payload_provider))
     }
 }

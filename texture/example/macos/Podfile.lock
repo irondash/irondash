@@ -20,7 +20,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   irondash_engine_context: da62996ee25616d2f01bbeb85dc115d813359478
-  texture_example: db6744c6a227c2a0f0a16a5a948a78a2d0808991
+  texture_example: 2fedc4dac66af2de61af8a6b04e8c47a7d467785
 
 PODFILE CHECKSUM: c4b569a7789227c376ab3db5156333f5b9bc9b4b
 

@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
       :name => 'Build Rust library',
       :script => 'sh $PODS_TARGET_SRCROOT/../cargokit/build_pod.sh ../rust texture_example',
       :execution_position=> :after_compile,
-      :input_files => ['${TARGET_TEMP_DIR}/cargokit_phony'],
-      :output_files => ['${TARGET_TEMP_DIR}/cargokit_phony_out']
+      :input_files => ['${BUILT_PRODUCTS_DIR}/cargokit_phony'],
+      :output_files => ['${BUILT_PRODUCTS_DIR}/cargokit_phony_out']
     }
 end

@@ -14,7 +14,7 @@ impl PayloadProvider<BoxedPixelData> for MyPayloadProvider {
     // This method will be called by Flutter during rasterization
     // to get new texture data.
     fn get_payload(&self) -> BoxedPixelData {
-        let data: Vec<u8> = get_pixel_data();
+        let data: Vec<u8> = make_pixel_data(width, height);
         SimplePixelData::boxed(width, height, data)
     }
 }
@@ -39,7 +39,7 @@ To create texture, you need to have handle for current Flutter engine, which you
 Other than `BoxedPixelData`, there are platform specific payload types that can be used to display GPU texture.
 
 - `BoxedIOSurface` that provides `IOSurface` texture on macOS and iOS
-- `BoxedGLTexsture` on Linux
+- `BoxedGLTexture` on Linux
 - `BoxedTextureDescriptor<ID3D11Texture2D>` and `BoxedTextureDescriptor<DxgiSharedHandle>` on Windows
 
 To use GPU texture on Android, instead of setting payload, you can request JNI `Surface` or NDK `ANativeWindow` from the texture:

@@ -10,16 +10,12 @@ struct MyPayloadProvider {
     // ...
 }
 
-impl PayloadProvider<PixelBuffer> for MyPayloadProvider {
+impl PayloadProvider<BoxedPixelData> for MyPayloadProvider {
     // This method will be called by Flutter during rasterization
     // to get new texture data.
-    fn get_payload(&self) -> BoxedPayload<PixelBuffer> {
-        let buffer = PixelBuffer {
-            width,
-            height,
-            data,
-        };
-        buffer.into_boxed_payload();
+    fn get_payload(&self) -> BoxedPixelData {
+        let data: Vec<u8> = make_pixel_data(width, height);
+        SimplePixelData::boxed(width, height, data)
     }
 }
 ```
@@ -38,13 +34,13 @@ texture.mark_frame_available();
 
 To create texture, you need to have handle for current Flutter engine, which you can obtain through [irondash_engine_context](https://github.com/irondash/irondash/tree/main/engine_context).
 
-`PixelBuffer` payload type is supported on all platforms, though pixel order may change depending on platform. To find out pixel order for current platform use `PixelBuffer::FORMAT`.
+`BoxedPixelData` payload type is supported on all platforms, though pixel order may change depending on platform. To find out pixel order for current platform use `PixelData::FORMAT`.
 
-Other than `PixelBuffer`, there are platform specific payload types that can be used to display GPU texture.
+Other than `BoxedPixelData`, there are platform specific payload types that can be used to display GPU texture.
 
-- `IOSurface` on macOS and iOS
-- `GLTexture` on Linux
-- `TextureDescriptor<ID3D11Texture2D>` and `TextureDescriptor<DxgiSharedHandle>` on Windows
+- `BoxedIOSurface` that provides `IOSurface` texture on macOS and iOS
+- `BoxedGLTexture` on Linux
+- `BoxedTextureDescriptor<ID3D11Texture2D>` and `BoxedTextureDescriptor<DxgiSharedHandle>` on Windows
 
 To use GPU texture on Android, instead of setting payload, you can request JNI `Surface` or NDK `ANativeWindow` from the texture:
 

@@ -1,7 +1,7 @@
 use std::{cell::Cell, iter::repeat_with, rc::Rc, sync::Arc, time::Duration};
 
 use irondash_run_loop::RunLoop;
-use irondash_texture::{BoxedPayload, IntoBoxedPayload, PayloadProvider, PixelBuffer, Texture};
+use irondash_texture::{BoxedPixelData, PayloadProvider, SimplePixelData, Texture};
 use log::error;
 
 #[cfg(target_os = "android")]
@@ -27,32 +27,27 @@ fn init_logging() {
 }
 
 struct Animator {
-    texture: Texture<PixelBuffer>,
+    texture: Texture<BoxedPixelData>,
     counter: Cell<u32>,
 }
 
-struct PixelBufferProvider {}
+struct PixelBufferSource {}
 
-impl PixelBufferProvider {
+impl PixelBufferSource {
     fn new() -> Self {
         Self {}
     }
 }
 
-impl PayloadProvider<PixelBuffer> for PixelBufferProvider {
-    fn get_payload(&self) -> BoxedPayload<PixelBuffer> {
+impl PayloadProvider<BoxedPixelData> for PixelBufferSource {
+    fn get_payload(&self) -> BoxedPixelData {
         let rng = fastrand::Rng::new();
         let width = 100i32;
         let height = 100i32;
         let bytes: Vec<u8> = repeat_with(|| rng.u8(..))
             .take((width * height * 4) as usize)
             .collect();
-        let buffer = PixelBuffer {
-            width,
-            height,
-            data: bytes.into(),
-        };
-        buffer.into_boxed_payload()
+        SimplePixelData::new_boxed(width, height, bytes)
     }
 }
 
@@ -75,7 +70,7 @@ impl Animator {
 }
 
 fn init_on_main_thread(engine_handle: i64) -> irondash_texture::Result<i64> {
-    let provider = Arc::new(PixelBufferProvider::new());
+    let provider = Arc::new(PixelBufferSource::new());
     let texture = Texture::new_with_provider(engine_handle, provider)?;
     let id = texture.id();
 

@@ -47,7 +47,7 @@ impl PayloadProvider<BoxedPixelData> for PixelBufferSource {
         let bytes: Vec<u8> = repeat_with(|| rng.u8(..))
             .take((width * height * 4) as usize)
             .collect();
-        SimplePixelData::boxed(width, height, bytes)
+        SimplePixelData::new_boxed(width, height, bytes)
     }
 }
 

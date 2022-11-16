@@ -132,7 +132,7 @@ pub trait PixelDataProvider {
 /// Actual type for pixel buffer payload.
 pub type BoxedPixelData = Box<dyn PixelDataProvider>;
 
-/// Convenience implementation for pixel buffer texture.
+/// Convenience implementation for pixel data texture.
 pub struct SimplePixelData {
     width: i32,
     height: i32,
@@ -140,7 +140,7 @@ pub struct SimplePixelData {
 }
 
 impl SimplePixelData {
-    pub fn boxed(width: i32, height: i32, data: Vec<u8>) -> Box<Self> {
+    pub fn new_boxed(width: i32, height: i32, data: Vec<u8>) -> Box<Self> {
         Box::new(Self {
             width,
             height,

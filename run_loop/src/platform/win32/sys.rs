@@ -26,6 +26,7 @@ pub mod windows {
     pub type TIMERPROC =
         unsafe extern "system" fn(param0: HWND, param1: u32, param2: usize, param3: u32);
     pub type QUEUE_STATUS_FLAGS = u32;
+    pub type MSG_WAIT_FOR_MULTIPLE_OBJECTS_EX_FLAGS = u32;
     pub type PEEK_MESSAGE_REMOVE_TYPE = u32;
 
     pub const GWLP_USERDATA: WINDOW_LONG_PTR_INDEX = -21i32;
@@ -40,6 +41,8 @@ pub mod windows {
 
     pub const QS_POSTMESSAGE: QUEUE_STATUS_FLAGS = 8u32;
     pub const QS_TIMER: QUEUE_STATUS_FLAGS = 0x10u32;
+
+    pub const MWMO_INPUTAVAILABLE: MSG_WAIT_FOR_MULTIPLE_OBJECTS_EX_FLAGS = 4u32;
 
     pub const PM_REMOVE: PEEK_MESSAGE_REMOVE_TYPE = 1u32;
     pub const PM_NOYIELD: PEEK_MESSAGE_REMOVE_TYPE = 2u32;
@@ -145,12 +148,12 @@ pub mod windows {
             lptimerfunc: ::core::option::Option<TIMERPROC>,
         ) -> usize;
         pub fn TranslateMessage(lpmsg: *const MSG) -> BOOL;
-        pub fn MsgWaitForMultipleObjects(
+        pub fn MsgWaitForMultipleObjectsEx(
             ncount: u32,
             phandles: *const HANDLE,
-            fwaitall: BOOL,
             dwmilliseconds: u32,
             dwwakemask: QUEUE_STATUS_FLAGS,
+            dwflags: MSG_WAIT_FOR_MULTIPLE_OBJECTS_EX_FLAGS,
         ) -> u32;
         pub fn PeekMessageW(
             lpmsg: *mut MSG,

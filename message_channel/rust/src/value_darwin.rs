@@ -27,7 +27,10 @@ use self::sys::{from_nsdata, from_nsstring, id, NSArray, NSDictionary};
 /// Trait for converting Value from and to Objective C objects.
 pub trait ValueObjcConversion: Sized {
     fn to_objc(&self) -> Result<StrongPtr, TryFromError>;
-    fn from_objc(objc: *mut runtime::Object) -> Result<Self, TryFromError>;
+    /// # Safety
+    /// This function dereferences a raw pointer. Caller is responsible for
+    /// ensuring that the pointer is valid.
+    unsafe fn from_objc(objc: *mut runtime::Object) -> Result<Self, TryFromError>;
 }
 
 impl ValueObjcConversion for Value {
@@ -35,7 +38,7 @@ impl ValueObjcConversion for Value {
         autoreleasepool(|| unsafe { _value_to_objc(self).map(|f| StrongPtr::retain(f)) })
     }
 
-    fn from_objc(obj: *mut runtime::Object) -> Result<Self, TryFromError> {
+    unsafe fn from_objc(obj: *mut runtime::Object) -> Result<Self, TryFromError> {
         autoreleasepool(|| unsafe { _value_from_objc(obj) })
     }
 }
@@ -261,7 +264,7 @@ mod test {
                 *to_nsstring("Key"),
             )
         };
-        let value = Value::from_objc(object1).unwrap();
+        let value = unsafe { Value::from_objc(object1).unwrap() };
         let our_value: Value = vec![(
             "Key".into(),
             vec![

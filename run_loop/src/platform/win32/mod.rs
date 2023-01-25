@@ -228,7 +228,7 @@ impl State {
     }
 
     fn stop(&self) {
-        unsafe { PostMessageW(self.hwnd.get(), WM_RUNLOOP_STOP as u32, 0, 0) };
+        unsafe { PostMessageW(self.hwnd.get(), WM_RUNLOOP_STOP, 0, 0) };
     }
 }
 
@@ -375,7 +375,7 @@ impl PlatformRunLoopSenderRegular {
                 callbacks.push(Box::new(callback));
             }
             unsafe {
-                PostMessageW(self.hwnd, WM_USER as u32, 0, 0);
+                PostMessageW(self.hwnd, WM_USER, 0, 0);
             }
             true
         } else {
@@ -393,7 +393,7 @@ impl PlatformRunLoopSender {
                 let callback = Box::new(callback);
                 let callback = Box::into_raw(callback);
                 unsafe {
-                    PostMessageW(FALLBACK_WINDOW, WM_USER as u32, callback as WPARAM, 0);
+                    PostMessageW(FALLBACK_WINDOW, WM_USER, callback as WPARAM, 0);
                 }
                 true
             }

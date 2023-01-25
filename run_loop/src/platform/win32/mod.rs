@@ -183,12 +183,15 @@ impl State {
 
     fn poll_once(&self, poll_session: &mut PollSession) {
         unsafe {
-            MsgWaitForMultipleObjects(
+            // Without MWMO_INPUTAVAILABLE the wait can
+            // be racy as it will ignore messages posted between
+            // PeekMessageW and MsgWaitForMultipleObjectsEx.
+            MsgWaitForMultipleObjectsEx(
                 0,
                 std::ptr::null_mut(),
-                0,
-                10000000,
+                7,
                 QS_POSTMESSAGE | QS_TIMER,
+                MWMO_INPUTAVAILABLE,
             );
             let mut message = MSG::default();
             loop {

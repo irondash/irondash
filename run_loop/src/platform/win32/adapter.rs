@@ -54,21 +54,21 @@ impl WindowClass {
 }
 
 unsafe extern "system" fn wnd_proc(
-    h_wnd: HWND,
+    hwnd: HWND,
     msg: u32,
     w_param: WPARAM,
     l_param: LPARAM,
 ) -> LRESULT {
     if msg == WM_NCCREATE {
         let create_struct = &*(l_param as *const CREATESTRUCTW);
-        SetWindowLongPtrW(h_wnd, GWLP_USERDATA, create_struct.lpCreateParams as isize);
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, create_struct.lpCreateParams as isize);
     }
 
-    let ptr = GetWindowLongPtrW(h_wnd, GWLP_USERDATA);
+    let ptr = GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     if ptr != 0 {
         let bridge = &*(ptr as *const EventBridge);
         let handler = &*(bridge.handler);
-        let res = handler.wnd_proc(h_wnd, msg, w_param, l_param);
+        let res = handler.wnd_proc(hwnd, msg, w_param, l_param);
         if msg == WM_NCDESTROY {
             // make sure bridge is dropped
             let _ = Box::<EventBridge>::from_raw(ptr as *mut EventBridge);
@@ -76,7 +76,7 @@ unsafe extern "system" fn wnd_proc(
         return res;
     }
 
-    DefWindowProcW(h_wnd, msg, w_param, l_param)
+    DefWindowProcW(hwnd, msg, w_param, l_param)
 }
 
 impl Drop for WindowClass {
@@ -91,7 +91,7 @@ struct EventBridge {
 }
 
 pub trait WindowAdapter {
-    fn wnd_proc(&self, h_wnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT;
+    fn wnd_proc(&self, hwnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT;
 
     fn create_window(&self, title: &str, style: WINDOW_STYLE, ex_style: WINDOW_STYLE) -> HWND
     where

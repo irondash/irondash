@@ -328,7 +328,7 @@ impl Drop for State {
 }
 
 impl WindowAdapter for State {
-    fn wnd_proc(&self, h_wnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
+    fn wnd_proc(&self, hwnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
         match msg {
             WM_TIMER => {
                 self.on_timer();
@@ -344,10 +344,10 @@ impl WindowAdapter for State {
         let handlers = self.message_listeners.borrow().clone();
         for handler in handlers {
             if let Some(handler) = handler.upgrade() {
-                handler.on_window_message(h_wnd, msg, w_param, l_param);
+                handler.on_window_message(hwnd, msg, w_param, l_param);
             }
         }
-        unsafe { DefWindowProcW(h_wnd, msg, w_param, l_param) }
+        unsafe { DefWindowProcW(hwnd, msg, w_param, l_param) }
     }
 }
 
@@ -377,13 +377,13 @@ static ON_LOAD: extern "C" fn() = {
 struct FallbackWindow {}
 
 impl WindowAdapter for FallbackWindow {
-    fn wnd_proc(&self, h_wnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
+    fn wnd_proc(&self, hwnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
         if msg == WM_USER {
             let callback = w_param as *mut Box<dyn FnOnce()>;
             let callback = unsafe { Box::from_raw(callback) };
             callback();
         }
-        unsafe { DefWindowProcW(h_wnd, msg, w_param, l_param) }
+        unsafe { DefWindowProcW(hwnd, msg, w_param, l_param) }
     }
 }
 

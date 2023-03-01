@@ -4,6 +4,7 @@ mod sys;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
+    rc::Weak,
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
@@ -15,8 +16,78 @@ use self::sys::windows::*;
 pub type HandleType = usize;
 pub const INVALID_HANDLE: HandleType = 0;
 
+pub trait MessageListener {
+    fn on_window_message(&self, hwnd: isize, message: u32, w_param: usize, l_param: isize);
+}
+
 pub struct PlatformRunLoop {
     state: Box<State>,
+}
+
+impl PlatformRunLoop {
+    pub fn new() -> Self {
+        let res = Self {
+            state: Box::new(State::new()),
+        };
+        res.state.initialize();
+        res
+    }
+
+    pub fn unschedule(&self, handle: HandleType) {
+        self.state.unschedule(handle);
+    }
+
+    pub fn hwnd(&self) -> isize {
+        self.state.hwnd.get()
+    }
+
+    pub fn register_message_listener(&self, handler: Weak<dyn MessageListener>) {
+        self.state.register_message_listener(handler);
+    }
+
+    pub fn unregister_message_listener(&self, handler: Weak<dyn MessageListener>) {
+        self.state.unregister_message_listener(handler);
+    }
+
+    #[must_use]
+    pub fn schedule<F>(&self, in_time: Duration, callback: F) -> HandleType
+    where
+        F: FnOnce() + 'static,
+    {
+        self.state.schedule(in_time, callback)
+    }
+
+    pub fn run(&self) {
+        self.state.run();
+    }
+
+    pub fn run_app(&self) {
+        self.run();
+    }
+
+    pub fn stop(&self) {
+        self.state.stop();
+    }
+
+    pub fn stop_app(&self) {
+        self.stop();
+    }
+
+    pub fn poll_once(&self, poll_session: &mut PollSession) {
+        self.state.poll_once(poll_session);
+    }
+
+    pub fn new_sender(&self) -> PlatformRunLoopSender {
+        self.state.new_sender()
+    }
+
+    pub fn is_main_thread() -> bool {
+        is_main_thread()
+    }
+
+    pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
+        PlatformRunLoopSender::MainThreadFallback
+    }
 }
 
 struct Timer {
@@ -38,6 +109,8 @@ struct State {
 
     // Indicate that stop has been called
     stopping: Cell<bool>,
+
+    message_listeners: RefCell<Vec<Weak<dyn MessageListener>>>,
 }
 
 pub struct PollSession {
@@ -64,6 +137,7 @@ impl State {
             timers: RefCell::new(HashMap::new()),
             sender_callbacks: Arc::new(Mutex::new(Vec::new())),
             stopping: Cell::new(false),
+            message_listeners: RefCell::new(Vec::new()),
         }
     }
 
@@ -233,6 +307,16 @@ impl State {
     fn stop(&self) {
         unsafe { PostMessageW(self.hwnd.get(), WM_RUNLOOP_STOP, 0, 0) };
     }
+
+    fn register_message_listener(&self, handler: Weak<dyn MessageListener>) {
+        self.message_listeners.borrow_mut().push(handler);
+    }
+
+    fn unregister_message_listener(&self, handler: Weak<dyn MessageListener>) {
+        self.message_listeners
+            .borrow_mut()
+            .retain(|h| !Weak::ptr_eq(h, &handler));
+    }
 }
 
 impl Drop for State {
@@ -257,68 +341,17 @@ impl WindowAdapter for State {
             }
             _ => {}
         }
+        let handlers = self.message_listeners.borrow().clone();
+        for handler in handlers {
+            if let Some(handler) = handler.upgrade() {
+                handler.on_window_message(h_wnd, msg, w_param, l_param);
+            }
+        }
         unsafe { DefWindowProcW(h_wnd, msg, w_param, l_param) }
     }
 }
 
 #[allow(unused_variables)]
-impl PlatformRunLoop {
-    pub fn new() -> Self {
-        let res = Self {
-            state: Box::new(State::new()),
-        };
-        res.state.initialize();
-        res
-    }
-
-    pub fn unschedule(&self, handle: HandleType) {
-        self.state.unschedule(handle);
-    }
-
-    pub fn hwnd(&self) -> HWND {
-        self.state.hwnd.get()
-    }
-
-    #[must_use]
-    pub fn schedule<F>(&self, in_time: Duration, callback: F) -> HandleType
-    where
-        F: FnOnce() + 'static,
-    {
-        self.state.schedule(in_time, callback)
-    }
-
-    pub fn run(&self) {
-        self.state.run();
-    }
-
-    pub fn run_app(&self) {
-        self.run();
-    }
-
-    pub fn stop(&self) {
-        self.state.stop();
-    }
-
-    pub fn stop_app(&self) {
-        self.stop();
-    }
-
-    pub fn poll_once(&self, poll_session: &mut PollSession) {
-        self.state.poll_once(poll_session);
-    }
-
-    pub fn new_sender(&self) -> PlatformRunLoopSender {
-        self.state.new_sender()
-    }
-
-    pub fn is_main_thread() -> bool {
-        is_main_thread()
-    }
-
-    pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
-        PlatformRunLoopSender::MainThreadFallback
-    }
-}
 
 static mut FIRST_THREAD: DWORD = 0;
 static mut FALLBACK_WINDOW: HWND = 0;

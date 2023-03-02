@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc, time::Duration};
+use std::{rc::Rc, sync::Arc, thread::AccessError, time::Duration};
 
 use futures::{task::ArcWake, Future};
 use once_cell::sync::OnceCell;
@@ -12,6 +12,7 @@ pub struct RunLoop {
 }
 
 static MAIN_THREAD_SENDER: OnceCell<RunLoopSender> = OnceCell::new();
+thread_local!(static RUN_LOOP: RunLoop = RunLoop::new());
 
 impl RunLoop {
     /// Creates new RunLoop instance. This is not meant to be called directly.
@@ -90,8 +91,15 @@ impl RunLoop {
     /// instance. The instance is created on demand and destroyed when thread
     /// exits.
     pub fn current() -> Self {
-        thread_local!(static RUN_LOOP: RunLoop = RunLoop::new());
         RUN_LOOP.with(|run_loop| RunLoop {
+            platform_run_loop: run_loop.platform_run_loop.clone(),
+        })
+    }
+
+    /// Fallible method to get RunLoop for current thread. May fail when thread
+    /// is being destroyed.
+    pub fn try_current() -> Result<Self, AccessError> {
+        RUN_LOOP.try_with(|run_loop| RunLoop {
             platform_run_loop: run_loop.platform_run_loop.clone(),
         })
     }

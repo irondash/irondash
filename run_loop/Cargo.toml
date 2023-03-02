@@ -1,6 +1,6 @@
 [package]
 name = "irondash_run_loop"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "MIT"
 description = "Consistent, platform-independent interface to system run loop."

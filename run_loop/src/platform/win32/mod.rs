@@ -45,7 +45,7 @@ impl PlatformRunLoop {
         self.state.register_message_listener(handler);
     }
 
-    pub fn unregister_message_listener(&self, handler: Weak<dyn MessageListener>) {
+    pub fn unregister_message_listener(&self, handler: &Weak<dyn MessageListener>) {
         self.state.unregister_message_listener(handler);
     }
 
@@ -312,10 +312,10 @@ impl State {
         self.message_listeners.borrow_mut().push(handler);
     }
 
-    fn unregister_message_listener(&self, handler: Weak<dyn MessageListener>) {
+    fn unregister_message_listener(&self, handler: &Weak<dyn MessageListener>) {
         self.message_listeners
             .borrow_mut()
-            .retain(|h| !Weak::ptr_eq(h, &handler));
+            .retain(|h| !Weak::ptr_eq(h, handler));
     }
 }
 

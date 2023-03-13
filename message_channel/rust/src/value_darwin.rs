@@ -158,8 +158,7 @@ unsafe fn _value_to_objc(value: &Value) -> Result<id, TryFromError> {
             ))
         }
         other => Err(TryFromError::OtherError(format!(
-            "Unable to convert {:?} to Objc",
-            other,
+            "Unable to convert {other:?} to Objc",
         ))),
     }
 }

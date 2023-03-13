@@ -36,13 +36,12 @@ impl Display for SendMessageError {
                 write!(f, "target isolate was shut down while waiting for response")
             }
             Self::ChannelNotFound { channel } => {
-                write!(f, "message channel \"{}\" not found", channel)
+                write!(f, "message channel \"{channel}\" not found")
             }
             Self::HandlerNotRegistered { channel } => {
                 write!(
                     f,
-                    "message handler for channel \"{}\" not registered",
-                    channel
+                    "message handler for channel \"{channel}\" not registered"
                 )
             }
         }

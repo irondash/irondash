@@ -172,7 +172,7 @@ impl TryIntoEnum {
 
     fn variant_ident_to_string(&self, ident: &Ident, r: &Option<StringWithSpan>) -> String {
         rename_variant(
-            &format!("{}", ident),
+            &format!("{ident}"),
             &self.attributes.rename_all,
             &r.as_ref().map(|s| s.value.clone()),
         )
@@ -276,11 +276,11 @@ fn process_struct_named(
                 continue;
             }
             let string = rename_field(
-                &format!("{}", ident),
+                &format!("{ident}"),
                 &rename_rule,
                 &attributes.rename.map(|a| a.value),
             );
-            err_missing_field.push(format!("required field \"{}\" missing in value.", string));
+            err_missing_field.push(format!("required field \"{string}\" missing in value."));
             strings.push(string);
             fields.push(ident.clone());
             types.push(field.ty.clone());

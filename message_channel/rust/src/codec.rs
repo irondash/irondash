@@ -92,7 +92,7 @@ impl Deserializer {
                 Value::Map(map.into())
             }
             _ => {
-                panic!("Unsupported value type: {}", t);
+                panic!("Unsupported value type: {t}");
             }
         }
     }

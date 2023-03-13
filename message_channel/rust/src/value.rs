@@ -161,7 +161,7 @@ impl Display for TryFromError {
                 write!(f, "Could not convert float value to a smaller type.")
             }
             TryFromError::OtherError(str) => {
-                write!(f, "{}", str)
+                write!(f, "{str}")
             }
         }
     }

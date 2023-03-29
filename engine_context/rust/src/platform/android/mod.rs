@@ -101,7 +101,7 @@ impl PlatformContext {
             .call_static_method(
                 class,
                 "getFlutterView",
-                "(J)Lio/flutter/embedding/android/FlutterView;",
+                "(J)Landroid/view/View;",
                 &[handle.into()],
             )?
             .l()?;

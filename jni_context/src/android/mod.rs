@@ -101,7 +101,7 @@ impl JniContext {
 
 fn get_class_loader(vm: &JavaVM) -> Option<GlobalRef> {
     let env = vm.attach_current_thread().unwrap();
-    let class = env.find_class("io/flutter/embedding/android/FlutterView");
+    let class = env.find_class("io/flutter/embedding/engine/FlutterJNI");
     if let Ok(class) = class {
         let loader = env.call_method(class, "getClassLoader", "()Ljava/lang/ClassLoader;", &[]);
         if let Ok(loader) = loader {

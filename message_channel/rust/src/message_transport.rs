@@ -82,7 +82,7 @@ pub mod native {
                     let isolate_id = match isolate_id {
                         DartValue::I32(id) => id as i64,
                         DartValue::I64(id) => id,
-                        id => panic!("invalid isolate id {:?}", id),
+                        id => panic!("invalid isolate id {id:?}"),
                     };
                     let message = message.to_string_lossy();
                     if message == "isolate_exit" {

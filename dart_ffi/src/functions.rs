@@ -91,7 +91,7 @@ impl Api {
                 return entry.function;
             }
         }
-        panic!("FFI function ${} not found", name);
+        panic!("FFI function ${name} not found");
     }
 }
 

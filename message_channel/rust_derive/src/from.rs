@@ -31,7 +31,7 @@ fn insert_fields(
             continue;
         }
         let string = rename_field(
-            &format!("{}", ident),
+            &format!("{ident}"),
             rename_rule,
             &attributes.rename.map(|a| a.value),
         );
@@ -162,9 +162,8 @@ impl FromEnum {
                             tag.span,
                             Level::Error,
                             format!(
-                                "tag for unnamed enum variants (i.e. {}) is only supported \
-                                if 'content' attribute is set as well",
-                                ident
+                                "tag for unnamed enum variants (i.e. {ident}) is only supported \
+                                if 'content' attribute is set as well"
                             ),
                         )
                         .abort();
@@ -239,7 +238,7 @@ impl FromEnum {
 
     fn variant_ident_to_string(&self, ident: &Ident, r: &Option<StringWithSpan>) -> String {
         rename_variant(
-            &format!("{}", ident),
+            &format!("{ident}"),
             &self.attributes.rename_all,
             &r.as_ref().map(|s| s.value.clone()),
         )

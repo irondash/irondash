@@ -161,7 +161,7 @@ impl Display for TryFromError {
                 write!(f, "Could not convert float value to a smaller type.")
             }
             TryFromError::OtherError(str) => {
-                write!(f, "{}", str)
+                write!(f, "{str}")
             }
         }
     }
@@ -334,6 +334,7 @@ fn hash_f32<H: std::hash::Hasher>(value: f32, state: &mut H) {
     state.write_u32(transmuted);
 }
 
+#[allow(renamed_and_removed_lints)]
 #[allow(clippy::derive_hash_xor_eq)]
 impl std::hash::Hash for Value {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

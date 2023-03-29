@@ -18,9 +18,9 @@ pub enum MethodCallError {
 impl Display for MethodCallError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MethodCallError::SendError(e) => write!(f, "error sending message: {}", e),
-            MethodCallError::PlatformError(e) => write!(f, "platform error: {}", e),
-            MethodCallError::ConversionError(e) => write!(f, "conversion error: {}", e),
+            MethodCallError::SendError(e) => write!(f, "error sending message: {e}"),
+            MethodCallError::PlatformError(e) => write!(f, "platform error: {e}"),
+            MethodCallError::ConversionError(e) => write!(f, "conversion error: {e}"),
         }
     }
 }

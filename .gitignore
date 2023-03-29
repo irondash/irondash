@@ -8,6 +8,7 @@ Cargo.lock
 pubspec.lock
 .flutter-plugins
 .flutter-plugins-dependencies
+pubspec_overrides.yaml
 
 # IntelliJ related
 *.iml

@@ -1,7 +1,9 @@
 package dev.irondash.engine_context;
 
 import android.app.Activity;
+import android.view.View;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -10,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import io.flutter.embedding.android.FlutterActivity;
-import io.flutter.embedding.android.FlutterView;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -23,6 +24,7 @@ import io.flutter.view.TextureRegistry;
 
 /** IrondashEngineContextPlugin */
 // used from JNI
+@Keep
 @SuppressWarnings("UnusedDeclaration")
 public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
   /// The MethodChannel that will the communication between Flutter and native Android
@@ -83,7 +85,7 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
     }
   }
 
-  static public FlutterView getFlutterView(long handle) {
+  static public View getFlutterView(long handle) {
     final Activity activity = getActivity(handle);
     if (activity != null) {
       return activity.findViewById(FlutterActivity.FLUTTER_VIEW_ID);

@@ -3,6 +3,7 @@
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
 #![allow(clippy::bool_assert_comparison)]
+#![allow(clippy::derivable_impls)]
 
 mod async_method_handler;
 mod codec;

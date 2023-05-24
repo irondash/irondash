@@ -133,10 +133,14 @@ impl<Type> PlatformTexture<Type> {
 
             // If there is a case where this is not true we need to copy line
             // by line.
-            assert!(buf.stride == buf.width);
-            assert!(buf.stride * buf.height * 4 == payload.data.len() as i32);
+            assert!(buf.stride >= buf.width);
+            assert!(buf.stride * buf.height * 4 >= payload.data.len() as i32);
 
-            data.copy_from_slice(payload.data);
+            let mut_ptr = data.as_mut_ptr() as *mut libc::c_void;
+            let const_ptr = payload.data.as_ptr() as *const libc::c_void;
+            unsafe {
+                memcpy(mut_ptr, const_ptr, payload.data.len());
+            }
 
             unsafe { ANativeWindow_unlockAndPost(self.native_window) };
         }
@@ -208,4 +212,8 @@ impl PlatformTextureWithoutProvider for Surface {
     fn get(texture: &PlatformTexture<Self>) -> Self {
         Self(texture.surface.clone())
     }
+}
+
+extern "C" {
+    fn memcpy(dest: *mut libc::c_void, src: *const libc::c_void, n: libc::size_t) -> *mut libc::c_void;
 }

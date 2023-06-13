@@ -1,5 +1,5 @@
 use irondash_jni_context::JniContext;
-use jni::objects::JObject;
+use jni::objects::{JObject, JValueGen};
 
 mod notifier;
 use notifier::*;
@@ -34,9 +34,9 @@ impl PlatformContext {
     }
 
     fn initialize(&mut self) -> Result<()> {
-        let notifier = Notifier::new(move |env, data| {
+        let notifier = Notifier::new(move | env, data| {
             let handle = env
-                .call_method(*data, "longValue", "()J", &[])
+                .call_method(data, "longValue", "()J", &[])
                 .ok()
                 .and_then(|v| v.j().ok());
             if let (Some(handle), Some(engine_context)) = //
@@ -45,8 +45,8 @@ impl PlatformContext {
                 engine_context.on_engine_destroyed(handle);
             }
         })?;
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
         env.call_static_method(
             class,
             "registerDestroyListener",
@@ -57,14 +57,13 @@ impl PlatformContext {
         Ok(())
     }
 
-    fn get_plugin_class<'a>(&'a self, env: &jni::JNIEnv<'a>) -> Result<jni::objects::JClass<'a>> {
+    fn get_plugin_class<'a>(&'a self, env: &mut jni::JNIEnv<'a>) -> Result<jni::objects::JClass<'a>> {
+        let plugin = &env.new_string("dev/irondash/engine_context/IrondashEngineContextPlugin")?;
         let plugin_class = env.call_method(
             self.class_loader.as_obj(),
             "loadClass",
             "(Ljava/lang/String;)Ljava/lang/Class;",
-            &[env
-                .new_string("dev/irondash/engine_context/IrondashEngineContextPlugin")?
-                .into()],
+            &[JValueGen::Object(plugin)],
         );
 
         if env.exception_check()? {
@@ -77,9 +76,9 @@ impl PlatformContext {
     }
 
     pub fn get_activity(&self, handle: i64) -> Result<Activity> {
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
-        let activity = env
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
+        let activity = &env
             .call_static_method(
                 class,
                 "getActivity",
@@ -95,9 +94,9 @@ impl PlatformContext {
     }
 
     pub fn get_flutter_view(&self, handle: i64) -> Result<FlutterView> {
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
-        let view = env
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
+        let view = &env
             .call_static_method(
                 class,
                 "getFlutterView",
@@ -113,9 +112,9 @@ impl PlatformContext {
     }
 
     pub fn get_binary_messenger(&self, handle: i64) -> Result<FlutterBinaryMessenger> {
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
-        let messenger = env
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
+        let messenger = &env
             .call_static_method(
                 class,
                 "getBinaryMessenger",
@@ -131,9 +130,9 @@ impl PlatformContext {
     }
 
     pub fn get_texture_registry(&self, handle: i64) -> Result<FlutterTextureRegistry> {
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
-        let registry = env
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
+        let registry = &env
             .call_static_method(
                 class,
                 "getTextureRegistry",

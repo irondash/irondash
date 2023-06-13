@@ -12,7 +12,13 @@
     // ],
     "rust-analyzer.cargo.features": [
         // "mock"
-        "irondash_message_channel_derive",
+        // "irondash_message_channel_derive",
     ],
-    "dart.runPubGetOnPubspecChanges": "never"
+    "dart.runPubGetOnPubspecChanges": "never",
+    "rust-analyzer.linkedProjects": [
+        "jni_context/Cargo.toml",
+        "engine_context/rust/Cargo.toml",
+        "run_loop/Cargo.toml",
+        "texture/Cargo.toml",
+    ]
 }

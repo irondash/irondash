@@ -43,10 +43,10 @@ impl<Type> PlatformTexture<Type> {
         pixel_buffer_provider: Option<Arc<dyn PayloadProvider<BoxedPixelData>>>,
     ) -> Result<Self> {
         let java_vm = JniContext::get()?.java_vm();
-        let env = java_vm.attach_current_thread()?;
+        let mut env = java_vm.attach_current_thread()?;
         let engine_context = EngineContext::get()?;
         let texture_registry = engine_context.get_texture_registry(engine_handle)?;
-        let texture_entry = env
+        let texture_entry = &env
             .call_method(
                 texture_registry.as_obj(),
                 "createSurfaceTexture",
@@ -54,7 +54,7 @@ impl<Type> PlatformTexture<Type> {
                 &[],
             )?
             .l()?;
-        let surface_texture = env
+        let surface_texture = &env
             .call_method(
                 texture_entry,
                 "surfaceTexture",
@@ -66,14 +66,14 @@ impl<Type> PlatformTexture<Type> {
 
         env.push_local_frame(16)?;
 
-        let surface = env.new_object(
+        let surface = &env.new_object(
             surface_class,
             "(Landroid/graphics/SurfaceTexture;)V",
             &[surface_texture.into()],
         )?;
 
         let native_window =
-            unsafe { ANativeWindow_fromSurface(env.get_native_interface(), surface.into_inner()) };
+            unsafe { ANativeWindow_fromSurface(env.get_native_interface(), surface.as_raw() ) };
 
         let id = env.call_method(texture_entry, "id", "()J", &[])?.j()?;
 
@@ -86,13 +86,13 @@ impl<Type> PlatformTexture<Type> {
             pixel_data_provider: pixel_buffer_provider,
             _phantom: PhantomData {},
         };
-        env.pop_local_frame(JObject::null())?;
+        unsafe { env.pop_local_frame(&JObject::null()) }?;
         Ok(res)
     }
 
     fn destroy(&mut self) -> Result<()> {
         let java_vm = JniContext::get()?.java_vm();
-        let env = java_vm.attach_current_thread()?;
+        let mut env = java_vm.attach_current_thread()?;
         env.call_method(self.texture_entry.as_obj(), "release", "()V", &[])?;
         unsafe {
             ANativeWindow_release(self.native_window);

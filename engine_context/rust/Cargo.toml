@@ -1,6 +1,6 @@
 [package]
 name = "irondash_engine_context"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 license = "MIT"
 description = "Easy access to FlutterView, FlutterBinaryMessenger and FlutterTextureRegistry for FFI."
@@ -11,13 +11,13 @@ repository = "https://github.com/irondash/irondash"
 
 [dependencies]
 once_cell = "1.16.0"
-irondash_run_loop = { version = "0.1.0" }
+irondash_run_loop = { version = "0.1.3" }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21"
 android_logger = "0.11"
 log = "0.4"
-irondash_jni_context = "0.1.2"
+irondash_jni_context = "0.1.3"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 objc = "0.2.7"

@@ -18,7 +18,7 @@ core-foundation = "0.9"
 objc = "0.2.7"
 
 [target.'cfg(target_os = "android")'.dependencies]
-irondash_jni_context = "0.1.3"
+irondash_jni_context =  { version = "0.1.0", path = "../jni_context" }
 log = "0.4"
 
 [[test]]

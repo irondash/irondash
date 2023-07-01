@@ -36,7 +36,7 @@ impl PlatformContext {
     fn initialize(&mut self) -> Result<()> {
         let notifier = Notifier::new(move |env, data| {
             let handle = env
-                .call_method(*data, "longValue", "()J", &[])
+                .call_method(data, "longValue", "()J", &[])
                 .ok()
                 .and_then(|v| v.j().ok());
             if let (Some(handle), Some(engine_context)) = //
@@ -45,8 +45,8 @@ impl PlatformContext {
                 engine_context.on_engine_destroyed(handle);
             }
         })?;
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
         env.call_static_method(
             class,
             "registerDestroyListener",
@@ -57,14 +57,18 @@ impl PlatformContext {
         Ok(())
     }
 
-    fn get_plugin_class<'a>(&'a self, env: &jni::JNIEnv<'a>) -> Result<jni::objects::JClass<'a>> {
+    fn get_plugin_class<'a>(
+        &'a self,
+        env: &mut jni::JNIEnv<'a>,
+    ) -> Result<jni::objects::JClass<'a>> {
         let plugin_class = env.call_method(
             self.class_loader.as_obj(),
             "loadClass",
             "(Ljava/lang/String;)Ljava/lang/Class;",
-            &[env
-                .new_string("dev/irondash/engine_context/IrondashEngineContextPlugin")?
-                .into()],
+            &[
+                (&env.new_string("dev/irondash/engine_context/IrondashEngineContextPlugin")?)
+                    .into(),
+            ],
         );
 
         if env.exception_check()? {
@@ -77,8 +81,8 @@ impl PlatformContext {
     }
 
     pub fn get_activity(&self, handle: i64) -> Result<Activity> {
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
         let activity = env
             .call_static_method(
                 class,
@@ -87,7 +91,7 @@ impl PlatformContext {
                 &[handle.into()],
             )?
             .l()?;
-        if env.is_same_object(activity, JObject::null())? {
+        if env.is_same_object(&activity, JObject::null())? {
             Err(Error::InvalidHandle)
         } else {
             Ok(env.new_global_ref(activity)?)
@@ -95,8 +99,8 @@ impl PlatformContext {
     }
 
     pub fn get_flutter_view(&self, handle: i64) -> Result<FlutterView> {
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
         let view = env
             .call_static_method(
                 class,
@@ -105,7 +109,7 @@ impl PlatformContext {
                 &[handle.into()],
             )?
             .l()?;
-        if env.is_same_object(view, JObject::null())? {
+        if env.is_same_object(&view, JObject::null())? {
             Err(Error::InvalidHandle)
         } else {
             Ok(env.new_global_ref(view)?)
@@ -113,8 +117,8 @@ impl PlatformContext {
     }
 
     pub fn get_binary_messenger(&self, handle: i64) -> Result<FlutterBinaryMessenger> {
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
         let messenger = env
             .call_static_method(
                 class,
@@ -123,7 +127,7 @@ impl PlatformContext {
                 &[handle.into()],
             )?
             .l()?;
-        if env.is_same_object(messenger, JObject::null())? {
+        if env.is_same_object(&messenger, JObject::null())? {
             Err(Error::InvalidHandle)
         } else {
             Ok(env.new_global_ref(messenger)?)
@@ -131,8 +135,8 @@ impl PlatformContext {
     }
 
     pub fn get_texture_registry(&self, handle: i64) -> Result<FlutterTextureRegistry> {
-        let env = self.java_vm.get_env()?;
-        let class = self.get_plugin_class(&env)?;
+        let mut env = self.java_vm.get_env()?;
+        let class = self.get_plugin_class(&mut env)?;
         let registry = env
             .call_static_method(
                 class,
@@ -141,7 +145,7 @@ impl PlatformContext {
                 &[handle.into()],
             )?
             .l()?;
-        if env.is_same_object(registry, JObject::null())? {
+        if env.is_same_object(&registry, JObject::null())? {
             Err(Error::InvalidHandle)
         } else {
             Ok(env.new_global_ref(registry)?)

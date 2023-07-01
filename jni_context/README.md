@@ -18,7 +18,7 @@ to schedule callbacks to be run on main thread.
 ```rust
     let context = JniContext::get().unwrap();
     let java_vm = context.java_vm();
-    let env = java_vm.attach_to_current_thread();
+    let mut env = java_vm.attach_to_current_thread();
 
     // ...
 

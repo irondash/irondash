@@ -53,10 +53,11 @@ class Serializer {
     final nativeLists = <NativeList>[list];
     try {
       _writeValue(buffer, message, nativeLists);
-    } finally {
+    } catch (_) {
       for (final NativeList list in nativeLists) {
         list.free();
       }
+      rethrow;
     }
     return list;
   }

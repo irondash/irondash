@@ -240,7 +240,7 @@ class NativeFunctionsException implements Exception {
 typedef _InitFunctionF = Int64 Function(Pointer<_GetFunctions>);
 typedef _InitFunction = int Function(Pointer<_GetFunctions>);
 
-class _GetFunctions extends Struct {
+final class _GetFunctions extends Struct {
   // in
   @Int64()
   external int size;

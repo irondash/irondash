@@ -13,7 +13,7 @@ class NoRegisteredHandlerException implements Exception {
   final String channel;
 }
 
-/// Context inteded for testing message channels. Can also be used for
+/// Context intended for testing message channels. Can also be used for
 /// dart-only implementation (i.e. flutter web)
 class MockMessageChannelContext extends MessageChannelContext {
   void registerMockChannelHandler(
@@ -98,7 +98,7 @@ extension MockEventChannel on MockMessageChannelContext {
   }
 }
 
-class _Sink extends Sink {
+class _Sink implements Sink {
   _Sink(this.onAdd);
 
   final Function(dynamic) onAdd;

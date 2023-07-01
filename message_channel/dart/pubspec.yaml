@@ -4,13 +4,13 @@ version: 0.1.1
 homepage: https://github.com/irondash/irondash
 
 environment:
-  sdk: ">=2.13.0 <3.0.0"
+  sdk: '>=3.0.0 <4.0.0'
   flutter: ">=2.2.1"
 
 dependencies:
   flutter:
     sdk: flutter
-  ffi: ^2.0.1
+  ffi: ^2.0.2
 
 dev_dependencies:
   flutter_test:

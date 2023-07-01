@@ -119,7 +119,7 @@ unsafe fn _value_to_objc(value: &Value) -> Result<id, TryFromError> {
         }
     }
     unsafe fn transform_slice<T>(s: &[T]) -> &[u8] {
-        std::slice::from_raw_parts(s.as_ptr() as *const u8, s.len() * std::mem::size_of::<T>())
+        std::slice::from_raw_parts(s.as_ptr() as *const u8, std::mem::size_of_val(s))
     }
 
     match value {
@@ -194,7 +194,7 @@ mod test {
         });
 
         unsafe fn transform_slice<T>(s: &[T]) -> &[u8] {
-            std::slice::from_raw_parts(s.as_ptr() as *const u8, s.len() * std::mem::size_of::<T>())
+            std::slice::from_raw_parts(s.as_ptr() as *const u8, std::mem::size_of_val(s))
         }
 
         let v: Value = vec![1f32, 2f32].into();

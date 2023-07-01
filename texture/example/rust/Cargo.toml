@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-irondash_engine_context = { version = "0.2.0" }
+irondash_engine_context = { version = "0.2.1" }
 irondash_texture = { version = "0.2.0" }
 irondash_run_loop = { version = "0.2.0" }
 simple_logger = "2.1"

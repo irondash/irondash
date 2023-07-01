@@ -133,12 +133,23 @@ impl<Type> PlatformTexture<Type> {
                 )
             };
 
-            // If there is a case where this is not true we need to copy line
-            // by line.
-            assert!(buf.stride == buf.width);
-            assert!(buf.stride * buf.height * 4 == payload.data.len() as i32);
-
-            data.copy_from_slice(payload.data);
+            if buf.stride == buf.width {
+                assert!(buf.stride * buf.height * 4 == payload.data.len() as i32);
+                data.copy_from_slice(payload.data);
+            } else {
+                let src_stride = payload.width * 4;
+                let dst_stride = buf.stride * 4;
+                let min_stride = std::cmp::min(src_stride, dst_stride);
+                let mut src_offset: usize = 0;
+                let mut dst_offset: usize = 0;
+                for _ in 0..payload.height {
+                    let src_slice = &payload.data[src_offset..src_offset + min_stride as usize];
+                    let dst_slice = &mut data[dst_offset..dst_offset + min_stride as usize];
+                    dst_slice.copy_from_slice(src_slice);
+                    src_offset += src_stride as usize;
+                    dst_offset += dst_stride as usize;
+                }
+            }
 
             unsafe { ANativeWindow_unlockAndPost(self.native_window) };
         }

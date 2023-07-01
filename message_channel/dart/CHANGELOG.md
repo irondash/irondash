@@ -1,3 +1,7 @@
+## 0.2.0
+  - **FEAT**: dart 3 support
+  - **FIX**: possible memory leak on exception while serializing message
+
 ## 0.1.1
 
  - **FEAT**: add irondash_texture (#8).

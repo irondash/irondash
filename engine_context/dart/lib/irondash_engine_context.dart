@@ -5,7 +5,7 @@ class EngineContext {
   static final instance = EngineContext();
 
   // this must match EngineContext::check_version.
-  static const _version = 3;
+  static const _version = 4;
   static const _versionShift = 48;
 
   final _methodChannel = const MethodChannel('dev.irondash.engine_context');

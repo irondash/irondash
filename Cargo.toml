@@ -3,7 +3,7 @@
 members = [
     "dart_ffi",
     "engine_context/rust",
-    "jni_context",
+    # "engine_context/dart/android/rust",
     "message_channel/dart/example/rust",
     "message_channel/rust_derive",
     "message_channel/rust",
@@ -12,6 +12,8 @@ members = [
     "texture/example/rust",
 ]
 
+resolver = "2"
+
 [profile.release]
 lto = true
 panic = "abort"
@@ -19,7 +21,6 @@ panic = "abort"
 [patch.crates-io]
 irondash_dart_ffi = { path = "dart_ffi" }
 irondash_engine_context = { path = "engine_context/rust" }
-irondash_jni_context = { path = "jni_context" }
 irondash_message_channel = { path = "message_channel/rust" }
 irondash_run_loop = { path = "run_loop" }
 irondash_texture = { path = "texture" }

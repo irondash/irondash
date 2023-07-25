@@ -1,12 +1,11 @@
 use std::mem::ManuallyDrop;
 
-use irondash_jni_context::JniContext;
 use jni::{
     objects::{GlobalRef, JClass, JObject},
     JNIEnv,
 };
 
-use super::Error;
+use super::jni_context::JniContext;
 use crate::Result;
 
 pub(crate) struct Notifier {
@@ -25,7 +24,7 @@ impl Notifier {
 
         let context = JniContext::get()?;
         let mut env = context.java_vm().get_env()?;
-        let class_loader = context.class_loader().ok_or(Error::MissingClassLoader)?;
+        let class_loader = context.class_loader();
         let notifier_class: JClass = env
             .call_method(
                 class_loader.as_obj(),

@@ -8,8 +8,7 @@ use std::{
 use super::sys::{
     libc::{close, pipe, read},
     ndk_sys::{
-        ALooper_acquire, ALooper_addFd, ALooper_forThread, ALooper_release, ALooper_removeFd,
-        ALOOPER_EVENT_INPUT,
+        ALooper_acquire, ALooper_addFd, ALooper_release, ALooper_removeFd, ALOOPER_EVENT_INPUT,
     },
 };
 
@@ -45,17 +44,8 @@ impl RunLoopCallbacks {
 }
 
 impl MiniRunLoop {
-    pub fn is_main_thread() -> bool {
-        let looper = unsafe { ALooper_forThread() };
-        !looper.is_null()
-    }
-
-    pub fn new() -> Self {
-        let looper = unsafe {
-            let looper = ALooper_forThread();
-            ALooper_acquire(looper);
-            looper
-        };
+    pub fn new(looper: *mut ALooper) -> Self {
+        unsafe { ALooper_acquire(looper) };
         let mut pipes: [c_int; 2] = [0, 2];
         unsafe { pipe(pipes.as_mut_ptr()) };
         let state = Rc::new(State {

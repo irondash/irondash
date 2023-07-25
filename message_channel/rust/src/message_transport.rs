@@ -58,13 +58,15 @@ pub mod native {
             let mut delegate = self.delegate.lock().unwrap();
             delegate.on_isolate_joined(isolate_id);
 
-            // Make one hop over to platform thread before telling the
-            // Dart counterpart we're ready.
-            // It is possible there is some initializaton pending.
-            RunLoop::sender_for_main_thread().send(move || {
-                let value = DartValue::String(CString::new("ready").unwrap());
-                isolate_port.send(value);
-            });
+            // // Make one hop over to platform thread before telling the
+            // // Dart counterpart we're ready.
+            // // It is possible there is some initializaton pending.
+            // RunLoop::sender_for_main_thread().send(move || {
+
+            // });
+
+            let value = DartValue::String(CString::new("ready").unwrap());
+            isolate_port.send(value);
         }
 
         fn handle_message(&self, isolate_id: IsolateId, message: Value) {

@@ -1,6 +1,8 @@
 package dev.irondash.engine_context;
 
 import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 
 import androidx.annotation.Keep;
@@ -146,4 +148,8 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
   }
 
   private static final Registry registry = new Registry();
+
+  static {
+    System.loadLibrary("irondash_engine_context_native");
+  }
 }

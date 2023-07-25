@@ -1,6 +1,6 @@
-use std::fmt::Display;
+use std::{fmt::Display, sync::Arc};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Error {
     /// Engine for this handle does not exist.
     InvalidHandle,
@@ -11,12 +11,7 @@ pub enum Error {
     /// irondash_engine_context plugin is not linked by application
     PluginNotLoaded,
     #[cfg(target_os = "android")]
-    /// Android class loader is missing.
-    MissingClassLoader,
-    #[cfg(target_os = "android")]
-    JNIError(jni::errors::Error),
-    #[cfg(target_os = "android")]
-    JniContextError(irondash_jni_context::Error),
+    JNIError(Arc<jni::errors::Error>),
 }
 
 impl Display for Error {
@@ -28,10 +23,6 @@ impl Display for Error {
             Error::PluginNotLoaded => write!(f, "irondash_engine_context plugin not loaded"),
             #[cfg(target_os = "android")]
             Error::JNIError(e) => e.fmt(f),
-            #[cfg(target_os = "android")]
-            Error::MissingClassLoader => write!(f, "missing class loader"),
-            #[cfg(target_os = "android")]
-            Error::JniContextError(e) => e.fmt(f),
         }
     }
 }
@@ -41,13 +32,6 @@ impl std::error::Error for Error {}
 #[cfg(target_os = "android")]
 impl From<jni::errors::Error> for Error {
     fn from(err: jni::errors::Error) -> Self {
-        Error::JNIError(err)
-    }
-}
-
-#[cfg(target_os = "android")]
-impl From<irondash_jni_context::Error> for Error {
-    fn from(err: irondash_jni_context::Error) -> Self {
-        Error::JniContextError(err)
+        Error::JNIError(Arc::new(err))
     }
 }

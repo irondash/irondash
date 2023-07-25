@@ -1,7 +1,7 @@
-use std::{rc::Rc, sync::Arc, thread::AccessError, time::Duration};
+use std::{fmt::Display, rc::Rc, sync::Arc, thread::AccessError, time::Duration};
 
 use futures::{task::ArcWake, Future};
-use once_cell::sync::OnceCell;
+use irondash_engine_context::EngineContext;
 
 use crate::{
     platform::PlatformRunLoop, util::FutureCompleter, Handle, JoinHandle, RunLoopSender, Task,
@@ -11,22 +11,38 @@ pub struct RunLoop {
     pub platform_run_loop: Rc<PlatformRunLoop>,
 }
 
-static MAIN_THREAD_SENDER: OnceCell<RunLoopSender> = OnceCell::new();
+#[derive(Debug, Clone)]
+pub enum Error {
+    /// Engine context plugin is not loaded. For access to main thread sender
+    /// the iron_dash_engine_context Flutter plugin must be loaded.
+    EngineContextPluginError(irondash_engine_context::Error),
+}
+
+impl From<irondash_engine_context::Error> for Error {
+    fn from(err: irondash_engine_context::Error) -> Self {
+        Error::EngineContextPluginError(err)
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::EngineContextPluginError(e) => e.fmt(f),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
+
 thread_local!(static RUN_LOOP: RunLoop = RunLoop::new());
 
 impl RunLoop {
     /// Creates new RunLoop instance. This is not meant to be called directly.
     /// Use [`RunLoop::current()`] instead.
     pub(crate) fn new() -> Self {
-        let res = Self {
+        Self {
             platform_run_loop: Rc::new(PlatformRunLoop::new()),
-        };
-        if MAIN_THREAD_SENDER.get().is_none() && Self::is_main_thread() {
-            MAIN_THREAD_SENDER
-                .set(res.new_sender())
-                .expect("Main thread sender already set");
         }
-        res
     }
 
     /// Schedules callback to be executed after specified delay.
@@ -80,6 +96,16 @@ impl RunLoop {
         RunLoopSender::new(self.platform_run_loop.new_sender())
     }
 
+    /// Returns sender object that can be used to send callback to main thread.
+    /// This requires `irondash_engine_context` Flutter plugin to be loaded.
+    /// If the plugin is not loaded the call will fail with [`Error::EngineContextPluginError`].
+    pub fn sender_for_main_thread() -> std::result::Result<RunLoopSender, Error> {
+        // We're not interested if this is main load but want to check for presence
+        // of engine context plugin and fail fast if missing;
+        let _is_main_thread = EngineContext::is_main_thread()?;
+        Ok(RunLoopSender::new_for_main_thread())
+    }
+
     /// Spawn the future with this run loop being the executor.
     pub fn spawn<T: 'static>(&self, future: impl Future<Output = T> + 'static) -> JoinHandle<T> {
         let task = Arc::new(Task::new(self.new_sender(), future));
@@ -102,23 +128,6 @@ impl RunLoop {
         RUN_LOOP.try_with(|run_loop| RunLoop {
             platform_run_loop: run_loop.platform_run_loop.clone(),
         })
-    }
-
-    /// Returns sender that can be used to send callbacks to main thread run
-    /// loop.
-    pub fn sender_for_main_thread() -> RunLoopSender {
-        MAIN_THREAD_SENDER.get().cloned().unwrap_or_else(|| {
-            if Self::is_main_thread() {
-                Self::current().new_sender()
-            } else {
-                RunLoopSender::new_fallback(PlatformRunLoop::main_thread_fallback_sender())
-            }
-        })
-    }
-
-    /// Returns whether current thread is main thread.
-    pub fn is_main_thread() -> bool {
-        PlatformRunLoop::is_main_thread()
     }
 
     /// Runs the run loop until it is stopped.

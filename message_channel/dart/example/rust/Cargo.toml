@@ -14,8 +14,8 @@ simple_logger = "2.1"
 async-trait = "0.1"
 tokio = { version = "1", features = ["full"] }
 thiserror = "1.0"
-irondash_message_channel = { version = "0.1.0", features = ["derive"] }
-irondash_run_loop = { version = "0.1.0" }
+irondash_message_channel = { version = "0.3.0", features = ["derive"] }
+irondash_run_loop = { version = "0.3.0" }
 
 # reqwest uses different options per platform
 
@@ -32,7 +32,7 @@ reqwest = { version = "0.11", default-features = false, features = [
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.11"
 reqwest = { version = "0.11", default-features = false, features = [
-    "rustls-tls",
+    # "rustls-tls",
 ] }
 
 [target.'cfg(target_os = "ios")'.dependencies]

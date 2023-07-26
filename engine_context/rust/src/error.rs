@@ -1,4 +1,4 @@
-use std::{fmt::Display, sync::Arc};
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -11,7 +11,7 @@ pub enum Error {
     /// irondash_engine_context plugin is not linked by application
     PluginNotLoaded,
     #[cfg(target_os = "android")]
-    JNIError(Arc<jni::errors::Error>),
+    JNIError(std::sync::Arc<jni::errors::Error>),
 }
 
 impl Display for Error {
@@ -32,6 +32,6 @@ impl std::error::Error for Error {}
 #[cfg(target_os = "android")]
 impl From<jni::errors::Error> for Error {
     fn from(err: jni::errors::Error) -> Self {
-        Error::JNIError(Arc::new(err))
+        Error::JNIError(std::sync::Arc::new(err))
     }
 }

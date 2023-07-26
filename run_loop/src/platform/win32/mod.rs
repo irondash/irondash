@@ -80,14 +80,6 @@ impl PlatformRunLoop {
     pub fn new_sender(&self) -> PlatformRunLoopSender {
         self.state.new_sender()
     }
-
-    pub fn is_main_thread() -> bool {
-        is_main_thread()
-    }
-
-    pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
-        PlatformRunLoopSender::MainThreadFallback
-    }
 }
 
 struct Timer {
@@ -231,10 +223,10 @@ impl State {
     }
 
     fn new_sender(&self) -> PlatformRunLoopSender {
-        PlatformRunLoopSender::Regular(PlatformRunLoopSenderRegular {
+        PlatformRunLoopSender {
             hwnd: self.hwnd.get(),
             callbacks: Arc::downgrade(&self.sender_callbacks),
-        })
+        }
     }
 
     fn run(&self) {
@@ -351,56 +343,14 @@ impl WindowAdapter for State {
     }
 }
 
-#[allow(unused_variables)]
-
-static mut FIRST_THREAD: DWORD = 0;
-static mut FALLBACK_WINDOW: HWND = 0;
-
-fn is_main_thread() -> bool {
-    unsafe { FIRST_THREAD == GetCurrentThreadId() }
-}
-
-#[used]
-#[cfg_attr(target_os = "windows", link_section = ".CRT$XCU")]
-static ON_LOAD: extern "C" fn() = {
-    extern "C" fn on_load() {
-        // Remember initial thread and create a fallback window that we'll be
-        // used to schedule things on main thread in case there is no RunLoop
-        // created for main thread yet.
-        unsafe { FIRST_THREAD = GetCurrentThreadId() };
-        let fallback_window = FallbackWindow {}.create_window("Irondash Fallback Window", 0, 0);
-        unsafe { FALLBACK_WINDOW = fallback_window };
-    }
-    on_load
-};
-
-struct FallbackWindow {}
-
-impl WindowAdapter for FallbackWindow {
-    fn wnd_proc(&self, hwnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
-        if msg == WM_USER {
-            let callback = w_param as *mut Box<dyn FnOnce()>;
-            let callback = unsafe { Box::from_raw(callback) };
-            callback();
-        }
-        unsafe { DefWindowProcW(hwnd, msg, w_param, l_param) }
-    }
-}
-
 #[derive(Clone)]
-pub enum PlatformRunLoopSender {
-    Regular(PlatformRunLoopSenderRegular),
-    MainThreadFallback,
-}
-
-#[derive(Clone)]
-pub struct PlatformRunLoopSenderRegular {
+pub struct PlatformRunLoopSender {
     hwnd: HWND,
     callbacks: std::sync::Weak<Mutex<Vec<SenderCallback>>>,
 }
 
 #[allow(unused_variables)]
-impl PlatformRunLoopSenderRegular {
+impl PlatformRunLoopSender {
     pub fn send<F>(&self, callback: F) -> bool
     where
         F: FnOnce() + 'static + Send,
@@ -416,23 +366,6 @@ impl PlatformRunLoopSenderRegular {
             true
         } else {
             false
-        }
-    }
-}
-
-impl PlatformRunLoopSender {
-    pub fn send<F: FnOnce() + 'static + Send>(&self, callback: F) -> bool {
-        match self {
-            PlatformRunLoopSender::Regular(s) => s.send(callback),
-            PlatformRunLoopSender::MainThreadFallback => {
-                let callback: Box<dyn FnOnce()> = Box::new(callback);
-                let callback = Box::new(callback);
-                let callback = Box::into_raw(callback);
-                unsafe {
-                    PostMessageW(FALLBACK_WINDOW, WM_USER, callback as WPARAM, 0);
-                }
-                true
-            }
         }
     }
 }

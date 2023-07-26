@@ -17,6 +17,12 @@ extern "C" {
 FLUTTER_PLUGIN_EXPORT void IrondashEngineContextPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar);
 
+FLUTTER_PLUGIN_EXPORT void
+IrondashEngineContextPerformOnMainThread(void (*callback)(void *data),
+                                         void *data);
+
+FLUTTER_PLUGIN_EXPORT unsigned long IrondashEngineContextGetMainThreadId();
+
 FLUTTER_PLUGIN_EXPORT size_t
 IrondashEngineContextGetFlutterView(int64_t engine_handle);
 
@@ -27,8 +33,8 @@ FLUTTER_PLUGIN_EXPORT FlutterDesktopMessengerRef
 IrondashEngineContextGetBinaryMessenger(int64_t engine_handle);
 
 typedef void (*EngineDestroyedCallback)(int64_t);
-FLUTTER_PLUGIN_EXPORT void
-IrondashEngineContextRegisterDestroyNotification(EngineDestroyedCallback callback);
+FLUTTER_PLUGIN_EXPORT void IrondashEngineContextRegisterDestroyNotification(
+    EngineDestroyedCallback callback);
 
 #if defined(__cplusplus)
 } // extern "C"

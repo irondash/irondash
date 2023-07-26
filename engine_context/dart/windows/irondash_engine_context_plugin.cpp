@@ -1,14 +1,15 @@
 #include "irondash_engine_context_plugin.h"
 
 // This must be included before many other Windows headers.
+#include <map>
+#include <mutex>
+#include <string>
+#include <vector>
 #include <windows.h>
 
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
-
-#include <map>
-#include <vector>
 
 namespace irondash_engine_context {
 
@@ -21,7 +22,113 @@ struct EngineContext {
 std::map<int64_t, EngineContext> contexts;
 int64_t next_handle = 1;
 std::vector<EngineDestroyedCallback> engine_destroyed_callbacks;
+DWORD main_thread_id;
+
+class MiniRunLoop;
+MiniRunLoop *mini_run_loop;
+
+class MiniRunLoop {
+public:
+  MiniRunLoop() : hwnd_(0) {
+    WNDCLASS window_class = RegisterWindowClass();
+    hwnd_ =
+        CreateWindowEx(0, window_class.lpszClassName, L"", 0, 0, 0, 0, 0,
+                       HWND_MESSAGE, nullptr, window_class.hInstance, nullptr);
+    if (hwnd_) {
+      SetWindowLongPtr(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+    }
+  }
+
+  ~MiniRunLoop() {
+    if (hwnd_) {
+      DestroyWindow(hwnd_);
+      hwnd_ = nullptr;
+    }
+    UnregisterClass(window_class_name_.c_str(), nullptr);
+  }
+
+  void Schedule(void (*fn)(void *), void *arg) {
+    {
+      std::lock_guard<std::mutex> guard(callbacks_mutex_);
+      callbacks_.push_back(Callback{fn, arg});
+    }
+    PostMessage(hwnd_, WM_NULL, 0, 0);
+  }
+
+private:
+  std::mutex callbacks_mutex_;
+  struct Callback {
+    void (*fn)(void *);
+    void *arg;
+  };
+  std::vector<Callback> callbacks_;
+
+  WNDCLASS RegisterWindowClass() {
+    window_class_name_ = L"EngineContextMiniRunLoop";
+
+    WNDCLASS window_class{};
+    window_class.hCursor = nullptr;
+    window_class.lpszClassName = window_class_name_.c_str();
+    window_class.style = 0;
+    window_class.cbClsExtra = 0;
+    window_class.cbWndExtra = 0;
+    window_class.hInstance = GetModuleHandle(nullptr);
+    window_class.hIcon = nullptr;
+    window_class.hbrBackground = 0;
+    window_class.lpszMenuName = nullptr;
+    window_class.lpfnWndProc = WndProc;
+    RegisterClass(&window_class);
+    return window_class;
+  }
+
+  LRESULT
+  HandleMessage(UINT const message, WPARAM const wparam,
+                LPARAM const lparam) noexcept {
+    if (message == WM_NULL) {
+      std::vector<Callback> callbacks;
+      {
+        std::lock_guard<std::mutex> guard(callbacks_mutex_);
+        std::swap(callbacks, callbacks_);
+      }
+      for (auto callback : callbacks) {
+        callback.fn(callback.arg);
+      }
+    }
+    return DefWindowProcW(hwnd_, message, wparam, lparam);
+  }
+
+  static LRESULT WndProc(HWND const window, UINT const message,
+                         WPARAM const wparam, LPARAM const lparam) noexcept {
+    if (auto *that = reinterpret_cast<MiniRunLoop *>(
+            GetWindowLongPtr(window, GWLP_USERDATA))) {
+      return that->HandleMessage(message, wparam, lparam);
+    } else {
+      return DefWindowProc(window, message, wparam, lparam);
+    }
+  }
+
+  std::wstring window_class_name_;
+  HWND hwnd_;
+};
+
 } // namespace
+
+extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason,
+                               LPVOID lpvReserved) {
+  switch (fdwReason) {
+  case DLL_PROCESS_ATTACH:
+    fprintf(stderr, "P ATTACH\n");
+    main_thread_id = GetCurrentThreadId();
+    mini_run_loop = new MiniRunLoop();
+  }
+  return TRUE;
+}
+
+void PerformOnMainThread(void (*callback)(void *data), void *data) {
+  mini_run_loop->Schedule(callback, data);
+}
+
+DWORD GetMainThreadId() { return main_thread_id; }
 
 size_t GetFlutterView(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);

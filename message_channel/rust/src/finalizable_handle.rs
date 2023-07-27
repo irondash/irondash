@@ -10,7 +10,7 @@ use irondash_dart_ffi::DartWeakPersistentHandle;
 use irondash_run_loop::{util::Capsule, RunLoop, RunLoopSender};
 use once_cell::sync::OnceCell;
 
-use crate::{IsolateId, MessageChannel};
+use crate::IsolateId;
 
 ///
 /// FinalizableHandle can be used as payload in [`super::Value::FinalizableHandle`].
@@ -83,23 +83,6 @@ impl FinalizableHandle {
     pub fn is_finalized(&self) -> bool {
         let state = FinalizableHandleState::get();
         !state.objects.contains_key(&self.id)
-    }
-
-    /// Updates the external size. This is a hint to Dart garbage collector.
-    pub fn update_size(&self, size: isize) {
-        let mut state = FinalizableHandleState::get();
-        let object = state.objects.get_mut(&self.id);
-        if let Some(object) = object {
-            object.external_size = size;
-            if object.handle.is_some() {
-                let handle = self.id;
-                let isolate_id = object.isolate_id;
-                // The actual dart method to update isolate size must be called from
-                // Dart thread, so we ask message channel to relay the request,
-                // which should result in a call to 'update_persistent_handle_size'.
-                MessageChannel::get().request_update_external_size(isolate_id, handle);
-            }
-        }
     }
 
     #[cfg(feature = "mock")]
@@ -283,16 +266,6 @@ pub(crate) mod finalizable_handle_native {
             return handle;
         }
         null_handle
-    }
-
-    pub(crate) unsafe extern "C" fn update_persistent_handle_size(id: isize) {
-        let mut state = FinalizableHandleState::get();
-        let object = state.objects.get_mut(&id);
-        if let Some(object) = object {
-            if let Some(handle) = object.handle.as_mut() {
-                (DartFunctions::get().update_external_size)(handle.0, object.external_size);
-            }
-        }
     }
 }
 

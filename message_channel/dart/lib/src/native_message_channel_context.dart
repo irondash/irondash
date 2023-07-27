@@ -17,8 +17,6 @@ abstract class NativeMessageChannelDelegate {
   void postMessage(IsolateId isolateId, Object? message);
 
   int token();
-
-  void updateExternalSize(int handle);
 }
 
 // Default FFI based delegate
@@ -48,11 +46,6 @@ class _NativeMessageChannelDelegate implements NativeMessageChannelDelegate {
   @override
   int token() {
     return nativeFunctions.token;
-  }
-
-  @override
-  void updateExternalSize(int handle) {
-    nativeFunctions.updateWeakPersistentHandleSize(handle);
   }
 }
 
@@ -148,9 +141,6 @@ class NativeMessageChannelContext
       if (handler != null) {
         handler(value);
       }
-    } else if (message == "request_update_external_size") {
-      final handle = data[1] as int;
-      delegate.updateExternalSize(handle);
     }
   }
 

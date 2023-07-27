@@ -33,7 +33,6 @@ pub struct DartFunctions {
     pub delete_weak_persistent_handle: unsafe extern "C" fn(handle: DartWeakPersistentHandle),
     pub handle_from_weak_persistent:
         unsafe extern "C" fn(handle: DartWeakPersistentHandle) -> DartHandle,
-    pub update_external_size: unsafe extern "C" fn(handle: DartWeakPersistentHandle, size: isize),
 }
 
 unsafe impl Send for DartFunctions {}
@@ -115,9 +114,6 @@ pub(super) fn init(ptr: *mut c_void) {
             ),
             handle_from_weak_persistent: mem::transmute(
                 api.lookup_fn("Dart_HandleFromWeakPersistent"),
-            ),
-            update_external_size: mem::transmute(
-                api.lookup_fn("Dart_UpdateFinalizableExternalSize"),
             ),
         }
     };

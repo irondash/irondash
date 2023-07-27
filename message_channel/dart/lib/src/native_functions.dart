@@ -12,7 +12,6 @@ class NativeFunctions {
     required this.registerIsolate,
     required this.postMessage,
     required this.attachWeakPersistentHandle,
-    required this.updateWeakPersistentHandleSize,
     required this.vecAllocateInt8,
     required this.vecAllocateUint8,
     required this.vecAllocateInt16,
@@ -40,7 +39,6 @@ class NativeFunctions {
   final RegisterIsolate registerIsolate;
   final PostMessage postMessage;
   final AttachWeakPersistentHandle attachWeakPersistentHandle;
-  final UpdateWeakPersistentHandleSize updateWeakPersistentHandleSize;
 
   final VecAllocate<Int8> vecAllocateInt8;
   final VecAllocate<Uint8> vecAllocateUint8;
@@ -109,9 +107,6 @@ class NativeFunctions {
         postMessage: context.ref.postMessage.asFunction<PostMessage>(),
         attachWeakPersistentHandle: context.ref.attachWeakPersistentHandle
             .asFunction<AttachWeakPersistentHandle>(),
-        updateWeakPersistentHandleSize: context
-            .ref.updateWeakPersistentHandleSize
-            .asFunction<UpdateWeakPersistentHandleSize>(),
         vecAllocateInt8:
             context.ref.vecAllocateInt8.asFunction<VecAllocate<Int8>>(),
         vecAllocateUint8:
@@ -251,8 +246,6 @@ final class _GetFunctions extends Struct {
   external Pointer<NativeFunction<_PostMessage>> postMessage;
   external Pointer<NativeFunction<_AttachWeakPersistentHandle>>
       attachWeakPersistentHandle;
-  external Pointer<NativeFunction<_UpdateWeakPersistentHandleSize>>
-      updateWeakPersistentHandleSize;
   external Pointer<NativeFunction<_VecAllocate<Int8>>> vecAllocateInt8;
   external Pointer<NativeFunction<_VecAllocate<Uint8>>> vecAllocateUint8;
   external Pointer<NativeFunction<_VecAllocate<Int16>>> vecAllocateInt16;
@@ -284,9 +277,6 @@ typedef _AttachWeakPersistentHandle = Handle Function(
     Handle, Int64, Handle, Int64);
 typedef AttachWeakPersistentHandle = Object? Function(
     Object, int, Object?, int);
-
-typedef _UpdateWeakPersistentHandleSize = Handle Function(Handle);
-typedef UpdateWeakPersistentHandleSize = Object? Function(int);
 
 typedef _VecAllocate<T extends NativeType> = Pointer<T> Function(Uint64 size);
 typedef VecAllocate<T extends NativeType> = Pointer<T> Function(int size);

@@ -35,9 +35,6 @@ class MockNativeMessageChannelDelegate extends NativeMessageChannelDelegate {
   int token() {
     return 1;
   }
-
-  @override
-  void updateExternalSize(int handle) {}
 }
 
 void main() {

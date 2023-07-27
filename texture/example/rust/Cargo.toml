@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 irondash_engine_context = { version = "0.3.0" }
 irondash_texture = { version = "0.3.0" }
 irondash_run_loop = { version = "0.3.0" }
-irondash_dart_ffi = "0.1.0"
+irondash_dart_ffi = "0.2.0"
 simple_logger = "2.1"
 log = "0.4"
 fastrand = "1.8"

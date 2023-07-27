@@ -66,7 +66,6 @@ pub extern "C" fn irondash_init_message_channel_context(_data: *mut c_void) -> F
             register_isolate: *mut c_void,
             send_message: *mut c_void,
             attach_weak_persistent_handle: *mut c_void,
-            update_persistant_handle_size: *mut c_void,
 
             allocate_vec_i8: *mut c_void,
             allocate_vec_u8: *mut c_void,
@@ -90,10 +89,7 @@ pub extern "C" fn irondash_init_message_channel_context(_data: *mut c_void) -> F
         }
 
         use self::native_vector::*;
-        use crate::{
-            finalizable_handle_native::attach_weak_persistent_handle,
-            finalizable_handle_native::update_persistent_handle_size,
-        };
+        use crate::finalizable_handle_native::attach_weak_persistent_handle;
 
         let context = _data as *mut MessageChannelContext;
         let context = unsafe { &mut *context };
@@ -105,7 +101,6 @@ pub extern "C" fn irondash_init_message_channel_context(_data: *mut c_void) -> F
         context.register_isolate = register_isolate as *mut _;
         context.send_message = post_message as *mut _;
         context.attach_weak_persistent_handle = attach_weak_persistent_handle as *mut _;
-        context.update_persistant_handle_size = update_persistent_handle_size as *mut _;
         context.allocate_vec_i8 = allocate_vec_i8 as *mut _;
         context.allocate_vec_u8 = allocate_vec_u8 as *mut _;
         context.allocate_vec_i16 = allocate_vec_i16 as *mut _;

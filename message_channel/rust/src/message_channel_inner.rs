@@ -115,16 +115,6 @@ impl<Transport: MessageTransport> MessageChannelInner<Transport> {
         }
     }
 
-    pub(crate) fn request_update_external_size(&self, target_isolate: IsolateId, handle: isize) {
-        let v = vec![
-            Value::String("request_update_external_size".into()),
-            (handle as i64).into(),
-        ]
-        .into();
-
-        self.transport().send(target_isolate, v);
-    }
-
     pub fn register_delegate<F>(&mut self, channel: &str, delegate: Rc<F>)
     where
         F: MessageChannelDelegate + 'static,

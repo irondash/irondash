@@ -130,11 +130,4 @@ impl MessageChannel {
     pub fn unregister_delegate(&self, channel: &str) {
         self.inner.lock().unwrap().unregister_delegate(channel)
     }
-
-    pub(crate) fn request_update_external_size(&self, target_isolate: IsolateId, handle: isize) {
-        self.inner
-            .lock()
-            .unwrap()
-            .request_update_external_size(target_isolate, handle);
-    }
 }

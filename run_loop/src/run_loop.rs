@@ -121,14 +121,14 @@ impl RunLoop {
     pub fn is_main_thread() -> std::result::Result<bool, Error> {
         use crate::platform;
         use std::sync::atomic::Ordering;
-        Ok(MAIN_THREAD_ID.load(Ordering::Acquire) == platform::get_system_thread_id())
+        Ok(MAIN_THREAD_ID.load(Ordering::Acquire) == platform::get_system_thread_id() as _)
     }
 
     #[cfg(test)]
     pub fn set_main_thread() {
         use crate::platform;
         use std::sync::atomic::Ordering;
-        MAIN_THREAD_ID.store(platform::get_system_thread_id(), Ordering::Release);
+        MAIN_THREAD_ID.store(platform::get_system_thread_id() as _, Ordering::Release);
         let sender = RunLoop::current().new_sender();
         MAIN_THREAD_SENDER.set(sender).ok();
     }

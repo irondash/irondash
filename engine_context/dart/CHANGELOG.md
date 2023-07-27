@@ -1,3 +1,6 @@
+## 0.2.0
+  - **FEAT**: dart 3 support
+
 ## 0.1.1
 
  - **FIX**: [android] build failing with proguard enabled (#18).

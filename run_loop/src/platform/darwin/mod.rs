@@ -21,7 +21,7 @@ use core_foundation::{
 };
 use objc::rc::{autoreleasepool, StrongPtr};
 
-use self::sys::{dispatch_async_f, dispatch_get_main_queue, pthread_threadid_np, to_nsstring};
+use self::sys::{pthread_threadid_np, to_nsstring};
 
 mod sys;
 
@@ -421,13 +421,9 @@ impl PlatformRunLoop {
     }
 
     pub fn new_sender(&self) -> PlatformRunLoopSender {
-        PlatformRunLoopSender::Regular {
-            state: StateWrapper(Arc::downgrade(&self.state)),
+        PlatformRunLoopSender {
+            state: Arc::downgrade(&self.state),
         }
-    }
-
-    pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
-        PlatformRunLoopSender::MainThreadFallback
     }
 }
 
@@ -435,9 +431,8 @@ impl PlatformRunLoop {
 pub struct StateWrapper(std::sync::Weak<Mutex<State>>);
 
 #[derive(Clone)]
-pub enum PlatformRunLoopSender {
-    Regular { state: StateWrapper },
-    MainThreadFallback,
+pub struct PlatformRunLoopSender {
+    state: std::sync::Weak<Mutex<State>>,
 }
 
 impl PlatformRunLoopSender {
@@ -445,42 +440,15 @@ impl PlatformRunLoopSender {
     where
         F: FnOnce() + 'static + Send,
     {
-        match self {
-            PlatformRunLoopSender::Regular { state } => {
-                if let Some(state) = state.0.upgrade() {
-                    let state_clone = state.clone();
-                    let mut state = state.lock().unwrap();
-                    state.callbacks.push(Box::new(callback));
-                    state.schedule(state_clone);
-                    true
-                } else {
-                    false
-                }
-            }
-            PlatformRunLoopSender::MainThreadFallback => {
-                // This could be done through custom run loop source but it
-                // is probably not worth the effort. Just use dispatch queue
-                // for now.
-                let callback: Box<dyn FnOnce()> = Box::new(callback);
-                let callback = Box::new(callback);
-                let callback = Box::into_raw(callback);
-
-                unsafe {
-                    dispatch_async_f(
-                        dispatch_get_main_queue(),
-                        callback as *mut c_void,
-                        Self::dispatch_work,
-                    );
-                }
-                true
-            }
+        if let Some(state) = self.state.upgrade() {
+            let state_clone = state.clone();
+            let mut state = state.lock().unwrap();
+            state.callbacks.push(Box::new(callback));
+            state.schedule(state_clone);
+            true
+        } else {
+            false
         }
-    }
-
-    extern "C" fn dispatch_work(data: *mut c_void) {
-        let callback = data as *mut Box<dyn FnOnce()>;
-        let callback = unsafe { Box::from_raw(callback) };
-        callback();
     }
 }
 

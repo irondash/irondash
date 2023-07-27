@@ -38,11 +38,15 @@ pub mod ndk_sys {
 pub mod libc {
     use std::ffi::{c_int, c_void};
 
+    pub const RTLD_NOLOAD: c_int = 4;
+
     extern "C" {
         pub fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
         pub fn pipe(fds: *mut c_int) -> c_int;
         pub fn close(fd: c_int) -> c_int;
         pub fn write(fd: c_int, buf: *const c_void, count: usize) -> isize;
-        pub fn gettid() -> u64;
+
+        pub fn dlopen(filename: *const std::ffi::c_char, flags: std::ffi::c_int) -> *mut c_void;
+        pub fn dlsym(handle: *mut c_void, symbol: *const std::ffi::c_char) -> *mut c_void;
     }
 }

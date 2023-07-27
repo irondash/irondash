@@ -13,9 +13,6 @@ use std::{
 pub type HandleType = usize;
 pub const INVALID_HANDLE: HandleType = 0;
 
-use irondash_jni_context::JniContext;
-
-use log::warn;
 use sys::{libc::*, ndk_sys::*};
 
 use self::sys::libc;
@@ -183,22 +180,10 @@ impl PlatformRunLoop {
     }
 
     pub fn new_sender(&self) -> PlatformRunLoopSender {
-        PlatformRunLoopSender::Regular(PlatformRunLoopSenderRegular {
+        PlatformRunLoopSender {
             callbacks: Arc::downgrade(&self.state.callbacks),
             condition: Arc::downgrade(&self.state.condition),
-        })
-    }
-
-    pub fn is_main_thread() -> bool {
-        if let Ok(context) = JniContext::get() {
-            context.is_main_thread()
-        } else {
-            false
         }
-    }
-
-    pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
-        PlatformRunLoopSender::MainThreadFallback
     }
 
     pub fn run(&self) {
@@ -332,40 +317,13 @@ impl Drop for PlatformRunLoop {
 }
 
 #[derive(Clone)]
-pub enum PlatformRunLoopSender {
-    Regular(PlatformRunLoopSenderRegular),
-    MainThreadFallback,
-}
-
-impl PlatformRunLoopSender {
-    pub fn send<F: FnOnce() + 'static + Send>(&self, callback: F) -> bool {
-        match self {
-            PlatformRunLoopSender::Regular(s) => s.send(callback),
-            PlatformRunLoopSender::MainThreadFallback => {
-                let context = JniContext::get();
-                match context {
-                    Ok(context) => {
-                        context.schedule_on_main_thread(callback);
-                        true
-                    }
-                    Err(err) => {
-                        warn!("Failed to get JniContext: {}", err);
-                        false
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct PlatformRunLoopSenderRegular {
+pub struct PlatformRunLoopSender {
     callbacks: std::sync::Weak<Mutex<Callbacks>>,
     condition: std::sync::Weak<Condvar>,
 }
 
 #[allow(unused_variables)]
-impl PlatformRunLoopSenderRegular {
+impl PlatformRunLoopSender {
     pub fn send<F>(&self, callback: F) -> bool
     where
         F: FnOnce() + 'static + Send,

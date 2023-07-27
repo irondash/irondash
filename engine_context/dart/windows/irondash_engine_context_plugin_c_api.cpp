@@ -12,6 +12,15 @@ void IrondashEngineContextPluginCApiRegisterWithRegistrar(
       registrar);
 }
 
+void IrondashEngineContextPerformOnMainThread(void (*callback)(void *data),
+                                              void *data) {
+  irondash_engine_context::PerformOnMainThread(callback, data);
+}
+
+unsigned long IrondashEngineContextGetMainThreadId() {
+  return irondash_engine_context::GetMainThreadId();
+}
+
 size_t IrondashEngineContextGetFlutterView(int64_t engine_handle) {
   return irondash_engine_context::GetFlutterView(engine_handle);
 }
@@ -26,7 +35,7 @@ IrondashEngineContextGetBinaryMessenger(int64_t engine_handle) {
   return irondash_engine_context::GetBinaryMessenger(engine_handle);
 }
 
-void
-IrondashEngineContextRegisterDestroyNotification(EngineDestroyedCallback callback) {
+void IrondashEngineContextRegisterDestroyNotification(
+    EngineDestroyedCallback callback) {
   return irondash_engine_context::RegisterDestroyNotification(callback);
 }

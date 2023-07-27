@@ -46,7 +46,7 @@ impl AsyncMethodHandler for Addition {
                     request,
                     thread_info: ThreadInfo {
                         thread_id: format!("{:?}", std::thread::current().id()),
-                        is_main_thread: RunLoop::is_main_thread(),
+                        is_main_thread: RunLoop::sender_for_main_thread().unwrap().is_same_thread(),
                     },
                 }
                 .into())

@@ -22,4 +22,10 @@ Rust code:
     let texture_registry = context.get_texture_registry(handle);
 ```
 
-On Android the dylib containing Rust code must be loaded through `System.loadLibrary` before loading it from Dart code. `System.loadLibrary` must be called on main thread.
+On Android, EngineContext can provide JavaVM instance and class loader that
+has loaded Flutter application:
+
+```rust
+let java_vm = EngineContext::get_java_vm()?;
+let class_loader = EngineContext::get_class_loader()?;
+```

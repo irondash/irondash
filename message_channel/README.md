@@ -185,7 +185,7 @@ To see message channel in action look at the [example project](https://github.co
 
 ```toml
 [dependencies]
-irondash_message_channel = { version = "0.1.0", features = ["derive"] }
+irondash_message_channel = { version = "0.3.0", features = ["derive"] }
 ```
 
 ```rust

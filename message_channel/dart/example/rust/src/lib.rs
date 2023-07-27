@@ -17,7 +17,7 @@ fn init_on_main_thread() {
         "Initializing handlers (on platform thread: {:?})",
         thread::current().id()
     );
-    assert!(RunLoop::is_main_thread());
+    assert!(RunLoop::sender_for_main_thread().unwrap().is_same_thread());
 
     addition::init();
     slow::init();
@@ -54,7 +54,9 @@ pub extern "C" fn example_rust_init_message_channel_context(data: *mut c_void) -
     START.call_once(|| {
         init_logging();
         // Run the actual initialization on main (platform) thread.
-        RunLoop::sender_for_main_thread().send(init_on_main_thread);
+        RunLoop::sender_for_main_thread()
+            .unwrap()
+            .send(init_on_main_thread);
     });
 
     debug!(

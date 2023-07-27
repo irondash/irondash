@@ -1,7 +1,6 @@
 use std::{cell::RefCell, marker::PhantomData, slice, sync::Arc};
 
 use irondash_engine_context::EngineContext;
-use irondash_jni_context::JniContext;
 use jni::objects::{GlobalRef, JObject};
 use ndk_sys::{
     AHardwareBuffer_Format, ANativeWindow, ANativeWindow_Buffer, ANativeWindow_acquire,
@@ -42,7 +41,7 @@ impl<Type> PlatformTexture<Type> {
         engine_handle: i64,
         pixel_buffer_provider: Option<Arc<dyn PayloadProvider<BoxedPixelData>>>,
     ) -> Result<Self> {
-        let java_vm = JniContext::get()?.java_vm();
+        let java_vm = EngineContext::get_java_vm()?;
         let mut env = java_vm.attach_current_thread()?;
         let engine_context = EngineContext::get()?;
         let texture_registry = engine_context.get_texture_registry(engine_handle)?;
@@ -93,7 +92,7 @@ impl<Type> PlatformTexture<Type> {
     }
 
     fn destroy(&mut self) -> Result<()> {
-        let java_vm = JniContext::get()?.java_vm();
+        let java_vm = EngineContext::get_java_vm()?;
         let mut env = java_vm.attach_current_thread()?;
         env.call_method(self.texture_entry.as_obj(), "release", "()V", &[])?;
         unsafe {

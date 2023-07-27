@@ -1,7 +1,14 @@
+use std::ffi::c_void;
+
 use cocoa::base::{id, nil};
+use core_foundation::runloop::{CFRunLoopGetCurrent, CFRunLoopGetMain};
 use objc::{msg_send, runtime::Class, sel, sel_impl};
 
 use crate::{Error, Result};
+
+use self::sys::{dispatch_async_f, dispatch_get_main_queue};
+
+mod sys;
 
 pub(crate) struct PlatformContext {}
 
@@ -10,6 +17,33 @@ pub(crate) type FlutterTextureRegistry = id;
 pub(crate) type FlutterBinaryMessenger = id;
 
 impl PlatformContext {
+    pub fn perform_on_main_thread(f: impl FnOnce() + Send + 'static) -> Result<()> {
+        // This could be done through custom run loop source but it
+        // is probably not worth the effort. Just use dispatch queue
+        // for now.
+        let callback: Box<dyn FnOnce()> = Box::new(f);
+        let callback = Box::new(callback);
+        let callback = Box::into_raw(callback);
+        unsafe {
+            dispatch_async_f(
+                dispatch_get_main_queue(),
+                callback as *mut c_void,
+                Self::dispatch_work,
+            );
+        }
+        Ok(())
+    }
+
+    extern "C" fn dispatch_work(data: *mut c_void) {
+        let callback = data as *mut Box<dyn FnOnce()>;
+        let callback = unsafe { Box::from_raw(callback) };
+        callback();
+    }
+
+    pub fn is_main_thread() -> Result<bool> {
+        Ok(unsafe { CFRunLoopGetCurrent() == CFRunLoopGetMain() })
+    }
+
     pub fn new() -> Result<Self> {
         let res = Self {};
         res.initialize()?;

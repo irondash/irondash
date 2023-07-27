@@ -6,13 +6,13 @@ use std::{
     rc::Rc,
 };
 
-use irondash_run_loop::RunLoop;
 use once_cell::sync::OnceCell;
 
 mod platform;
 
 mod error;
 pub use error::Error;
+use platform::PlatformContext;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -28,7 +28,7 @@ pub struct EngineContext {
     next_notification_handle: Cell<i64>,
 }
 
-// needed because context is stored in static variable, hwoever the context
+// needed because context is stored in static variable, however the context
 // can only be accessed on platform thread.
 unsafe impl Sync for EngineContext {}
 unsafe impl Send for EngineContext {}
@@ -36,12 +36,30 @@ unsafe impl Send for EngineContext {}
 static ENGINE_CONTEXT: OnceCell<EngineContext> = OnceCell::new();
 
 impl EngineContext {
+    #[cfg(target_os = "android")]
+    pub fn get_java_vm() -> Result<&'static jni::JavaVM> {
+        PlatformContext::get_java_vm()
+    }
+
+    #[cfg(target_os = "android")]
+    pub fn get_class_loader() -> Result<jni::objects::GlobalRef> {
+        PlatformContext::get_class_loader()
+    }
+
+    pub fn perform_on_main_thread(f: impl FnOnce() + Send + 'static) -> Result<()> {
+        PlatformContext::perform_on_main_thread(f)
+    }
+
+    pub fn is_main_thread() -> Result<bool> {
+        PlatformContext::is_main_thread()
+    }
+
     /// Returns shared instance of the engine context for this module.
     ///
     /// This method must be called on platform thread, otherwise will fail with
     /// `Error::InvalidThread`.
     pub fn get() -> Result<&'static Self> {
-        if !RunLoop::is_main_thread() {
+        if !PlatformContext::is_main_thread()? {
             return Err(Error::InvalidThread);
         }
         if ENGINE_CONTEXT.get().is_none() {
@@ -54,7 +72,7 @@ impl EngineContext {
         Ok(ENGINE_CONTEXT.get().unwrap())
     }
 
-    /// Registers callback to be invoked when engine gets destroyed.
+    /// Registers callback to be invoked when an engine gets destroyed.
     /// EngineHandle will be passed to provided callback.
     /// Returns handle that can be passed to `unregister_destroy_notification`.
     pub fn register_destroy_notification<F>(&self, callback: F) -> i64
@@ -111,13 +129,13 @@ impl EngineContext {
     }
 
     pub(crate) fn try_get() -> Option<&'static Self> {
-        assert!(RunLoop::is_main_thread());
+        assert!(PlatformContext::is_main_thread().unwrap_or(false));
         ENGINE_CONTEXT.get()
     }
 
     fn strip_version(handle: i64) -> Result<i64> {
         // this must be same as version in `irondash_engine_context.dart`.
-        let expected_version = 3i64;
+        let expected_version = 4i64;
         let version_shift = 48;
         let version_mask = 0xFFi64 << version_shift;
         let handle_version = (handle & version_mask) >> version_shift;

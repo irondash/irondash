@@ -1,8 +1,10 @@
-use std::{cell::Cell, iter::repeat_with, rc::Rc, sync::Arc, time::Duration};
+use std::{cell::Cell, ffi::c_void, iter::repeat_with, rc::Rc, sync::Arc, time::Duration};
 
+use irondash_dart_ffi::DartValue;
+use irondash_engine_context::EngineContext;
 use irondash_run_loop::RunLoop;
 use irondash_texture::{BoxedPixelData, PayloadProvider, SimplePixelData, Texture};
-use log::error;
+use log::{error, info};
 
 #[cfg(target_os = "android")]
 fn init_logging() {
@@ -84,14 +86,21 @@ fn init_on_main_thread(engine_handle: i64) -> irondash_texture::Result<i64> {
 }
 
 #[no_mangle]
-pub extern "C" fn init_texture_example(engine_id: i64) -> i64 {
+pub extern "C" fn init_texture_example(engine_id: i64, ffi_ptr: *mut c_void, port: i64) {
     init_logging();
-    let runner = RunLoop::sender_for_main_thread();
-    runner.send_and_wait(move || match init_on_main_thread(engine_id) {
-        Ok(id) => id,
-        Err(err) => {
-            error!("Error {:?}", err);
-            0
+    irondash_dart_ffi::irondash_init_ffi(ffi_ptr);
+    info!("init_texture_example {:?}", port);
+    EngineContext::perform_on_main_thread(move || {
+        let port = irondash_dart_ffi::DartPort::new(port);
+        match init_on_main_thread(engine_id) {
+            Ok(id) => {
+                port.send(DartValue::I64(id));
+            }
+            Err(err) => {
+                error!("Error {:?}", err);
+                port.send(0);
+            }
         }
     })
+    .unwrap();
 }

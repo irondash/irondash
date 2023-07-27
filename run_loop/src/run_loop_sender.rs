@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use irondash_engine_context::EngineContext;
+
 use crate::{
     get_system_thread_id, platform::PlatformRunLoopSender, util::BlockingVariable, RunLoop,
     SystemThreadId,
@@ -8,38 +10,72 @@ use crate::{
 // Can be used to send callbacks from other threads to be executed on run loop thread
 #[derive(Clone)]
 pub struct RunLoopSender {
-    thread_id: Option<SystemThreadId>,
-    platform_sender: PlatformRunLoopSender,
+    inner: RunLoopSenderInner,
+}
+
+#[derive(Clone)]
+enum RunLoopSenderInner {
+    PlatformSender {
+        thread_id: SystemThreadId,
+        platform_sender: PlatformRunLoopSender,
+    },
+    MainThreadSender,
 }
 
 impl Debug for RunLoopSender {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("RunLoopSender")
-            .field("thread_id", &self.thread_id)
-            .finish()
+        match &self.inner {
+            RunLoopSenderInner::PlatformSender {
+                thread_id,
+                platform_sender: _,
+            } => f
+                .debug_struct("RunLoopSender")
+                .field("thread_id", &thread_id)
+                .finish(),
+            RunLoopSenderInner::MainThreadSender => f
+                .debug_struct("RunLoopSender")
+                .field("thread_id", &"main")
+                .finish(),
+        }
     }
 }
 
 impl RunLoopSender {
     pub(crate) fn new(platform_sender: PlatformRunLoopSender) -> Self {
         Self {
-            thread_id: Some(get_system_thread_id()),
-            platform_sender,
+            inner: RunLoopSenderInner::PlatformSender {
+                thread_id: get_system_thread_id(),
+                platform_sender,
+            },
         }
     }
 
-    pub(crate) fn new_fallback(fallback_platform_sender: PlatformRunLoopSender) -> Self {
+    /// Creates sender for main thread. This should only be called from
+    /// background threads. On main thread the RunLoop should create regular
+    /// sender from current run loop.
+    ///
+    /// The reason is that the main thread sender, when invoking on main thread,
+    /// may execute the callback synchronously instead of scheduling it (linux),
+    /// which is not how regular run loop sender works.
+    #[allow(unused)] // not used in tests
+    pub(crate) fn new_for_main_thread() -> Self {
+        debug_assert!(!RunLoop::is_main_thread().unwrap_or(true));
         Self {
-            thread_id: None,
-            platform_sender: fallback_platform_sender,
+            inner: RunLoopSenderInner::MainThreadSender,
         }
     }
 
-    /// Retruns true if sender would send the callback to current thread.
+    /// Returns true if sender would send the callback to current thread.
     pub fn is_same_thread(&self) -> bool {
-        Some(get_system_thread_id()) == self.thread_id
-            // this is fallback main thread sender and we're on main thread
-            || self.thread_id.is_none() && RunLoop::is_main_thread()
+        match self.inner {
+            RunLoopSenderInner::PlatformSender {
+                thread_id,
+                platform_sender: _,
+            } => get_system_thread_id() == thread_id,
+            // This should never panic as we check for whether engine context plugin is loaded
+            // before creating the sender.
+            RunLoopSenderInner::MainThreadSender => RunLoop::is_main_thread().unwrap(),
+        }
     }
 
     /// Schedules the callback to be executed on run loop and returns immediately.
@@ -47,7 +83,19 @@ impl RunLoopSender {
     where
         F: FnOnce() + 'static + Send,
     {
-        self.platform_sender.send(callback);
+        match &self.inner {
+            RunLoopSenderInner::PlatformSender {
+                thread_id: _,
+                platform_sender,
+            } => {
+                platform_sender.send(callback);
+            }
+            RunLoopSenderInner::MainThreadSender => {
+                // This should never panic as we check for whether engine context plugin is loaded
+                // before creating the sender.
+                EngineContext::perform_on_main_thread(callback).unwrap();
+            }
+        }
     }
 
     /// Schedules the callback on run loop and blocks until it is invoked.

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:ffi';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,11 +12,20 @@ Future<int> initNative() async {
       : (defaultTargetPlatform == TargetPlatform.windows
           ? DynamicLibrary.open("texture_example.dll")
           : DynamicLibrary.process());
+
   final function = dylib
-      .lookup<NativeFunction<Int64 Function(Int64)>>("init_texture_example")
-      .asFunction<int Function(int)>();
+      .lookup<NativeFunction<Void Function(Int64, Pointer<Void>, Int64)>>(
+          "init_texture_example")
+      .asFunction<void Function(int, Pointer<Void>, int)>();
+
   final handle = await EngineContext.instance.getEngineHandle();
-  return function(handle);
+  final port = ReceivePort();
+  final completer = Completer<int>();
+  port.listen((message) {
+    completer.complete(message);
+  });
+  function(handle, NativeApi.initializeApiDLData, port.sendPort.nativePort);
+  return completer.future;
 }
 
 late int texture;

@@ -205,12 +205,6 @@ impl PlatformRunLoop {
         unsafe { g_main_context_is_owner(g_main_context_default()) == GTRUE }
     }
 
-    pub fn main_thread_fallback_sender() -> PlatformRunLoopSender {
-        PlatformRunLoopSender::new_fallback(unsafe {
-            ContextHolder::retain(g_main_context_default())
-        })
-    }
-
     pub fn new_sender(self: &Rc<Self>) -> PlatformRunLoopSender {
         PlatformRunLoopSender::new(self.context.clone())
     }
@@ -268,13 +262,6 @@ impl PlatformRunLoopSender {
         Self {
             context,
             thread_id: get_system_thread_id(),
-        }
-    }
-
-    fn new_fallback(context: ContextHolder) -> Self {
-        Self {
-            context,
-            thread_id: unsafe { FIRST_THREAD },
         }
     }
 

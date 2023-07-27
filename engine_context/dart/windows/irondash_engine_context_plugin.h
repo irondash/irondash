@@ -5,10 +5,14 @@
 #include <flutter/plugin_registrar_windows.h>
 
 #include <memory>
+#include <minwindef.h>
 
 namespace irondash_engine_context {
 
 typedef void (*EngineDestroyedCallback)(int64_t);
+
+void PerformOnMainThread(void (*callback)(void *data), void *data);
+DWORD GetMainThreadId();
 
 size_t GetFlutterView(int64_t engine_handle);
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle);

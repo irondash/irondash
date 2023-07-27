@@ -3,14 +3,17 @@
 members = [
     "dart_ffi",
     "engine_context/rust",
-    "jni_context",
     "message_channel/dart/example/rust",
     "message_channel/rust_derive",
     "message_channel/rust",
     "run_loop",
     "texture",
     "texture/example/rust",
+    # This project has separate workspace to force custom build profile settings
+    # "engine_context/dart/android/rust",
 ]
+
+resolver = "2"
 
 [profile.release]
 lto = true
@@ -19,7 +22,6 @@ panic = "abort"
 [patch.crates-io]
 irondash_dart_ffi = { path = "dart_ffi" }
 irondash_engine_context = { path = "engine_context/rust" }
-irondash_jni_context = { path = "jni_context" }
 irondash_message_channel = { path = "message_channel/rust" }
 irondash_run_loop = { path = "run_loop" }
 irondash_texture = { path = "texture" }

@@ -1,0 +1,21 @@
+[workspace]
+
+[package]
+name = "irondash_engine_context_native"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.dev]
+panic = "abort" # required for no_std
+# Must be disabled otherwise dereferences can panic which requres eh_personality.
+debug-assertions = false
+
+[profile.release]
+panic = "abort" # required for no_std
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]

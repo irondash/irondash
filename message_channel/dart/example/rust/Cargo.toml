@@ -16,6 +16,7 @@ tokio = { version = "1", features = ["full"] }
 thiserror = "1.0"
 irondash_message_channel = { version = "0.3.0", features = ["derive"] }
 irondash_run_loop = { version = "0.3.0" }
+irondash_dart_ffi = "0.2.0"
 
 # reqwest uses different options per platform
 

@@ -1,10 +1,9 @@
 use std::{cell::Cell, ffi::c_void, iter::repeat_with, rc::Rc, sync::Arc, time::Duration};
 
 use irondash_dart_ffi::DartValue;
-use irondash_engine_context::EngineContext;
 use irondash_run_loop::RunLoop;
 use irondash_texture::{BoxedPixelData, PayloadProvider, SimplePixelData, Texture};
-use log::{error, info};
+use log::error;
 
 #[cfg(target_os = "android")]
 fn init_logging() {
@@ -89,18 +88,18 @@ fn init_on_main_thread(engine_handle: i64) -> irondash_texture::Result<i64> {
 pub extern "C" fn init_texture_example(engine_id: i64, ffi_ptr: *mut c_void, port: i64) {
     init_logging();
     irondash_dart_ffi::irondash_init_ffi(ffi_ptr);
-    info!("init_texture_example {:?}", port);
-    EngineContext::perform_on_main_thread(move || {
+    // Schedule initialization on main thread. When completed return the
+    // texture id back to dart through a port.
+    RunLoop::sender_for_main_thread().unwrap().send(move || {
         let port = irondash_dart_ffi::DartPort::new(port);
         match init_on_main_thread(engine_id) {
             Ok(id) => {
-                port.send(DartValue::I64(id));
+                port.send(id);
             }
             Err(err) => {
                 error!("Error {:?}", err);
-                port.send(0);
+                port.send(DartValue::Null);
             }
         }
-    })
-    .unwrap();
+    });
 }

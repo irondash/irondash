@@ -6,29 +6,27 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:irondash_engine_context/irondash_engine_context.dart';
 
-Future<int> initNative() async {
+Future<int?> initNative() async {
   final dylib = defaultTargetPlatform == TargetPlatform.android
       ? DynamicLibrary.open("libtexture_example.so")
       : (defaultTargetPlatform == TargetPlatform.windows
           ? DynamicLibrary.open("texture_example.dll")
           : DynamicLibrary.process());
 
-  final function = dylib
+  final initFunction = dylib
       .lookup<NativeFunction<Void Function(Int64, Pointer<Void>, Int64)>>(
           "init_texture_example")
       .asFunction<void Function(int, Pointer<Void>, int)>();
 
   final handle = await EngineContext.instance.getEngineHandle();
+  // init function is asynchronous, make sure to not block the thread while
+  // waiting for the result.
   final port = ReceivePort();
-  final completer = Completer<int>();
-  port.listen((message) {
-    completer.complete(message);
-  });
-  function(handle, NativeApi.initializeApiDLData, port.sendPort.nativePort);
-  return completer.future;
+  initFunction(handle, NativeApi.initializeApiDLData, port.sendPort.nativePort);
+  return await port.first;
 }
 
-late int texture;
+late int? texture;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -137,7 +135,9 @@ class _MyHomePageState extends State<MyHomePage> {
             const CircularProgressIndicator(),
             SizedBox.square(
               dimension: 200,
-              child: Texture(textureId: texture),
+              child: texture != null
+                  ? Texture(textureId: texture!)
+                  : const Text('Failed to initialize texture'),
             ),
           ],
         ),

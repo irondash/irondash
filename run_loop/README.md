@@ -51,8 +51,10 @@ thread::spawn(move||{
 });
 ```
 
-> Depending on `irondash_engine_context` plugin is necessary because the Rust
+Depending on `irondash_engine_context` plugin is necessary because the Rust
 code may be part of FFI plugin that gets loaded from UI thread or other background isolate, and on some platforms it is not possible to jump back to main thread without having some preparation done on main thread first (which is facilitated by the native code part of `irondash_engine_context` plugin).
+
+If you want to use `RunLoop` without `irondash_engine_context` plugin, you can call `RunLoop::set_main_thread()` on the main thread as the very first method on the `RunLoop`.
 
 ## Scheduling timers
 

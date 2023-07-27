@@ -1,10 +1,8 @@
 use std::fmt::Debug;
 
-use irondash_engine_context::EngineContext;
-
 use crate::{
-    get_system_thread_id, platform::PlatformRunLoopSender, util::BlockingVariable, RunLoop,
-    SystemThreadId,
+    get_system_thread_id, main_thread::MainThreadFacilitator, platform::PlatformRunLoopSender,
+    util::BlockingVariable, RunLoop, SystemThreadId,
 };
 
 // Can be used to send callbacks from other threads to be executed on run loop thread
@@ -93,7 +91,9 @@ impl RunLoopSender {
             RunLoopSenderInner::MainThreadSender => {
                 // This should never panic as we check for whether engine context plugin is loaded
                 // before creating the sender.
-                EngineContext::perform_on_main_thread(callback).unwrap();
+                MainThreadFacilitator::get()
+                    .perform_on_main_thread(callback)
+                    .unwrap();
             }
         }
     }

@@ -3,7 +3,8 @@ use std::{fmt::Display, rc::Rc, sync::Arc, thread::AccessError, time::Duration};
 use futures::{task::ArcWake, Future};
 
 use crate::{
-    platform::PlatformRunLoop, util::FutureCompleter, Handle, JoinHandle, RunLoopSender, Task,
+    main_thread::MainThreadFacilitator, platform::PlatformRunLoop, util::FutureCompleter, Handle,
+    JoinHandle, RunLoopSender, Task,
 };
 
 pub struct RunLoop {
@@ -19,6 +20,8 @@ pub enum Error {
     #[cfg(test)]
     MainThreadNotSet,
 }
+
+pub type Result<T> = std::result::Result<T, Error>;
 
 impl From<irondash_engine_context::Error> for Error {
     fn from(err: irondash_engine_context::Error) -> Self {
@@ -42,13 +45,6 @@ impl Display for Error {
 impl std::error::Error for Error {}
 
 thread_local!(static RUN_LOOP: RunLoop = RunLoop::new());
-
-#[cfg(test)]
-static MAIN_THREAD_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-
-#[cfg(test)]
-static MAIN_THREAD_SENDER: once_cell::sync::OnceCell<RunLoopSender> =
-    once_cell::sync::OnceCell::new();
 
 impl RunLoop {
     /// Creates new RunLoop instance. This is not meant to be called directly.
@@ -110,33 +106,28 @@ impl RunLoop {
         RunLoopSender::new(self.platform_run_loop.new_sender())
     }
 
-    #[cfg(not(test))]
-    pub fn is_main_thread() -> std::result::Result<bool, Error> {
-        use irondash_engine_context::EngineContext;
-        let is_main_thread = EngineContext::is_main_thread()?;
-        Ok(is_main_thread)
+    /// Returns whether current thread is main thread. This requires either
+    /// `irondash_engine_context` Flutter plugin to be loaded or [`RunLoop::set_main_thread()`]
+    /// to be called first on the main thread.
+    pub fn is_main_thread() -> Result<bool> {
+        MainThreadFacilitator::get().is_main_thread()
     }
 
-    #[cfg(test)]
-    pub fn is_main_thread() -> std::result::Result<bool, Error> {
-        use crate::platform;
-        use std::sync::atomic::Ordering;
-        Ok(MAIN_THREAD_ID.load(Ordering::Acquire) == platform::get_system_thread_id() as _)
-    }
-
-    #[cfg(test)]
+    /// Tells RunLoop that current thread is main thread. This is required in order
+    /// to use [`RunLoop::sender_for_main_thread()`] in environment where the
+    /// `irondash_engine_context` Flutter plugin is not available.
+    ///
+    /// This method must be called before other RunLoop methods.
     pub fn set_main_thread() {
-        use crate::platform;
-        use std::sync::atomic::Ordering;
-        MAIN_THREAD_ID.store(platform::get_system_thread_id() as _, Ordering::Release);
-        let sender = RunLoop::current().new_sender();
-        MAIN_THREAD_SENDER.set(sender).ok();
+        MainThreadFacilitator::set_for_current_thread();
     }
 
     /// Returns sender object that can be used to send callback to main thread.
     /// This requires `irondash_engine_context` Flutter plugin to be loaded.
     /// If the plugin is not loaded the call will fail with [`Error::EngineContextPluginError`].
-    #[cfg(not(test))]
+    ///
+    /// Alternatively you can call [`RunLoop::set_main_thread()`] on main thread
+    /// as the very first method on the RunLoop.
     pub fn sender_for_main_thread() -> std::result::Result<RunLoopSender, Error> {
         // This also checks for presence if engine context plugin.
         let is_main_thread = Self::is_main_thread()?;
@@ -145,12 +136,6 @@ impl RunLoop {
         } else {
             Ok(RunLoopSender::new_for_main_thread())
         }
-    }
-
-    #[cfg(test)]
-    pub fn sender_for_main_thread() -> std::result::Result<RunLoopSender, Error> {
-        let sender = MAIN_THREAD_SENDER.get().ok_or(Error::MainThreadNotSet)?;
-        Ok(sender.clone())
     }
 
     /// Spawn the future with this run loop being the executor.
@@ -171,7 +156,7 @@ impl RunLoop {
 
     /// Fallible method to get RunLoop for current thread. May fail when thread
     /// is being destroyed.
-    pub fn try_current() -> Result<Self, AccessError> {
+    pub fn try_current() -> std::result::Result<Self, AccessError> {
         RUN_LOOP.try_with(|run_loop| RunLoop {
             platform_run_loop: run_loop.platform_run_loop.clone(),
         })

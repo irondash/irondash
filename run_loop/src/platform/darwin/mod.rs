@@ -21,7 +21,7 @@ use core_foundation::{
 };
 use objc::rc::{autoreleasepool, StrongPtr};
 
-use self::sys::{to_nsstring, pthread_threadid_np};
+use self::sys::{pthread_threadid_np, to_nsstring};
 
 mod sys;
 

@@ -22,7 +22,6 @@ pub mod native {
     };
 
     use irondash_dart_ffi::{raw, DartPort, DartValue, NativePort};
-    use irondash_run_loop::RunLoop;
     use once_cell::sync::OnceCell;
 
     use crate::{
@@ -58,19 +57,8 @@ pub mod native {
             let mut delegate = self.delegate.lock().unwrap();
             delegate.on_isolate_joined(isolate_id);
 
-            let block = move || {
-                let value = DartValue::String(CString::new("ready").unwrap());
-                isolate_port.send(value);
-            };
-
-            // Make one hop over to platform thread before telling the
-            // Dart counterpart we're ready.
-            // It is possible there is some initialization pending.
-            if let Ok(sender) = RunLoop::sender_for_main_thread() {
-                sender.send(block);
-            } else {
-                block();
-            }
+            let value = DartValue::String(CString::new("ready").unwrap());
+            isolate_port.send(value);
         }
 
         fn handle_message(&self, isolate_id: IsolateId, message: Value) {

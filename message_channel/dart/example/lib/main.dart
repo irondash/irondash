@@ -1,26 +1,40 @@
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:irondash_message_channel/irondash_message_channel.dart';
 
+final _dylib = defaultTargetPlatform == TargetPlatform.android
+    ? DynamicLibrary.open("libexample_rust.so")
+    : (defaultTargetPlatform == TargetPlatform.windows
+        ? DynamicLibrary.open("example_rust.dll")
+        : DynamicLibrary.process());
+
 /// initialize context for Native library.
 MessageChannelContext _initNativeContext() {
-  final dylib = defaultTargetPlatform == TargetPlatform.android
-      ? DynamicLibrary.open("libexample_rust.so")
-      : (defaultTargetPlatform == TargetPlatform.windows
-          ? DynamicLibrary.open("example_rust.dll")
-          : DynamicLibrary.process());
-
   // This function will be called by MessageChannel with opaque FFI
   // initialization data. From it you should call
   // `irondash_init_message_channel_context` and do any other initialization,
   // i.e. register rust method channel handlers.
   final function =
-      dylib.lookup<NativeFunction<MessageChannelContextInitFunction>>(
+      _dylib.lookup<NativeFunction<MessageChannelContextInitFunction>>(
           "example_rust_init_message_channel_context");
   return MessageChannelContext.forInitFunction(function);
+}
+
+// Initializes the native code (registers the method channel handlers, etc).
+// The initialization is done on platform thread. So native code will post
+// a message on the port when it's done.
+Future<void> _initNative() async {
+  final port = ReceivePort();
+  final function = _dylib
+      .lookup<NativeFunction<Void Function(Pointer<Void>, Int64)>>(
+          "example_rust_init_native")
+      .asFunction<void Function(Pointer<Void>, int)>();
+  function(NativeApi.initializeApiDLData, port.sendPort.nativePort);
+  return await port.first;
 }
 
 final nativeContext = _initNativeContext();
@@ -117,7 +131,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-void main() {
+void main() async {
+  await _initNative();
   runApp(const MyApp());
 }
 

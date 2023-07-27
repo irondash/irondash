@@ -1,9 +1,9 @@
 use std::{
     ffi::c_void,
-    sync::Once,
     thread::{self},
 };
 
+use irondash_dart_ffi::{DartPort, DartValue};
 use irondash_message_channel::{irondash_init_message_channel_context, FunctionResult};
 use irondash_run_loop::RunLoop;
 use log::debug;
@@ -46,23 +46,27 @@ fn init_logging() {
         .ok();
 }
 
-static START: Once = Once::new();
-
-// Entry-point - called from dart.
+// Initializes message channel context.
 #[no_mangle]
 pub extern "C" fn example_rust_init_message_channel_context(data: *mut c_void) -> FunctionResult {
-    START.call_once(|| {
-        init_logging();
-        // Run the actual initialization on main (platform) thread.
-        RunLoop::sender_for_main_thread()
-            .unwrap()
-            .send(init_on_main_thread);
-    });
-
     debug!(
         "Initializing message channel context from dart thread {:?}",
         thread::current().id()
     );
     // init FFI part of message channel from data obtained from Dart side.
     irondash_init_message_channel_context(data)
+}
+
+// Entry-point - called from dart.
+#[no_mangle]
+pub extern "C" fn example_rust_init_native(ffi_ptr: *mut c_void, port: i64) {
+    init_logging();
+    irondash_dart_ffi::irondash_init_ffi(ffi_ptr);
+    // Schedule initialization on main thread. When completed return the
+    // texture id back to dart through a port.
+    RunLoop::sender_for_main_thread().unwrap().send(move || {
+        let port = DartPort::new(port);
+        init_on_main_thread();
+        port.send(DartValue::Null);
+    });
 }

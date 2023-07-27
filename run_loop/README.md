@@ -18,8 +18,7 @@ If there is no run loop associated with current thread, this will create one.
 
 ## Calling RunLoop from other threads
 
-`RunLoop` neither `Send`, nor `Sync`. All interaction with must be carried on
-thread, where the run loop belongs.
+`RunLoop` is neither `Send`, nor `Sync`. All interaction with it must be carried on thread where the run loop belongs.
 
 To interact with run loop from other threads, use `RunLoopSender`:
 

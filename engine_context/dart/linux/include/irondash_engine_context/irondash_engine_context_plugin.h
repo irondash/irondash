@@ -18,6 +18,9 @@ typedef struct {
 
 FLUTTER_PLUGIN_EXPORT GType irondash_engine_context_plugin_get_type();
 
+FLUTTER_PLUGIN_EXPORT
+uint64_t IrondashEngineContextGetMainThreadId();
+
 FLUTTER_PLUGIN_EXPORT FlView *
 IrondashEngineContextGetFlutterView(int64_t engine_handle);
 

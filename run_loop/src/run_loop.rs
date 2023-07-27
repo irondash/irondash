@@ -1,7 +1,6 @@
 use std::{fmt::Display, rc::Rc, sync::Arc, thread::AccessError, time::Duration};
 
 use futures::{task::ArcWake, Future};
-use irondash_engine_context::EngineContext;
 
 use crate::{
     platform::PlatformRunLoop, util::FutureCompleter, Handle, JoinHandle, RunLoopSender, Task,
@@ -16,6 +15,9 @@ pub enum Error {
     /// Engine context plugin is not loaded. For access to main thread sender
     /// the iron_dash_engine_context Flutter plugin must be loaded.
     EngineContextPluginError(irondash_engine_context::Error),
+
+    #[cfg(test)]
+    MainThreadNotSet,
 }
 
 impl From<irondash_engine_context::Error> for Error {
@@ -28,6 +30,11 @@ impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::EngineContextPluginError(e) => e.fmt(f),
+            #[cfg(test)]
+            Error::MainThreadNotSet => write!(
+                f,
+                "main thread was not set. call RunLoop::set_main_thread() from main thread"
+            ),
         }
     }
 }
@@ -35,6 +42,13 @@ impl Display for Error {
 impl std::error::Error for Error {}
 
 thread_local!(static RUN_LOOP: RunLoop = RunLoop::new());
+
+#[cfg(test)]
+static MAIN_THREAD_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
+#[cfg(test)]
+static MAIN_THREAD_SENDER: once_cell::sync::OnceCell<RunLoopSender> =
+    once_cell::sync::OnceCell::new();
 
 impl RunLoop {
     /// Creates new RunLoop instance. This is not meant to be called directly.
@@ -96,14 +110,47 @@ impl RunLoop {
         RunLoopSender::new(self.platform_run_loop.new_sender())
     }
 
+    #[cfg(not(test))]
+    pub fn is_main_thread() -> std::result::Result<bool, Error> {
+        use irondash_engine_context::EngineContext;
+        let is_main_thread = EngineContext::is_main_thread()?;
+        Ok(is_main_thread)
+    }
+
+    #[cfg(test)]
+    pub fn is_main_thread() -> std::result::Result<bool, Error> {
+        use crate::platform;
+        use std::sync::atomic::Ordering;
+        Ok(MAIN_THREAD_ID.load(Ordering::Acquire) == platform::get_system_thread_id())
+    }
+
+    #[cfg(test)]
+    pub fn set_main_thread() {
+        use crate::platform;
+        use std::sync::atomic::Ordering;
+        MAIN_THREAD_ID.store(platform::get_system_thread_id(), Ordering::Release);
+        let sender = RunLoop::current().new_sender();
+        MAIN_THREAD_SENDER.set(sender).ok();
+    }
+
     /// Returns sender object that can be used to send callback to main thread.
     /// This requires `irondash_engine_context` Flutter plugin to be loaded.
     /// If the plugin is not loaded the call will fail with [`Error::EngineContextPluginError`].
+    #[cfg(not(test))]
     pub fn sender_for_main_thread() -> std::result::Result<RunLoopSender, Error> {
-        // We're not interested if this is main load but want to check for presence
-        // of engine context plugin and fail fast if missing;
-        let _is_main_thread = EngineContext::is_main_thread()?;
-        Ok(RunLoopSender::new_for_main_thread())
+        // This also checks for presence if engine context plugin.
+        let is_main_thread = Self::is_main_thread()?;
+        if is_main_thread {
+            Ok(RunLoop::current().new_sender())
+        } else {
+            Ok(RunLoopSender::new_for_main_thread())
+        }
+    }
+
+    #[cfg(test)]
+    pub fn sender_for_main_thread() -> std::result::Result<RunLoopSender, Error> {
+        let sender = MAIN_THREAD_SENDER.get().ok_or(Error::MainThreadNotSet)?;
+        Ok(sender.clone())
     }
 
     /// Spawn the future with this run loop being the executor.
@@ -166,7 +213,7 @@ mod tests {
     use std::{
         cell::RefCell,
         rc::Rc,
-        sync::{Arc, Mutex},
+        sync::{Arc, Barrier, Mutex},
         thread,
         time::{Duration, Instant},
     };
@@ -237,5 +284,28 @@ mod tests {
         let start = Instant::now();
         run_loop.run();
         assert!(start.elapsed() >= Duration::from_millis(50));
+    }
+
+    #[test]
+    fn test_sender_for_main_thread() {
+        let barrier = Arc::new(Barrier::new(2));
+        let barrier_clone = barrier.clone();
+        RunLoop::set_main_thread();
+        thread::spawn(move || {
+            // This is needed to associate GMainContext with current thread,
+            // otherwise it will try to use default context on current thread,
+            // because it is not running on any other thread.
+            RunLoop::current();
+
+            // At this point there might be no RunLoop for main thread. This should
+            // test fallback implementation.
+            let sender = RunLoop::sender_for_main_thread().unwrap();
+            sender.send(|| {
+                RunLoop::current().stop();
+            });
+            barrier_clone.wait();
+        });
+        barrier.wait();
+        RunLoop::current().run();
     }
 }

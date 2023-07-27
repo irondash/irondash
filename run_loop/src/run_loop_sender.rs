@@ -3,7 +3,8 @@ use std::fmt::Debug;
 use irondash_engine_context::EngineContext;
 
 use crate::{
-    get_system_thread_id, platform::PlatformRunLoopSender, util::BlockingVariable, SystemThreadId,
+    get_system_thread_id, platform::PlatformRunLoopSender, util::BlockingVariable, RunLoop,
+    SystemThreadId,
 };
 
 // Can be used to send callbacks from other threads to be executed on run loop thread
@@ -49,7 +50,16 @@ impl RunLoopSender {
         }
     }
 
+    /// Creates sender for main thread. This should only be called from
+    /// background threads. On main thread the RunLoop should create regular
+    /// sender from current run loop.
+    ///
+    /// The reason is that the main thread sender, when invoking on main thread,
+    /// may execute the callback synchronously instead of scheduling it (linux),
+    /// which is not how regular run loop sender works.
+    #[allow(unused)] // not used in tests
     pub(crate) fn new_for_main_thread() -> Self {
+        debug_assert!(!RunLoop::is_main_thread().unwrap_or(true));
         Self {
             inner: RunLoopSenderInner::MainThreadSender,
         }
@@ -64,7 +74,7 @@ impl RunLoopSender {
             } => get_system_thread_id() == thread_id,
             // This should never panic as we check for whether engine context plugin is loaded
             // before creating the sender.
-            RunLoopSenderInner::MainThreadSender => EngineContext::is_main_thread().unwrap(),
+            RunLoopSenderInner::MainThreadSender => RunLoop::is_main_thread().unwrap(),
         }
     }
 

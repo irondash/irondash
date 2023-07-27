@@ -129,7 +129,7 @@ impl EngineContext {
     }
 
     pub(crate) fn try_get() -> Option<&'static Self> {
-        assert!(PlatformContext::is_main_thread().is_ok_and(|v| v));
+        assert!(PlatformContext::is_main_thread().unwrap_or(false));
         ENGINE_CONTEXT.get()
     }
 

@@ -160,7 +160,7 @@ impl PixelDataProvider for SimplePixelData {
 }
 
 //
-// Playform specific payloads.
+// Platform specific payloads.
 //
 
 #[cfg(target_os = "android")]

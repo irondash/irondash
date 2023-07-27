@@ -16,5 +16,4 @@
         "irondash_message_channel_derive",
     ],
     "dart.runPubGetOnPubspecChanges": "never",
-    "dart.flutterSdkPath": "/Users/Matej/Projects/flutter/stable"
 }

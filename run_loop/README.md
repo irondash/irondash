@@ -37,11 +37,12 @@ thread::spawn(move||{
 ```
 
 At any point, without needing a `RunLoop` instance, you can request sender that
-sends the closure to main thread.
+sends the closure to main thread. For this to work on all platforms your Dart
+application must depend on the `irondash_engine_context` plugin.
 
 ```rust
 thread::spawn(move||{
-    let sender = RunLoop::main_thread_sender();
+    let sender = RunLoop::sender_for_main_thread().unwrap();
     sender.send(||{
         println!("Back on main thread");
         // run_loop is main thread run loop
@@ -50,7 +51,8 @@ thread::spawn(move||{
 });
 ```
 
-> Note that for this to work on Android, the library must be loaded from Java using `System.loadLibrary`. Otherwise you must call `RunLoop::current()` on main thread at least once before `RunLoop::main_thread_sender()` is called.
+> Depending on `irondash_engine_context` plugin is necessary because the Rust
+code may be part of FFI plugin that gets loaded from UI thread or other background isolate, and on some platforms it is not possible to jump back to main thread without having some preparation done on main thread first (which is facilitated by the native code part of `irondash_engine_context` plugin).
 
 ## Scheduling timers
 
@@ -105,7 +107,7 @@ need to be `Send`.
 This slightly varies per platform.
 
 - On iOS and macOS, it is the very first thread created when application is launched. It is the thread for which `pthread_main_np()` returns 1.
-- On Linux, main thread is thread that owns default `GMainContext`, i.e. `g_main_context_is_owner(g_main_context_default)`.
-- On Android, main thread is the thread that the library was loaded from (`System.loadLibrary`). If library gets loaded from different thread things won't work as expected.
+- On Linux, for the purpose of RunLoop, main thread is the very first thread similar to iOS and macOS.
+- On Android, there is a concept of main thread (i.e. `Looper.getMainLooper()`).
 - On Windows, main thread is the first thread created when application was launched, similar to macOS and iOS. If you create windows and pump the message loop on
-different thread, `RunLoop::main_thread_sender()` will not work as expected.
+different thread, `RunLoop::sender_for_main_thread()` will not work as expected.

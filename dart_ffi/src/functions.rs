@@ -90,7 +90,7 @@ impl Api {
                 return entry.function;
             }
         }
-        panic!("FFI function ${name} not found");
+        panic!("FFI function {name} not found");
     }
 }
 

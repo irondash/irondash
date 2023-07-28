@@ -1,3 +1,7 @@
+## 0.3.0
+
+- **FEAT**: improved support for FFI plugins
+
 ## 0.2.0
 
   - **FEAT**: dart 3 support

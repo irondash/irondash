@@ -1,4 +1,10 @@
+## 0.3.0
+
+  - **FEAT**: improved support for FFI plugins
+  - **FIX**: FFI breaking change in current Flutter main
+
 ## 0.2.0
+
   - **FEAT**: dart 3 support
   - **FIX**: possible memory leak on exception while serializing message
 

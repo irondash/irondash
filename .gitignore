@@ -10,6 +10,9 @@ pubspec.lock
 .flutter-plugins-dependencies
 pubspec_overrides.yaml
 
+# This is here to stop pub from complaining about lock file being checked in
+!engine_context/dart/cargokit/build_tool/Cargo.lock
+
 # IntelliJ related
 *.iml
 *.ipr

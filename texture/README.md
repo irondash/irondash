@@ -51,7 +51,7 @@ let native_window = texture.get()?;
 
 ## Threading
 
-`PayloadProvider` must be `Send` and `Sync`, the texture payload will be requested on platform thread.
+`PayloadProvider` must be `Send` and `Sync`, the texture payload will be requested on raster thread.
 
 `Texture` itself must be created on platform thread. However once the texture is
 created, you can convert it to `SendableTexture`, which can be moved between threads:

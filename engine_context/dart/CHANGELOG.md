@@ -1,3 +1,7 @@
+## 0.3.1
+
+ - **FEAT**: upgrade to dart 3.0  (#24).
+
 ## 0.3.0
 
 - **FEAT**: improved support for FFI plugins

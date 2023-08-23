@@ -1,6 +1,6 @@
 name: irondash_message_channel
 description: Dart interface to irondash MessageChannel.
-version: 0.3.0
+version: 0.3.1
 homepage: https://github.com/irondash/irondash
 
 environment:

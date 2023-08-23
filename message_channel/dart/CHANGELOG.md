@@ -1,3 +1,11 @@
+## 0.3.1
+
+ - **FIX**: improve example initialization code (#31).
+ - **FIX**: re-enable rust-tls on android.
+ - **FIX**: potential leak on Error during serialization (#19).
+ - **FEAT**: upgrade JNI to 0.21.1 (#26).
+ - **FEAT**: upgrade to dart 3.0  (#24).
+
 ## 0.3.0
 
   - **FEAT**: improved support for FFI plugins

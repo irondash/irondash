@@ -1,9 +1,10 @@
 use std::{env::args, process::exit};
 
 use anyhow::Result;
+use build_gradle::clang_linker_wrapper;
 use log::{debug, LevelFilter};
 
-mod build_android;
+mod build_gradle;
 mod build_cmake;
 mod build_pod;
 mod logger;
@@ -37,6 +38,10 @@ fn run() -> Result<()> {
     init_logging()?;
     dump_environment()?;
 
+    if std::env::var("_CARGOKIT_NDK_LINK_TARGET").is_ok() {
+        clang_linker_wrapper();
+    }
+
     let mut args = args();
     args.next(); // executable
 
@@ -46,7 +51,7 @@ fn run() -> Result<()> {
 
     match command.as_str() {
         "build_pod" => build_pod::build_pod(args),
-        "build_android" => build_android::build_android(),
+        "build_gradle" => build_gradle::build_gradle(),
         "build_cmake" => build_cmake::build_cmake(),
         command => Err(anyhow::format_err!("Invalid command: {}", command)),
     }

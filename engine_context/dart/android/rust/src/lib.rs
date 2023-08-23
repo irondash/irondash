@@ -14,7 +14,7 @@ use jni_sys::jobject;
 
 #[panic_handler]
 #[cfg(not(test))]
-fn panic(info: &core::panic::PanicInfo) -> ! {
+fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
 }
 

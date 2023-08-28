@@ -2,6 +2,7 @@ name: irondash
 
 packages:
   - engine_context/dart
+  - engine_context/dart/cargokit/build_tool
   - message_channel/dart
   - message_channel/dart/example
   - texture/example

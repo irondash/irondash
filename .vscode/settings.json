@@ -13,4 +13,7 @@
         "texture/example/cargokit",
     ],
     "dart.runPubGetOnPubspecChanges": "never",
+    "cSpell.words": [
+        "finalizer"
+    ]
 }

@@ -305,7 +305,7 @@ pub mod raw {
         fn drop(&mut self) {
             match self.ty {
                 DartCObjectType::String => {
-                    unsafe { CString::from_raw(self.value.as_string) };
+                    let _ = unsafe { CString::from_raw(self.value.as_string) };
                 }
                 DartCObjectType::Array => unsafe {
                     let array = Vec::<*mut DartCObject>::from_raw_parts(

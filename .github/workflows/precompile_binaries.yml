@@ -1,0 +1,18 @@
+on:
+  push:
+    branches: [ master ]
+
+name: Precompile Binaries
+
+jobs:
+  Precompile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v1
+      - name: Precompile (Android)
+        run: dart run build_tool precompile-binaries -v --lib-name=irondash_engine_context_native --manifest-dir=../../android/rust --repository=irondash/irondash --android-sdk-location=/usr/local/lib/android/sdk --android-ndk-version=24.0.8215888 --android-min-sdk-version=23 --target=armv7-linux-androideabi --target=aarch64-linux-android --target=i686-linux-android --target=x86_64-linux-android
+        working-directory: engine_context/dart/cargokit/build_tool
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          PRIVATE_KEY: ${{ secrets.RELEASE_PRIVATE_KEY }}

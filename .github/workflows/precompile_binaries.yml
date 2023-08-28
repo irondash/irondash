@@ -8,8 +8,6 @@ name: Precompile Binaries
 jobs:
   Precompile:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1

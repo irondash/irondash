@@ -16,7 +16,7 @@ log = "0.4"
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21.1"
-ndk-sys = "0.4.0"
+ndk-sys = "0.4.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 cstr = "0.2.11"

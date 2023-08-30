@@ -1,4 +1,4 @@
-## 0.4.0-dev1
+## 0.4.0-dev.1
 
 - **FEAT**: add precompiled binaries
 

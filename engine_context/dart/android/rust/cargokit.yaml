@@ -1,4 +1,4 @@
-prebuilt_binaries:
+precompiled_binaries:
   # Uri prefix used when downloading prebuilt binaries.
   url_prefix: https://github.com/irondash/irondash/releases/download/prebuilt_
 

@@ -236,7 +236,7 @@ fn create_texture_objc(provider: Arc<dyn PayloadProvider<BoxedIOSurface>>) -> St
     unsafe {
         let object: id = msg_send![*TEXTURE_CLASS, new];
         let ptr = Box::into_raw(provider) as *mut c_void;
-        (*object).set_ivar("imState", ptr as *mut c_void);
+        (*object).set_ivar("imState", ptr);
         StrongPtr::new(object)
     }
 }

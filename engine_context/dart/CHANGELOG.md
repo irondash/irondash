@@ -1,3 +1,7 @@
+## 0.4.0-dev1
+
+- **FEAT**: add precompiled binaries
+
 ## 0.3.1
 
  - **FEAT**: upgrade to dart 3.0  (#24).

@@ -312,7 +312,7 @@ extern "C" fn copy_pixel_buffer(this: &Object, _: Sel) -> CVPixelBufferRef {
 extern "C" fn on_texture_unregistered(this: &mut Object, _: Sel, _: id) {
     unsafe {
         let ptr: *mut c_void = *this.get_ivar("imState");
-        this.set_ivar("imState", std::ptr::null_mut() as *mut c_void);
+        this.set_ivar("imState", std::ptr::null_mut::<c_void>());
         let ptr = ptr as *mut Arc<dyn PayloadProvider<BoxedIOSurface>>;
         let _ = Box::from_raw(ptr);
     }

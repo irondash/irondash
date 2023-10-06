@@ -202,7 +202,7 @@ mod linux {
         fn get(&self) -> GLTexture;
     }
 
-    /// Payload type for IOSurface backed texture.
+    /// Payload type for OpenGL backed texture.
     pub type BoxedGLTexture = Box<dyn GLTextureProvider>;
 }
 

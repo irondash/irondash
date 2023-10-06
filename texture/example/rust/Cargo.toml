@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+irondash_engine_context = { version = "0.3.0" }
 irondash_texture = { version = "0.3.0" }
 irondash_run_loop = { version = "0.3.0" }
 irondash_dart_ffi = "0.2.0"
@@ -20,6 +21,15 @@ fastrand = "1.8"
 jni = "0.21.1"
 android_logger = "0.11"
 ndk-sys = "0.4.1"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gl_loader = "0.1.2"
+#glow = { version = "0.12.3", features = ["debug_trace_calls", "debug_automatic_glGetError"] }
+glow = { version = "0.12.3", features = [] }
+glib-sys = "0.18.1"
+gobject-sys = "0.18.0"
+gdk-sys = "0.18.0"
+gtk-sys = "0.18.0"
 
 [target.'cfg(target_os = "ios")'.dependencies]
 oslog = "0.2.0"

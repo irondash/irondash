@@ -578,7 +578,7 @@ dependencies = [
 
 [[package]]
 name = "irondash_message_channel"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "async-trait",
  "core-foundation",

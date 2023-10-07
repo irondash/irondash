@@ -365,7 +365,11 @@ mod sys {
 
         let len = msg_send![ns_string, lengthOfBytesUsingEncoding: UTF8_ENCODING];
 
-        let bytes = slice::from_raw_parts(bytes, len);
+        // IntelliJ likes to put NULL terminator in the string, because why not.
+        let mut bytes = slice::from_raw_parts(bytes, len);
+        while bytes.last() == Some(&0) {
+            bytes = &bytes[..bytes.len() - 1];
+        }
         std::str::from_utf8(bytes).unwrap().into()
     }
 

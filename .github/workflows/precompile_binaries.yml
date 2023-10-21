@@ -8,8 +8,8 @@ jobs:
   Precompile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 #v2.7.0
+      - uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d #v1.6.0
       - name: Precompile (Android)
         run: dart run build_tool precompile-binaries -v --manifest-dir=../../android/rust --repository=irondash/irondash --android-sdk-location=/usr/local/lib/android/sdk --android-ndk-version=24.0.8215888 --android-min-sdk-version=23 --target=armv7-linux-androideabi --target=aarch64-linux-android --target=i686-linux-android --target=x86_64-linux-android
         working-directory: engine_context/dart/cargokit/build_tool

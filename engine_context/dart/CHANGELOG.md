@@ -1,3 +1,7 @@
+## 0.4.0
+
+- **FEAT**: update cargokit
+
 ## 0.4.0-dev.2
 
 - **FEAT**: update cargokit

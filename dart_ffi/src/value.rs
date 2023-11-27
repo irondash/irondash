@@ -99,8 +99,7 @@ impl DartValue {
             }
             DartCObjectType::Array => {
                 let array = &object.value.as_array;
-                let mut res = Vec::new();
-                res.reserve(array.length as usize);
+                let mut res = Vec::with_capacity(array.length as usize);
                 for i in 0..array.length {
                     let value = array.values.offset(i);
                     let value = *value;

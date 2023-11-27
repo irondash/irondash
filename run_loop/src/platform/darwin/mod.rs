@@ -19,9 +19,10 @@ use core_foundation::{
     },
     string::CFStringRef,
 };
-use objc::rc::{autoreleasepool, StrongPtr};
+use icrate::Foundation::NSString;
+use objc2::rc::{autoreleasepool, Id};
 
-use self::sys::{pthread_threadid_np, to_nsstring};
+use self::sys::pthread_threadid_np;
 
 mod sys;
 
@@ -41,7 +42,7 @@ struct State {
     timer: Option<CFRunLoopTimer>,
     source: Option<CFRunLoopSource>,
     run_loop: CFRunLoopRef,
-    run_loop_mode: StrongPtr,
+    run_loop_mode: Id<NSString>,
 }
 
 // CFRunLoopTimer is thread safe
@@ -61,7 +62,7 @@ impl State {
             timers: HashMap::new(),
             timer: None,
             source: None,
-            run_loop_mode: to_nsstring("IrondashRunLoopMode"),
+            run_loop_mode: NSString::from_str("IrondashRunLoopMode"),
             run_loop,
         }
     }
@@ -95,7 +96,7 @@ impl State {
                 CFRunLoopRemoveTimer(
                     self.run_loop,
                     timer.as_concrete_TypeRef(),
-                    *self.run_loop_mode as CFStringRef,
+                    Id::as_ptr(&self.run_loop_mode) as CFStringRef,
                 );
             };
         }
@@ -130,7 +131,7 @@ impl State {
             CFRunLoopAddSource(
                 self.run_loop,
                 source.as_concrete_TypeRef(),
-                *self.run_loop_mode as CFStringRef,
+                Id::as_ptr(&self.run_loop_mode) as CFStringRef,
             );
         }
         self.source = Some(source);
@@ -148,7 +149,7 @@ impl State {
                 CFRunLoopRemoveSource(
                     self.run_loop,
                     source.as_concrete_TypeRef(),
-                    *self.run_loop_mode as CFStringRef,
+                    Id::as_ptr(&self.run_loop_mode) as CFStringRef,
                 )
             };
         }
@@ -205,7 +206,7 @@ impl State {
                 CFRunLoopAddTimer(
                     self.run_loop,
                     timer.as_concrete_TypeRef(),
-                    *self.run_loop_mode as CFStringRef,
+                    Id::as_ptr(&self.run_loop_mode) as CFStringRef,
                 );
                 CFRunLoopWakeUp(self.run_loop);
             };
@@ -238,7 +239,7 @@ impl State {
     }
 
     fn drain(state: &Arc<Mutex<State>>) {
-        autoreleasepool(|| {
+        autoreleasepool(|_| {
             let execution = state.lock().unwrap().get_pending_execution();
             for c in execution.callbacks {
                 c();
@@ -360,13 +361,12 @@ impl PlatformRunLoop {
 
     #[cfg(target_os = "macos")]
     pub fn run_app(&self) {
-        use self::sys::cocoa::NSApplication;
-        use crate::platform::platform_impl::sys::cocoa::nil;
-        use objc::runtime::YES;
+        use icrate::AppKit::NSApplication;
+
         unsafe {
-            let app = NSApplication::sharedApplication(nil);
-            NSApplication::activateIgnoringOtherApps_(app, YES);
-            NSApplication::run(app);
+            let app = NSApplication::sharedApplication();
+            app.activateIgnoringOtherApps(true);
+            app.run();
         }
     }
 
@@ -382,27 +382,18 @@ impl PlatformRunLoop {
 
     #[cfg(target_os = "macos")]
     pub fn stop_app(&self) {
-        use self::sys::cocoa::NSApplication;
-        use crate::platform::platform_impl::sys::cocoa::{id, nil, NSEventType, NSPoint};
-        use objc::{class, msg_send, runtime::YES, sel, sel_impl};
-        unsafe {
-            let app = NSApplication::sharedApplication(nil);
-            app.stop_(nil);
+        use icrate::{
+            AppKit::{NSApplication, NSEvent, NSEventTypeApplicationDefined},
+            Foundation::CGPoint,
+        };
 
-            let dummy_event: id = msg_send![class!(NSEvent),
-                otherEventWithType: NSEventType::NSApplicationDefined
-                location: NSPoint::new(0.0, 0.0)
-                modifierFlags: 0
-                timestamp: 0
-                windowNumber: 0
-                context: nil
-                subtype: 0
-                data1: 0
-                data2: 0
-            ];
+        unsafe {
+            let app = NSApplication::sharedApplication();
+            app.stop(None);
 
             // To stop event loop immediately, we need to post event.
-            let () = msg_send![app, postEvent: dummy_event atStart: YES];
+            let dummy_event = NSEvent::otherEventWithType_location_modifierFlags_timestamp_windowNumber_context_subtype_data1_data2(NSEventTypeApplicationDefined, CGPoint::ZERO, 0, 0.0, 0, None, 0,0,0).unwrap();
+            app.postEvent_atStart(&dummy_event, true);
         }
     }
 
@@ -413,7 +404,7 @@ impl PlatformRunLoop {
             // circumstances the UI thread may be waiting for RasterThread (i.e. await toImage)
             // and raster thread might might be waiting to schedule things on UI thread
             // (i.e. ResizeSynchronizer) - in which case we must drain the run loop fully.
-            unsafe { CFRunLoopRunInMode(*mode as CFStringRef, 0.006, 1) };
+            unsafe { CFRunLoopRunInMode(Id::as_ptr(&mode) as CFStringRef, 0.006, 1) };
             poll_session.timed_out = poll_session.start.elapsed() >= Duration::from_millis(6);
         } else {
             unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, 1) };

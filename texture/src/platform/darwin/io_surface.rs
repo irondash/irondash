@@ -41,6 +41,7 @@ impl TCFType for IOSurface {
     type Ref = IOSurfaceRef;
 
     #[inline]
+    #[allow(non_snake_case)]
     fn as_concrete_TypeRef(&self) -> IOSurfaceRef {
         self.obj
     }
@@ -57,6 +58,7 @@ impl TCFType for IOSurface {
     }
 
     #[inline]
+    #[allow(non_snake_case)]
     fn as_CFTypeRef(&self) -> CFTypeRef {
         self.as_concrete_TypeRef() as CFTypeRef
     }

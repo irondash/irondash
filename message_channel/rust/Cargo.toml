@@ -1,6 +1,6 @@
 [package]
 name = "irondash_message_channel"
-version = "0.4.0-dev1"
+version = "0.4.0-dev2"
 edition = "2021"
 license = "MIT"
 description = "Rust interface to irondash MessageChannel."
@@ -12,7 +12,7 @@ repository = "https://github.com/irondash/irondash"
 [dependencies]
 once_cell = "1.16.0"
 irondash_dart_ffi = { version = "0.2.0" }
-irondash_run_loop = { version = "0.4.0-dev.1" }
+irondash_run_loop = { version = "0.4.0-dev.2" }
 async-trait = "0.1"
 irondash_message_channel_derive = { version = "0.1.1", path = "../rust_derive", optional = true }
 

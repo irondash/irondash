@@ -1,8 +1,9 @@
 use std::ffi::c_void;
 
-use cocoa::base::{id, nil};
 use core_foundation::runloop::{CFRunLoopGetCurrent, CFRunLoopGetMain};
-use objc::{msg_send, runtime::Class, sel, sel_impl};
+use objc2::{
+    extern_class, extern_methods, mutability::Immutable, rc::Id, runtime::NSObject, ClassType,
+};
 
 use crate::{Error, Result};
 
@@ -12,9 +13,39 @@ mod sys;
 
 pub(crate) struct PlatformContext {}
 
-pub(crate) type FlutterView = id;
-pub(crate) type FlutterTextureRegistry = id;
-pub(crate) type FlutterBinaryMessenger = id;
+pub(crate) type FlutterView = Id<NSObject>;
+pub(crate) type FlutterTextureRegistry = Id<NSObject>;
+pub(crate) type FlutterBinaryMessenger = Id<NSObject>;
+
+extern_class!(
+    #[derive(PartialEq, Eq, Hash)]
+    pub struct IrondashEngineContextPlugin;
+
+    unsafe impl ClassType for IrondashEngineContextPlugin {
+        type Super = NSObject;
+        type Mutability = Immutable;
+    }
+);
+
+extern_methods!(
+    unsafe impl IrondashEngineContextPlugin {
+        #[allow(non_snake_case)]
+        #[method_id(@__retain_semantics Other getFlutterView:)]
+        pub unsafe fn getFlutterView(handle: i64) -> Option<FlutterView>;
+
+        #[allow(non_snake_case)]
+        #[method_id(@__retain_semantics Other getTextureRegistry:)]
+        pub unsafe fn getTextureRegistry(handle: i64) -> Option<FlutterTextureRegistry>;
+
+        #[allow(non_snake_case)]
+        #[method_id(@__retain_semantics Other getBinaryMessenger:)]
+        pub unsafe fn getBinaryMessenger(handle: i64) -> Option<FlutterBinaryMessenger>;
+
+        #[allow(non_snake_case)]
+        #[method(registerEngineDestroyedCallback:)]
+        pub unsafe fn registerEngineDestroyedCallback(callback: extern "C" fn(i64));
+    }
+);
 
 impl PlatformContext {
     pub fn perform_on_main_thread(f: impl FnOnce() + Send + 'static) -> Result<()> {
@@ -52,48 +83,37 @@ impl PlatformContext {
 
     fn initialize(&self) -> Result<()> {
         unsafe {
-            let _: () = msg_send![
-                Self::get_class()?,
-                registerEngineDestroyedCallback: on_engine_destroyed as usize
-            ];
+            IrondashEngineContextPlugin::registerEngineDestroyedCallback(on_engine_destroyed);
         }
         Ok(())
     }
 
-    fn get_class() -> Result<&'static objc::runtime::Class> {
-        let class = Class::get("IrondashEngineContextPlugin");
-        class.ok_or(Error::PluginNotLoaded)
-    }
-
     pub fn get_flutter_view(&self, handle: i64) -> Result<FlutterView> {
         unsafe {
-            let view: id = msg_send![Self::get_class()?, getFlutterView: handle];
-            if view == nil {
-                Err(Error::InvalidHandle)
-            } else {
-                Ok(view)
+            let view = IrondashEngineContextPlugin::getFlutterView(handle);
+            match view {
+                Some(view) => Ok(view),
+                None => Err(Error::InvalidHandle),
             }
         }
     }
 
     pub fn get_texture_registry(&self, handle: i64) -> Result<FlutterTextureRegistry> {
         unsafe {
-            let registry: id = msg_send![Self::get_class()?, getTextureRegistry: handle];
-            if registry == nil {
-                Err(Error::InvalidHandle)
-            } else {
-                Ok(registry)
+            let registry = IrondashEngineContextPlugin::getTextureRegistry(handle);
+            match registry {
+                Some(registry) => Ok(registry),
+                None => Err(Error::InvalidHandle),
             }
         }
     }
 
     pub fn get_binary_messenger(&self, handle: i64) -> Result<FlutterBinaryMessenger> {
         unsafe {
-            let messenger: id = msg_send![Self::get_class()?, getBinaryMessenger: handle];
-            if messenger == nil {
-                Err(Error::InvalidHandle)
-            } else {
-                Ok(messenger)
+            let messenger = IrondashEngineContextPlugin::getBinaryMessenger(handle);
+            match messenger {
+                Some(messenger) => Ok(messenger),
+                None => Err(Error::InvalidHandle),
             }
         }
     }

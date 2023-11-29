@@ -73,8 +73,7 @@ impl Deserializer {
             VALUE_FLOAT64LIST => Value::F64List(Self::read_vec::<f64>(reader)),
             VALUE_LIST => {
                 let len = reader.read_size();
-                let mut list = Vec::new();
-                list.reserve(len);
+                let mut list = Vec::with_capacity(len);
                 for _ in 0..len {
                     let value = Self::read_value(reader);
                     list.push(value);

@@ -18,6 +18,6 @@ android_logger = "0.11"
 log = "0.4"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-objc = "0.2.7"
-cocoa = "0.24"
+objc2 = "0.4.1"
+icrate = { version = "0.0.4", features = ["Foundation"] }
 core-foundation = "0.9"

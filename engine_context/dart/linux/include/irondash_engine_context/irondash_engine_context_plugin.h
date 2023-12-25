@@ -1,6 +1,10 @@
 #ifndef FLUTTER_PLUGIN_ENGINE_CONTEXT_PLUGIN_H_
 #define FLUTTER_PLUGIN_ENGINE_CONTEXT_PLUGIN_H_
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <flutter_linux/flutter_linux.h>
 
 G_BEGIN_DECLS

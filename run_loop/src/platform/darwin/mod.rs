@@ -366,6 +366,8 @@ impl PlatformRunLoop {
         unsafe {
             let mtm = MainThreadMarker::new().unwrap();
             let app = NSApplication::sharedApplication(mtm);
+            // TODO(knopp): Replace with `activate` once macOS 14 is minimum deployment target
+            #[allow(deprecated)]
             app.activateIgnoringOtherApps(true);
             app.run();
         }

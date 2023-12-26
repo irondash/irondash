@@ -61,7 +61,7 @@ pub extern "C" fn irondash_init_message_channel_context(_data: *mut c_void) -> F
     {
         #[repr(C)]
         struct MessageChannelContext {
-            size: isize,
+            size: i64,
             ffi_data: *mut c_void,
             register_isolate: *mut c_void,
             send_message: *mut c_void,
@@ -93,8 +93,12 @@ pub extern "C" fn irondash_init_message_channel_context(_data: *mut c_void) -> F
 
         let context = _data as *mut MessageChannelContext;
         let context = unsafe { &mut *context };
-        if context.size != std::mem::size_of::<MessageChannelContext>() as isize {
-            println!("Bad struct size");
+        if context.size != std::mem::size_of::<MessageChannelContext>() as i64 {
+            eprintln!(
+                "Bad struct size (expected {}, got {})",
+                std::mem::size_of::<MessageChannelContext>(),
+                context.size
+            );
             return FunctionResult::InvalidStructSize;
         }
         irondash_init_ffi(context.ffi_data);

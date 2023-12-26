@@ -1,3 +1,7 @@
+## 0.5.0
+
+ - Bump version to match Rust crate version.
+
 ## 0.3.1
 
  - **FIX**: improve example initialization code (#31).

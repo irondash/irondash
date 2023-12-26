@@ -21,7 +21,7 @@ const RTLD_LAZY: c_int = 1;
 extern "C" {
     fn dlopen(filename: *const c_char, flags: c_int) -> *mut c_void;
     fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
-    pub fn gettid() -> u64;
+    pub fn pthread_self() -> usize;
 }
 
 pub(crate) type FlutterView = FlView;
@@ -31,7 +31,7 @@ pub(crate) type FlutterBinaryMessenger = FlBinaryMessenger;
 type FlView = *mut c_void;
 type FlTextureRegistrar = *mut c_void;
 type FlBinaryMessenger = *mut c_void;
-type GetMainThreadIdProc = unsafe extern "C" fn() -> u64;
+type GetMainThreadIdProc = unsafe extern "C" fn() -> usize;
 type GetFlutterViewProc = unsafe extern "C" fn(i64) -> FlView;
 type RegisterDestroyNotificationProc = unsafe extern "C" fn(extern "C" fn(i64)) -> ();
 type GetFlutterTextureRegistrarProc = unsafe extern "C" fn(i64) -> FlTextureRegistrar;
@@ -81,7 +81,7 @@ impl PlatformContext {
         let proc = Self::get_proc(b"IrondashEngineContextGetMainThreadId\0")?;
         let proc: GetMainThreadIdProc = unsafe { std::mem::transmute(proc) };
         let main_thread_id = unsafe { proc() };
-        let current_thread_id = unsafe { gettid() };
+        let current_thread_id = unsafe { pthread_self() };
         Ok(main_thread_id == current_thread_id)
     }
 

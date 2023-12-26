@@ -24,11 +24,8 @@ use crate::{
     PlatformTextureWithProvider, Result,
 };
 use objc2::{
-    declare::{Ivar, IvarDrop},
-    declare_class, extern_class, extern_methods, msg_send_id, mutability,
-    rc::Id,
-    runtime::NSObject,
-    ClassType,
+    declare_class, extern_class, extern_methods, msg_send_id, mutability, rc::Id,
+    runtime::NSObject, ClassType, DeclaredClass,
 };
 
 use self::io_surface::{IOSurface, IOSurfaceGetHeight, IOSurfaceGetWidth, IOSurfaceRef};
@@ -295,13 +292,12 @@ fn init_surface(width: i32, height: i32) -> IOSurface {
     IOSurface::new(&CFDictionary::from_CFType_pairs(pairs.as_slice()))
 }
 
-declare_class!(
-    struct IrondashTexture {
-        payload_provider:
-            IvarDrop<Box<Arc<dyn PayloadProvider<BoxedIOSurface>>>, "_payload_provider">,
-    }
+struct Ivars {
+    payload_provider: Arc<dyn PayloadProvider<BoxedIOSurface>>,
+}
 
-    mod ivars;
+declare_class!(
+    struct IrondashTexture;
 
     unsafe impl ClassType for IrondashTexture {
         type Super = NSObject;
@@ -309,10 +305,14 @@ declare_class!(
         const NAME: &'static str = "IrondashTexture";
     }
 
+    impl DeclaredClass for IrondashTexture {
+        type Ivars = Ivars;
+    }
+
     unsafe impl IrondashTexture {
         #[method(copyPixelBuffer)]
         fn copy_pixel_buffer(&self) -> CVPixelBufferRef {
-            do_copy_pixel_buffer(&self.payload_provider)
+            do_copy_pixel_buffer(&self.ivars().payload_provider)
         }
     }
 );
@@ -321,8 +321,9 @@ impl IrondashTexture {
     pub fn new_with_provider(
         payload_provider: Arc<dyn PayloadProvider<BoxedIOSurface>>,
     ) -> Id<Self> {
-        let mut this: Id<Self> = unsafe { msg_send_id![Self::alloc(), init] };
-        Ivar::write(&mut this.payload_provider, Box::new(payload_provider));
-        this
+        let this = Self::alloc().set_ivars(Ivars {
+            payload_provider: payload_provider.clone(),
+        });
+        unsafe { msg_send_id![super(this), init] }
     }
 }

@@ -23,17 +23,16 @@ struct EngineContext {
 std::map<int64_t, EngineContext> contexts;
 int64_t next_handle = 1;
 std::vector<EngineDestroyedCallback> engine_destroyed_callbacks;
-uint64_t main_thread_id;
+size_t main_thread_id;
 
 __attribute__((constructor)) void Init() {
-  fprintf(stderr, "OnLoad\n");
-  main_thread_id = gettid();
+  main_thread_id = reinterpret_cast<size_t>(pthread_self());
 }
 } // namespace
 
 extern "C" {
 
-uint64_t IrondashEngineContextGetMainThreadId() { return main_thread_id; }
+size_t IrondashEngineContextGetMainThreadId() { return main_thread_id; }
 
 FlView *IrondashEngineContextGetFlutterView(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);

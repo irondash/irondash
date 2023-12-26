@@ -361,10 +361,11 @@ impl PlatformRunLoop {
 
     #[cfg(target_os = "macos")]
     pub fn run_app(&self) {
-        use icrate::AppKit::NSApplication;
+        use icrate::{AppKit::NSApplication, Foundation::MainThreadMarker};
 
         unsafe {
-            let app = NSApplication::sharedApplication();
+            let mtm = MainThreadMarker::new().unwrap();
+            let app = NSApplication::sharedApplication(mtm);
             app.activateIgnoringOtherApps(true);
             app.run();
         }
@@ -384,11 +385,12 @@ impl PlatformRunLoop {
     pub fn stop_app(&self) {
         use icrate::{
             AppKit::{NSApplication, NSEvent, NSEventTypeApplicationDefined},
-            Foundation::CGPoint,
+            Foundation::{CGPoint, MainThreadMarker},
         };
 
         unsafe {
-            let app = NSApplication::sharedApplication();
+            let mtm = MainThreadMarker::new().unwrap();
+            let app = NSApplication::sharedApplication(mtm);
             app.stop(None);
 
             // To stop event loop immediately, we need to post event.

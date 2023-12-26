@@ -175,7 +175,7 @@ unsafe fn _value_to_objc(value: &Value) -> Result<Option<Id<NSObject>>, TryFromE
                 objects.push(fix_null(_value_to_objc(&item.1)?));
             }
             let key_refs = keys.iter().map(|v| v.as_ref()).collect::<Vec<_>>();
-            let dict = NSDictionary::from_keys_and_objects(&key_refs, objects);
+            let dict = NSDictionary::from_vec(&key_refs, objects);
             Ok(Some(Id::cast(dict)))
         }
         other => Err(TryFromError::OtherError(format!(
@@ -186,9 +186,8 @@ unsafe fn _value_to_objc(value: &Value) -> Result<Option<Id<NSObject>>, TryFromE
 
 #[cfg(test)]
 mod test {
-    use icrate::{
-        ns_string,
-        Foundation::{NSArray, NSData, NSDictionary, NSNull, NSNumber, NSString},
+    use icrate::Foundation::{
+        ns_string, NSArray, NSData, NSDictionary, NSNull, NSNumber, NSString,
     };
     use objc2::{rc::Id, runtime::NSObject};
 
@@ -277,7 +276,7 @@ mod test {
     #[test]
     fn tests() {
         let object1 = unsafe {
-            NSDictionary::<NSString, NSObject>::from_keys_and_objects(
+            NSDictionary::<NSString, NSObject>::from_vec(
                 &[ns_string!("Key")],
                 vec![Id::cast(NSArray::<NSObject>::from_id_slice(&[
                     Id::cast(NSString::from_str("Obj1")),

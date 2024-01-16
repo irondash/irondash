@@ -1,3 +1,7 @@
+## 0.5.1
+
+- Update cargokit
+
 ## 0.5.0
 
 - Bump version to match Rust crate version.

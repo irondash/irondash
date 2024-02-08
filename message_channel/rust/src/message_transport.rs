@@ -153,9 +153,9 @@ pub mod native {
     pub(crate) extern "C" fn post_message(
         isolate_id: crate::ffi::IsolateId,
         message: *mut u8,
-        len: u64,
+        len: usize,
     ) {
-        let vec = unsafe { Vec::from_raw_parts(message, len as usize, len as usize) };
+        let vec = unsafe { Vec::from_raw_parts(message, len, len) };
         if let Some(transport) = NativeMessageTransport::get() {
             let isolate_id = IsolateId(isolate_id);
             let value = unsafe { Deserializer::deserialize(&vec) };

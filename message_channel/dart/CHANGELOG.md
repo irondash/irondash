@@ -1,3 +1,7 @@
+## 0.6.0
+
+- Fix crash on 32-bit Android devices.
+
 ## 0.5.0
 
  - Bump version to match Rust crate version.

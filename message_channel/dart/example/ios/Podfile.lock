@@ -1,21 +1,27 @@
 PODS:
   - example_rust (0.0.1)
   - Flutter (1.0.0)
+  - irondash_engine_context (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - example_rust (from `../rust`)
   - Flutter (from `Flutter`)
+  - irondash_engine_context (from `.symlinks/plugins/irondash_engine_context/ios`)
 
 EXTERNAL SOURCES:
   example_rust:
     :path: "../rust"
   Flutter:
     :path: Flutter
+  irondash_engine_context:
+    :path: ".symlinks/plugins/irondash_engine_context/ios"
 
 SPEC CHECKSUMS:
-  example_rust: f98802abd5a395ff36ccc266e4d135e3b10f2a78
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  example_rust: f06c10d023833ef3d902aba66c8725baf77ce384
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  irondash_engine_context: 3458bf979b90d616ffb8ae03a150bafe2e860cc9
 
-PODFILE CHECKSUM: 54486487fd03e12b8b5d89a865ca5b3d6e185b24
+PODFILE CHECKSUM: cf18f0d065b60b5f7592a313c31f397835c28164
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.14.3

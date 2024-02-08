@@ -116,22 +116,12 @@ dependencies = [
 
 [[package]]
 name = "block2"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15b55663a85f33501257357e6421bb33e769d5c9ffb5ba0921c975a123e35e68"
-dependencies = [
- "block-sys",
- "objc2 0.4.1",
-]
-
-[[package]]
-name = "block2"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e58aa60e59d8dbfcc36138f5f18be5f24394d33b38b24f7fd0b1caa33095f22f"
 dependencies = [
  "block-sys",
- "objc2 0.5.0",
+ "objc2",
 ]
 
 [[package]]
@@ -288,8 +278,8 @@ dependencies = [
  "android_logger",
  "async-trait",
  "irondash_dart_ffi",
- "irondash_message_channel 0.4.0-dev2",
- "irondash_run_loop 0.4.0-dev.2",
+ "irondash_message_channel",
+ "irondash_run_loop",
  "log",
  "oslog",
  "reqwest",
@@ -579,22 +569,12 @@ dependencies = [
 
 [[package]]
 name = "icrate"
-version = "0.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99d3aaff8a54577104bafdf686ff18565c3b6903ca5782a2026ef06e2c7aa319"
-dependencies = [
- "block2 0.3.0",
- "objc2 0.4.1",
-]
-
-[[package]]
-name = "icrate"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e286f4b975ac6c054971a0600a9b76438b332edace54bff79c71c9d3adfc9772"
 dependencies = [
- "block2 0.4.0",
- "objc2 0.5.0",
+ "block2",
+ "objc2",
 ]
 
 [[package]]
@@ -641,45 +621,14 @@ dependencies = [
 
 [[package]]
 name = "irondash_engine_context"
-version = "0.4.0-dev.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ba5e3af5bf3fc5924ea11aae618d75791f1ec103481488e90aa6e5f4f9a3b63"
-dependencies = [
- "android_logger",
- "core-foundation",
- "icrate 0.0.4",
- "jni",
- "log",
- "objc2 0.4.1",
- "once_cell",
-]
-
-[[package]]
-name = "irondash_engine_context"
 version = "0.5.0"
 dependencies = [
  "android_logger",
  "core-foundation",
- "icrate 0.1.0",
+ "icrate",
  "jni",
  "log",
- "objc2 0.5.0",
- "once_cell",
-]
-
-[[package]]
-name = "irondash_message_channel"
-version = "0.4.0-dev2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b622fe3a97aa5ed014ffe6cdcf37731acb4643acd7e0e1331a69a38526de92f"
-dependencies = [
- "async-trait",
- "core-foundation",
- "icrate 0.0.4",
- "irondash_dart_ffi",
- "irondash_message_channel_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "irondash_run_loop 0.4.0-dev.2",
- "objc2 0.4.1",
+ "objc2",
  "once_cell",
 ]
 
@@ -689,11 +638,12 @@ version = "0.5.0"
 dependencies = [
  "async-trait",
  "core-foundation",
- "icrate 0.1.0",
+ "icrate",
  "irondash_dart_ffi",
- "irondash_message_channel_derive 0.1.1",
- "irondash_run_loop 0.5.0",
- "objc2 0.5.0",
+ "irondash_message_channel_derive",
+ "irondash_run_loop",
+ "log",
+ "objc2",
  "once_cell",
 ]
 
@@ -708,42 +658,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "irondash_message_channel_derive"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cc040dca601ea6a092d0c936dbe362863580c3537e4748ca6c17cbaf88cb0b7"
-dependencies = [
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "irondash_run_loop"
-version = "0.4.0-dev.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "339e4b6b64c83fb25e8a1f55c1c6ee361d7737143f650d0fe0c7bac92f897e9d"
-dependencies = [
- "core-foundation",
- "futures",
- "icrate 0.0.4",
- "irondash_engine_context 0.4.0-dev.2",
- "log",
- "objc2 0.4.1",
- "once_cell",
-]
-
-[[package]]
 name = "irondash_run_loop"
 version = "0.5.0"
 dependencies = [
  "core-foundation",
  "futures",
- "icrate 0.1.0",
- "irondash_engine_context 0.5.0",
+ "icrate",
+ "irondash_engine_context",
  "log",
- "objc2 0.5.0",
+ "objc2",
  "once_cell",
 ]
 
@@ -755,13 +678,13 @@ dependencies = [
  "cstr",
  "glib-sys",
  "gobject-sys",
- "icrate 0.1.0",
- "irondash_engine_context 0.5.0",
- "irondash_run_loop 0.5.0",
+ "icrate",
+ "irondash_engine_context",
+ "irondash_run_loop",
  "jni",
  "log",
  "ndk-sys",
- "objc2 0.5.0",
+ "objc2",
  "once_cell",
 ]
 
@@ -933,29 +856,13 @@ checksum = "c7c71324e4180d0899963fc83d9d241ac39e699609fc1025a850aadac8257459"
 
 [[package]]
 name = "objc2"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "559c5a40fdd30eb5e344fbceacf7595a81e242529fb4e21cf5f43fb4f11ff98d"
-dependencies = [
- "objc-sys",
- "objc2-encode 3.0.0",
-]
-
-[[package]]
-name = "objc2"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a9c7f0d511a4ce26b078183179dca908171cfc69f88986fe36c5138e1834476"
 dependencies = [
  "objc-sys",
- "objc2-encode 4.0.0",
+ "objc2-encode",
 ]
-
-[[package]]
-name = "objc2-encode"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d079845b37af429bfe5dfa76e6d087d788031045b25cfc6fd898486fd9847666"
 
 [[package]]
 name = "objc2-encode"
@@ -1542,7 +1449,7 @@ dependencies = [
  "android_logger",
  "fastrand 1.9.0",
  "irondash_dart_ffi",
- "irondash_run_loop 0.5.0",
+ "irondash_run_loop",
  "irondash_texture",
  "jni",
  "log",

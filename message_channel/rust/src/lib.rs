@@ -31,6 +31,7 @@ pub use async_method_handler::*;
 pub use event_channel::*;
 pub use finalizable_handle::*;
 pub use late::*;
+use log::error;
 pub use message_channel::*;
 pub use method_handler::*;
 pub use value::*;
@@ -61,7 +62,7 @@ pub extern "C" fn irondash_init_message_channel_context(_data: *mut c_void) -> F
     {
         #[repr(C)]
         struct MessageChannelContext {
-            size: i64,
+            size: usize,
             ffi_data: *mut c_void,
             register_isolate: *mut c_void,
             send_message: *mut c_void,
@@ -93,8 +94,8 @@ pub extern "C" fn irondash_init_message_channel_context(_data: *mut c_void) -> F
 
         let context = _data as *mut MessageChannelContext;
         let context = unsafe { &mut *context };
-        if context.size != std::mem::size_of::<MessageChannelContext>() as i64 {
-            eprintln!(
+        if context.size != std::mem::size_of::<MessageChannelContext>() {
+            error!(
                 "Bad struct size (expected {}, got {})",
                 std::mem::size_of::<MessageChannelContext>(),
                 context.size

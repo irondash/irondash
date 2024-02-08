@@ -237,7 +237,7 @@ typedef _InitFunction = int Function(Pointer<_GetFunctions>);
 
 final class _GetFunctions extends Struct {
   // in
-  @Int64()
+  @IntPtr()
   external int size;
   external Pointer<Void> ffiData;
 
@@ -270,23 +270,23 @@ final class _GetFunctions extends Struct {
 typedef _RegisterIsolate = Int64 Function(Int64, Handle);
 typedef RegisterIsolate = IsolateId Function(int dartPort, Object isolateId);
 
-typedef _PostMessage = Void Function(Int64, Pointer<Uint8>, Int64);
+typedef _PostMessage = Void Function(Int64, Pointer<Uint8>, IntPtr);
 typedef PostMessage = void Function(IsolateId, Pointer<Uint8>, int len);
 
 typedef _AttachWeakPersistentHandle = Handle Function(
-    Handle, Int64, Handle, Int64);
+    Handle, IntPtr, Handle, Int64);
 typedef AttachWeakPersistentHandle = Object? Function(
     Object, int, Object?, int);
 
-typedef _VecAllocate<T extends NativeType> = Pointer<T> Function(Uint64 size);
+typedef _VecAllocate<T extends NativeType> = Pointer<T> Function(IntPtr size);
 typedef VecAllocate<T extends NativeType> = Pointer<T> Function(int size);
 
 typedef _VecResize<T extends NativeType> = Pointer<T> Function(
-    Pointer<T> oldData, Uint64 oldSize, Uint64 newSize);
+    Pointer<T> oldData, IntPtr oldSize, IntPtr newSize);
 typedef VecResize<T extends NativeType> = Pointer<T> Function(
     Pointer<T> oldData, int oldsize, int newSize);
 
 typedef _VecFree<T extends NativeType> = Void Function(
-    Pointer<T> data, Uint64 size);
+    Pointer<T> data, IntPtr size);
 typedef VecFree<T extends NativeType> = void Function(
     Pointer<T> data, int size);

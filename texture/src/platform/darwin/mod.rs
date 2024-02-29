@@ -71,7 +71,7 @@ extern_methods!(
     }
 );
 
-pub(crate) const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
+pub(crate) const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::BGRA;
 
 impl<Type> PlatformTexture<Type> {
     fn texture_registery(engine_handle: i64) -> Result<Id<FlutterTextureRegistry>> {

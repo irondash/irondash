@@ -10,6 +10,8 @@ use crate::{
 
 mod gl_texture;
 mod pixel_buffer_texture;
+
+#[allow(dead_code)]
 mod sys;
 
 mod g_object_wrapper;

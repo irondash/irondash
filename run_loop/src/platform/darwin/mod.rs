@@ -423,9 +423,6 @@ impl PlatformRunLoop {
 }
 
 #[derive(Clone)]
-pub struct StateWrapper(std::sync::Weak<Mutex<State>>);
-
-#[derive(Clone)]
 pub struct PlatformRunLoopSender {
     state: std::sync::Weak<Mutex<State>>,
 }

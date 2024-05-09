@@ -245,11 +245,6 @@ impl Drop for ContextHolder {
     }
 }
 
-struct Movable<T>(T);
-
-unsafe impl<T> Send for Movable<T> {}
-unsafe impl<T> Sync for Movable<T> {}
-
 #[derive(Clone)]
 pub struct PlatformRunLoopSender {
     context: ContextHolder,

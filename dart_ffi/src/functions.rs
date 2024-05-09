@@ -61,7 +61,7 @@ impl DartFunctions {
 static FUNCTIONS: OnceCell<DartFunctions> = OnceCell::new();
 
 thread_local! {
-    static FUNCTIONS_TL: RefCell<Option<DartFunctions>> = RefCell::new(None);
+    static FUNCTIONS_TL: RefCell<Option<DartFunctions>> = const { RefCell::new(None) };
 }
 
 #[repr(C)]

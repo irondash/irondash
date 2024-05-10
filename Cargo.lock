@@ -278,7 +278,7 @@ dependencies = [
  "android_logger",
  "async-trait",
  "irondash_dart_ffi",
- "irondash_message_channel",
+ "irondash_message_channel 0.6.0",
  "irondash_run_loop",
  "log",
  "oslog",
@@ -635,12 +635,29 @@ dependencies = [
 [[package]]
 name = "irondash_message_channel"
 version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c1b29c2a0cf44ae1098ade855f4fcf8c21c3eaca98b14c5fb6c60030fdbf4ab"
 dependencies = [
  "async-trait",
  "core-foundation",
  "icrate",
  "irondash_dart_ffi",
- "irondash_message_channel_derive",
+ "irondash_message_channel_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "irondash_run_loop",
+ "log",
+ "objc2",
+ "once_cell",
+]
+
+[[package]]
+name = "irondash_message_channel"
+version = "0.7.0"
+dependencies = [
+ "async-trait",
+ "core-foundation",
+ "icrate",
+ "irondash_dart_ffi",
+ "irondash_message_channel_derive 0.1.1",
  "irondash_run_loop",
  "log",
  "objc2",
@@ -650,6 +667,18 @@ dependencies = [
 [[package]]
 name = "irondash_message_channel_derive"
 version = "0.1.1"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "irondash_message_channel_derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cc040dca601ea6a092d0c936dbe362863580c3537e4748ca6c17cbaf88cb0b7"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",

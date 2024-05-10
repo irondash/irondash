@@ -1,3 +1,7 @@
+## 0.7.0
+
+- Use pointer size values where appropriate (#48)
+
 ## 0.6.0
 
 - Fix crash on 32-bit Android devices.

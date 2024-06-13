@@ -1,3 +1,7 @@
+## 0.5.4
+
+- Update cargokit
+
 ## 0.5.3
 
 - Fix Android debug with Rust 1.78

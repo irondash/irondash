@@ -137,6 +137,7 @@ impl Functions {
     fn new() -> Self {
         unsafe {
             let module = GetModuleHandleA(cstr!("flutter_windows.dll").as_ptr());
+            #[allow(clippy::missing_transmute_annotations)]
             Self {
                 RegisterExternalTexture: std::mem::transmute(GetProcAddress(
                     module,

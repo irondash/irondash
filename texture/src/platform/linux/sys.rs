@@ -110,6 +110,7 @@ impl Functions {
     fn new() -> Self {
         unsafe {
             let dl = dlopen(std::ptr::null_mut(), RTLD_LAZY);
+            #[allow(clippy::missing_transmute_annotations)]
             Self {
                 fl_texture_get_type: std::mem::transmute(dlsym(
                     dl,

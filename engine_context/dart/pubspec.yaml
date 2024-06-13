@@ -1,6 +1,6 @@
 name: irondash_engine_context
 description: Easy access to FlutterView, FlutterBinaryMessenger and FlutterTextureRegistry for FFI.
-version: 0.5.3
+version: 0.5.4
 homepage: https://github.com/irondash/irondash
 
 environment:

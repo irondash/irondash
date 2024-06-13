@@ -103,23 +103,23 @@ impl<T: Into<Value> + 'static> From<Vec<T>> for Value {
         // https://github.com/rust-lang/rust/issues/31844
         let type_id = TypeId::of::<T>();
         if type_id == TypeId::of::<i8>() {
-            Value::I8List(unsafe { std::mem::transmute(vec) })
+            Value::I8List(unsafe { std::mem::transmute::<Vec<T>, Vec<i8>>(vec) })
         } else if type_id == TypeId::of::<u8>() {
-            Value::U8List(unsafe { std::mem::transmute(vec) })
+            Value::U8List(unsafe { std::mem::transmute::<Vec<T>, Vec<u8>>(vec) })
         } else if type_id == TypeId::of::<i16>() {
-            Value::I16List(unsafe { std::mem::transmute(vec) })
+            Value::I16List(unsafe { std::mem::transmute::<Vec<T>, Vec<i16>>(vec) })
         } else if type_id == TypeId::of::<u16>() {
-            Value::U16List(unsafe { std::mem::transmute(vec) })
+            Value::U16List(unsafe { std::mem::transmute::<Vec<T>, Vec<u16>>(vec) })
         } else if type_id == TypeId::of::<i32>() {
-            Value::I32List(unsafe { std::mem::transmute(vec) })
+            Value::I32List(unsafe { std::mem::transmute::<Vec<T>, Vec<i32>>(vec) })
         } else if type_id == TypeId::of::<u32>() {
-            Value::U32List(unsafe { std::mem::transmute(vec) })
+            Value::U32List(unsafe { std::mem::transmute::<Vec<T>, Vec<u32>>(vec) })
         } else if type_id == TypeId::of::<i64>() {
-            Value::I64List(unsafe { std::mem::transmute(vec) })
+            Value::I64List(unsafe { std::mem::transmute::<Vec<T>, Vec<i64>>(vec) })
         } else if type_id == TypeId::of::<f32>() {
-            Value::F32List(unsafe { std::mem::transmute(vec) })
+            Value::F32List(unsafe { std::mem::transmute::<Vec<T>, Vec<f32>>(vec) })
         } else if type_id == TypeId::of::<f64>() {
-            Value::F64List(unsafe { std::mem::transmute(vec) })
+            Value::F64List(unsafe { std::mem::transmute::<Vec<T>, Vec<f64>>(vec) })
         } else {
             Value::List(vec.into_iter().map(|v| v.into()).collect())
         }
@@ -289,7 +289,7 @@ impl<
 
 fn try_extract<T: 'static, V: 'static>(list: Vec<T>) -> Result<Vec<V>, TryFromError> {
     if TypeId::of::<V>() == TypeId::of::<T>() {
-        Ok(unsafe { std::mem::transmute(list) })
+        Ok(unsafe { std::mem::transmute::<Vec<T>, Vec<V>>(list) })
     } else {
         Err(TryFromError::BadType)
     }

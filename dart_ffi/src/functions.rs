@@ -101,6 +101,7 @@ pub(super) fn init(ptr: *mut c_void) {
         if api.major != 2 {
             panic!("unsupported Dart API version {}.{}", api.major, api.minor);
         }
+        #[allow(clippy::missing_transmute_annotations)]
         DartFunctions {
             post_cobject: mem::transmute(api.lookup_fn("Dart_PostCObject")),
             post_integer: mem::transmute(api.lookup_fn("Dart_PostInteger")),

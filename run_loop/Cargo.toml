@@ -17,18 +17,17 @@ once_cell = "1.16.0"
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 core-foundation = "0.9"
 objc2 = "0.5.0"
-icrate = { version = "0.1.0", features = [
-    "Foundation",
-    "Foundation_NSString",
-    "Foundation_NSThread",
+objc2-foundation = { version = "0.2.2", features = [
+    "NSString",
+    "NSThread",
 ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-icrate = { version = "0.1.0", features = [
-    "AppKit",
-    "AppKit_NSEvent",
-    "AppKit_NSApplication",
-    "AppKit_NSGraphicsContext",
+objc2-app-kit = { version = "0.2.2", features = [
+    "NSEvent",
+    "NSResponder",
+    "NSApplication",
+    "NSGraphicsContext",
 ] }
 
 [target.'cfg(target_os = "android")'.dependencies]

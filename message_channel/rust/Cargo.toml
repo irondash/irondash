@@ -20,14 +20,15 @@ irondash_message_channel_derive = { version = "0.1.1", path = "../rust_derive", 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 core-foundation = "0.9"
 objc2 = "0.5.0"
-icrate = { version = "0.1.0", features = [
-    "Foundation",
-    "Foundation_NSNumber",
-    "Foundation_NSString",
-    "Foundation_NSNull",
-    "Foundation_NSDictionary",
-    "Foundation_NSArray",
-    "Foundation_NSData",
+objc2-foundation = { version = "0.2.2", features = [
+    "NSString",
+    "NSNull",
+    "NSDictionary",
+    "NSArray",
+    "NSData",
+    "NSValue",
+    "NSEnumerator",
+    "NSObject",
 ] }
 
 

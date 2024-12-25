@@ -121,7 +121,7 @@ pub struct PixelData<'a> {
     pub data: &'a [u8],
 }
 
-impl<'a> PixelData<'a> {
+impl PixelData<'_> {
     pub const FORMAT: PixelFormat = platform::PIXEL_DATA_FORMAT;
 }
 

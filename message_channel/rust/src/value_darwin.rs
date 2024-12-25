@@ -11,7 +11,7 @@ use core_foundation::{
         kCFNumberFloat64Type, kCFNumberSInt64Type, CFBooleanGetValue, CFNumberGetValue, CFNumberRef,
     },
 };
-use icrate::Foundation::{NSArray, NSCopying, NSData, NSDictionary, NSNull, NSNumber, NSString};
+
 use objc2::{
     extern_class,
     mutability::Immutable,
@@ -19,6 +19,7 @@ use objc2::{
     runtime::{NSObject, NSObjectProtocol},
     ClassType,
 };
+use objc2_foundation::{NSArray, NSCopying, NSData, NSDictionary, NSNull, NSNumber, NSString};
 
 use crate::{TryFromError, Value};
 
@@ -186,10 +187,8 @@ unsafe fn _value_to_objc(value: &Value) -> Result<Option<Id<NSObject>>, TryFromE
 
 #[cfg(test)]
 mod test {
-    use icrate::Foundation::{
-        ns_string, NSArray, NSData, NSDictionary, NSNull, NSNumber, NSString,
-    };
     use objc2::{rc::Id, runtime::NSObject};
+    use objc2_foundation::{ns_string, NSArray, NSData, NSDictionary, NSNull, NSNumber, NSString};
 
     use crate::Value;
 
@@ -198,8 +197,8 @@ mod test {
     #[test]
     #[cfg(target_endian = "little")]
     fn test_coerce_data() {
-        use icrate::Foundation::NSData;
         use objc2::rc::Id;
+        use objc2_foundation::NSData;
 
         use crate::{value_darwin::ValueObjcConversion, Value};
 
@@ -233,8 +232,8 @@ mod test {
     #[test]
     #[cfg(target_endian = "little")]
     fn test_coerce_data_l() {
-        use icrate::Foundation::NSData;
         use objc2::rc::Id;
+        use objc2_foundation::NSData;
 
         use crate::{value_darwin::ValueObjcConversion, Value};
 
@@ -317,8 +316,8 @@ mod test {
 mod sys {
     use std::{ffi::c_char, slice};
 
-    use icrate::Foundation::{NSString, NSUTF8StringEncoding};
     use objc2::rc::Id;
+    use objc2_foundation::{NSString, NSUTF8StringEncoding};
 
     pub unsafe fn from_nsstring(ns_string: &Id<NSString>) -> String {
         let bytes: *const c_char = ns_string.UTF8String();

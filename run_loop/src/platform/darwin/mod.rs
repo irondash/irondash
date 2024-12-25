@@ -19,8 +19,8 @@ use core_foundation::{
     },
     string::CFStringRef,
 };
-use icrate::Foundation::NSString;
 use objc2::rc::{autoreleasepool, Id};
+use objc2_foundation::NSString;
 
 use self::sys::pthread_threadid_np;
 
@@ -361,7 +361,8 @@ impl PlatformRunLoop {
 
     #[cfg(target_os = "macos")]
     pub fn run_app(&self) {
-        use icrate::{AppKit::NSApplication, Foundation::MainThreadMarker};
+        use objc2_app_kit::NSApplication;
+        use objc2_foundation::MainThreadMarker;
 
         unsafe {
             let mtm = MainThreadMarker::new().unwrap();
@@ -385,10 +386,8 @@ impl PlatformRunLoop {
 
     #[cfg(target_os = "macos")]
     pub fn stop_app(&self) {
-        use icrate::{
-            AppKit::{NSApplication, NSEvent, NSEventTypeApplicationDefined},
-            Foundation::{CGPoint, MainThreadMarker},
-        };
+        use objc2_app_kit::{NSApplication, NSEvent, NSEventModifierFlags, NSEventType};
+        use objc2_foundation::{CGPoint, MainThreadMarker};
 
         unsafe {
             let mtm = MainThreadMarker::new().unwrap();
@@ -396,7 +395,7 @@ impl PlatformRunLoop {
             app.stop(None);
 
             // To stop event loop immediately, we need to post event.
-            let dummy_event = NSEvent::otherEventWithType_location_modifierFlags_timestamp_windowNumber_context_subtype_data1_data2(NSEventTypeApplicationDefined, CGPoint::ZERO, 0, 0.0, 0, None, 0,0,0).unwrap();
+            let dummy_event = NSEvent::otherEventWithType_location_modifierFlags_timestamp_windowNumber_context_subtype_data1_data2(NSEventType::ApplicationDefined, CGPoint::ZERO, NSEventModifierFlags::empty(), 0.0, 0, None, 0,0,0).unwrap();
             app.postEvent_atStart(&dummy_event, true);
         }
     }

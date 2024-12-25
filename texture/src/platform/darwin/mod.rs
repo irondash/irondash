@@ -150,8 +150,8 @@ impl IOSurfaceProvider for IOSurfaceHolder {
 /// SurfaceCache has two purposes:
 /// 1. It makes sure we keep onto the payload while surface is in use.
 /// 2. On iOS, which has a bug that requests the texture during every frame
-/// regardless of mark_frame_available this reuses existing surface until next
-/// call to mark_frame_available.
+///    regardless of mark_frame_available this reuses existing surface until next
+///    call to mark_frame_available.
 struct SurfaceCache {
     surface: Mutex<Option<IOSurface>>,
     parent_provider: Arc<dyn PayloadProvider<BoxedIOSurface>>,

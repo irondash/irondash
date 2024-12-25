@@ -6,7 +6,7 @@ use std::{
     ffi::c_int,
     mem::ManuallyDrop,
     rc::{Rc, Weak},
-    sync::{Arc, Condvar, Mutex},
+    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 
@@ -33,7 +33,6 @@ struct Timer {
 struct State {
     timer_fd: c_int,
     callbacks: Arc<Mutex<Callbacks>>,
-    condition: Arc<Condvar>,
     next_handle: Cell<HandleType>,
     timers: RefCell<HashMap<HandleType, Timer>>,
 }
@@ -43,7 +42,6 @@ type SenderCallback = Box<dyn FnOnce() + Send>;
 struct Callbacks {
     fd: c_int,
     callbacks: Vec<SenderCallback>,
-    manually_polling: bool,
 }
 
 #[allow(unused_variables)]
@@ -67,9 +65,7 @@ impl PlatformRunLoop {
             callbacks: Arc::new(Mutex::new(Callbacks {
                 fd: pipes[1],
                 callbacks: Vec::new(),
-                manually_polling: false,
             })),
-            condition: Arc::new(Condvar::new()),
             next_handle: Cell::new(INVALID_HANDLE + 1),
             timers: RefCell::new(HashMap::new()),
         });
@@ -137,34 +133,14 @@ impl PlatformRunLoop {
     }
 
     pub fn poll_once(&self) {
-        let mut callbacks = self.state.callbacks.lock().unwrap();
-        let previous_polling = callbacks.manually_polling;
-        callbacks.manually_polling = true;
-        loop {
-            let pending_callbacks: Vec<SenderCallback> = callbacks.callbacks.drain(0..).collect();
-            let pending_timers = self.state.get_pending_timers();
-            if !pending_callbacks.is_empty() || !pending_timers.is_empty() {
-                callbacks.manually_polling = previous_polling;
-                // process callbacks and timers with mutex unlocked
-                drop(callbacks);
-
-                for c in pending_callbacks {
-                    c();
-                }
-                self.state.process_pending_timers(pending_timers);
-                break;
-            }
-            let wait_time = self
-                .state
-                .next_timer()
-                .saturating_duration_since(Instant::now());
-            callbacks = self
-                .state
-                .condition
-                .wait_timeout(callbacks, wait_time)
-                .unwrap()
-                .0;
-        }
+        unsafe {
+            ALooper_pollOnce(
+                4,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+            )
+        };
     }
 
     pub fn unschedule(&self, handle: HandleType) {
@@ -182,7 +158,6 @@ impl PlatformRunLoop {
     pub fn new_sender(&self) -> PlatformRunLoopSender {
         PlatformRunLoopSender {
             callbacks: Arc::downgrade(&self.state.callbacks),
-            condition: Arc::downgrade(&self.state.condition),
         }
     }
 
@@ -319,7 +294,6 @@ impl Drop for PlatformRunLoop {
 #[derive(Clone)]
 pub struct PlatformRunLoopSender {
     callbacks: std::sync::Weak<Mutex<Callbacks>>,
-    condition: std::sync::Weak<Condvar>,
 }
 
 #[allow(unused_variables)]
@@ -328,18 +302,12 @@ impl PlatformRunLoopSender {
     where
         F: FnOnce() + 'static + Send,
     {
-        if let (Some(callbacks), Some(condition)) =
-            (self.callbacks.upgrade(), self.condition.upgrade())
-        {
+        if let Some(callbacks) = self.callbacks.upgrade() {
             let mut callbacks = callbacks.lock().unwrap();
             callbacks.callbacks.push(Box::new(callback));
-            if callbacks.manually_polling {
-                condition.notify_one();
-            } else {
-                let buf = [0u8; 8];
-                unsafe {
-                    write(callbacks.fd, buf.as_ptr() as *const _, buf.len());
-                }
+            let buf = [0u8; 8];
+            unsafe {
+                write(callbacks.fd, buf.as_ptr() as *const _, buf.len());
             }
             true
         } else {

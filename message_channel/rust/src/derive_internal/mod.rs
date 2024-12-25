@@ -18,7 +18,7 @@ pub trait Assign {
     fn set_optional_to_none(&mut self);
 }
 
-impl<'a, T: TryFrom<Value, Error = E>, E> Assign for WrapMut<'a, Option<T>>
+impl<T: TryFrom<Value, Error = E>, E> Assign for WrapMut<'_, Option<T>>
 where
     E: Into<TryFromError>,
 {
@@ -29,7 +29,7 @@ where
     fn set_optional_to_none(&mut self) {}
 }
 
-impl<'a, T: TryFrom<Value, Error = E>, E> Assign for &mut WrapMut<'a, Option<Option<T>>>
+impl<T: TryFrom<Value, Error = E>, E> Assign for &mut WrapMut<'_, Option<Option<T>>>
 where
     E: Into<TryFromError>,
 {
@@ -47,7 +47,7 @@ where
     }
 }
 
-impl<'a> Assign for &mut &mut WrapMut<'a, Option<Option<Value>>> {
+impl Assign for &mut &mut WrapMut<'_, Option<Option<Value>>> {
     fn assign(&mut self, value: Value, skip_if_empty: bool) -> Result<(), TryFromError> {
         if skip_if_empty {
             self.0.replace(Some(value));
@@ -70,13 +70,13 @@ pub trait IsNone {
     fn is_none(&self) -> bool;
 }
 
-impl<'a, T> IsNone for Wrap<'a, T> {
+impl<T> IsNone for Wrap<'_, T> {
     fn is_none(&self) -> bool {
         false
     }
 }
 
-impl<'a, T> IsNone for &Wrap<'a, Option<T>> {
+impl<T> IsNone for &Wrap<'_, Option<T>> {
     fn is_none(&self) -> bool {
         self.0.is_none()
     }

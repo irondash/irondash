@@ -272,5 +272,7 @@ pub(crate) mod finalizable_handle_native {
 fn next_handle() -> isize {
     static mut COUNTER: AtomicIsize = AtomicIsize::new(0);
     #[allow(static_mut_refs)]
-    unsafe { COUNTER.fetch_add(1, Ordering::SeqCst) }
+    unsafe {
+        COUNTER.fetch_add(1, Ordering::SeqCst)
+    }
 }

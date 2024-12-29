@@ -183,7 +183,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "117725a109d387c937a1533ce01b450cbde6b88abceea8473c4d7a85853cda3c"
 dependencies = [
  "lazy_static",
- "windows-sys 0.52.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -287,7 +287,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33d852cb9b869c2a9b3df2f71a3074817f01e1844f839a144f5fcef059a4eb5d"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -297,8 +297,8 @@ dependencies = [
  "android_logger",
  "async-trait",
  "irondash_dart_ffi",
- "irondash_message_channel 0.6.0",
- "irondash_run_loop 0.6.0",
+ "irondash_message_channel",
+ "irondash_run_loop",
  "log",
  "oslog",
  "reqwest",
@@ -797,30 +797,13 @@ dependencies = [
 
 [[package]]
 name = "irondash_message_channel"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c1b29c2a0cf44ae1098ade855f4fcf8c21c3eaca98b14c5fb6c60030fdbf4ab"
-dependencies = [
- "async-trait",
- "core-foundation",
- "icrate",
- "irondash_dart_ffi",
- "irondash_message_channel_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "irondash_run_loop 0.5.0",
- "log",
- "objc2",
- "once_cell",
-]
-
-[[package]]
-name = "irondash_message_channel"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "core-foundation",
  "irondash_dart_ffi",
- "irondash_message_channel_derive 0.1.1",
- "irondash_run_loop 0.6.0",
+ "irondash_message_channel_derive",
+ "irondash_run_loop",
  "log",
  "objc2",
  "objc2-foundation",
@@ -838,39 +821,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "irondash_message_channel_derive"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cc040dca601ea6a092d0c936dbe362863580c3537e4748ca6c17cbaf88cb0b7"
-dependencies = [
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "irondash_run_loop"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b669550085d7f2ecad1811118b36f57224dd83fddbc97da17009f429d637239d"
-dependencies = [
- "core-foundation",
- "futures",
- "icrate",
- "irondash_engine_context 0.5.0",
- "log",
- "objc2",
- "once_cell",
-]
-
-[[package]]
 name = "irondash_run_loop"
 version = "0.6.0"
 dependencies = [
  "core-foundation",
  "futures",
- "irondash_engine_context 0.6.0",
+ "irondash_engine_context 0.5.0",
  "log",
  "objc2",
  "objc2-app-kit",
@@ -887,8 +843,8 @@ dependencies = [
  "glib-sys",
  "gobject-sys",
  "icrate",
- "irondash_engine_context 0.6.0",
- "irondash_run_loop 0.6.0",
+ "irondash_engine_context 0.5.0",
+ "irondash_run_loop",
  "jni",
  "log",
  "ndk-sys",
@@ -1433,7 +1389,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1737,7 +1693,7 @@ dependencies = [
  "fastrand 2.3.0",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1747,7 +1703,7 @@ dependencies = [
  "android_logger",
  "fastrand 1.9.0",
  "irondash_dart_ffi",
- "irondash_run_loop 0.6.0",
+ "irondash_run_loop",
  "irondash_texture",
  "jni",
  "log",
@@ -2129,7 +2085,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 irondash_texture = { version = "0.5.0" }
-irondash_run_loop = { version = "0.5.0" }
+irondash_run_loop = { version = "0.6.0" }
 irondash_dart_ffi = "0.2.0"
 simple_logger = "2.1"
 log = "0.4"

@@ -1,6 +1,6 @@
 [package]
 name = "irondash_run_loop"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 license = "MIT"
 description = "Consistent, platform-independent interface to system run loop."
@@ -11,7 +11,7 @@ repository = "https://github.com/irondash/irondash"
 
 [dependencies]
 futures = { version = "0.3.17", default-features = false, features = ["std"] }
-irondash_engine_context = { version = "0.5.0" }
+irondash_engine_context = { version = "0.6.0" }
 once_cell = "1.16.0"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]

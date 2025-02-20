@@ -8,7 +8,7 @@ use irondash_engine_context::EngineContext;
 
 use crate::{
     log::OkLog, BoxedPixelData, BoxedTextureDescriptor, DxgiSharedHandle, ID3D11Texture2D,
-    PayloadProvider, PixelFormat, PlatformTextureWithProvider, Result,
+    PayloadProvider, PixelFormat, PlatformTextureWithProvider, Result, TextureDescriptorProvider,
 };
 
 use self::sys::{
@@ -282,22 +282,3 @@ impl PlatformTextureWithProvider for BoxedPixelData {
 }
 
 
-
-impl PlatformTextureWithProvider for BoxedTextureDescriptor<ID3D11Texture2D> {
-    fn create_texture(
-        engine_handle: i64,
-        payload_provider: Arc<dyn PayloadProvider<Self>>,
-    ) -> Result<PlatformTexture<Self>> {
-        PlatformTexture::new::<Self>(engine_handle, payload_provider)
-    }
-}
-
-
-impl PlatformTextureWithProvider for BoxedTextureDescriptor<DxgiSharedHandle> {
-    fn create_texture(
-        engine_handle: i64,
-        payload_provider: Arc<dyn PayloadProvider<Self>>,
-    ) -> Result<PlatformTexture<Self>> {
-        PlatformTexture::new::<Self>(engine_handle, payload_provider)
-    }
-}

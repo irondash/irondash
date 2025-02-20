@@ -35,7 +35,7 @@ pub struct PlatformTexture<Type> {
 pub const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
 
 impl<Type> PlatformTexture<Type> {
-    fn new<T: TextureInfoProvider<Type>>(
+    pub fn new<T: TextureInfoProvider<Type>>(
         engine_handle: i64,
         payload_provider: Arc<dyn PayloadProvider<Type>>,
     ) -> Result<Self> {
@@ -45,7 +45,7 @@ impl<Type> PlatformTexture<Type> {
         let registrar = EngineContext::get()?.get_texture_registry(engine_handle)?;
         let id = unsafe {
             (Functions::get().RegisterExternalTexture)(
-                registrar as *mut _,
+                registrar as *mut _, 
                 &texture_info as *const _,
             )
         };
@@ -164,9 +164,9 @@ unsafe extern "C" fn d3d11texture2d_callback(
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
     let texture: Arc<Mutex<Texture<BoxedTextureDescriptor<ID3D11Texture2D>>>> =
         Arc::from_raw(user_data as *mut _);
-    let texture = ManuallyDrop::new(texture);
-    let texture = texture.lock().unwrap();
-    let payload = texture.payload_provider.get_payload();
+    let texture: ManuallyDrop<Arc<Mutex<Texture<Box<dyn TextureDescriptorProvider<ID3D11Texture2D>>>>>> = ManuallyDrop::new(texture);
+    let texture: std::sync::MutexGuard<'_, Texture<Box<dyn TextureDescriptorProvider<ID3D11Texture2D>>>> = texture.lock().unwrap();
+    let payload: Box<dyn TextureDescriptorProvider<ID3D11Texture2D>> = texture.payload_provider.get_payload();
     let texture2d = payload.get();
 
     let holder = Box::new(PayloadHolder {

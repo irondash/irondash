@@ -229,13 +229,13 @@ mod windows {
 
     pub type BoxedTextureDescriptor<HandleType> = Box<dyn TextureDescriptorProvider<HandleType>>;
 
-    /// Wrapper around `ID3D11Texture2D`, can be used as `TextureHandle` in
+    /// Wrapper around `ID3D11Texture2D`, can be used as `HandleType` in
     /// `TextureDescriptor`.
     #[derive(Clone, Debug)]
     pub struct ID3D11Texture2D(pub *mut c_void);
 
     /// Wrapper around DXGI shared handle (*mut HANDLE), can be used as
-    // `TextureHandle` in `TextureDescriptor`.
+    // `HandleType` in `TextureDescriptor`.
     pub struct DxgiSharedHandle(pub *mut c_void);
 }
 #[cfg(target_os = "windows")]

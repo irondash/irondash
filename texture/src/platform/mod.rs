@@ -15,5 +15,6 @@ mod platform_impl;
 mod platform_impl;
 
 pub(crate) use platform_impl::*;
+
 #[cfg(target_os = "windows")]
 pub use platform_impl::PlatformTexture;

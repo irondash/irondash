@@ -213,6 +213,8 @@ pub use linux::*;
 mod windows {
     use std::ffi::c_void;
 
+    use irondash_run_loop::platform;
+
     /// Texture descriptor for native texture.
     pub struct TextureDescriptor<'a, HandleType> {
         pub handle: &'a HandleType,
@@ -237,6 +239,8 @@ mod windows {
     /// Wrapper around DXGI shared handle (*mut HANDLE), can be used as
     // `HandleType` in `TextureDescriptor`.
     pub struct DxgiSharedHandle(pub *mut c_void);
+
+    pub type PlatformTexture<T> =  crate::platform::PlatformTexture<T>;
     
 }
 #[cfg(target_os = "windows")]

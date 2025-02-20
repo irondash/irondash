@@ -237,6 +237,7 @@ mod windows {
     /// Wrapper around DXGI shared handle (*mut HANDLE), can be used as
     // `HandleType` in `TextureDescriptor`.
     pub struct DxgiSharedHandle(pub *mut c_void);
+    
 }
 #[cfg(target_os = "windows")]
 pub use windows::*;

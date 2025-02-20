@@ -4,7 +4,6 @@
 use std::sync::{Arc, Mutex};
 
 use irondash_run_loop::{util::Capsule, RunLoop, RunLoopSender};
-use platform::PlatformTexture;
 
 mod error;
 mod log;
@@ -211,12 +210,8 @@ pub use linux::*;
 
 #[cfg(target_os = "windows")]
 mod windows {
-    use std::{
-        ffi::c_void,
-        sync::{Arc, Mutex},
-    };
+    use std::ffi::c_void;
 
-    use crate::Texture;
 
     /// Texture descriptor for native texture.
     pub struct TextureDescriptor<'a, HandleType> {
@@ -243,6 +238,7 @@ mod windows {
     // `HandleType` in `TextureDescriptor`.
     pub struct DxgiSharedHandle(pub *mut c_void);
 
+    pub use crate::platform::*;
 
 }
 #[cfg(target_os = "windows")]

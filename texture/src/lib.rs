@@ -211,9 +211,10 @@ pub use linux::*;
 
 #[cfg(target_os = "windows")]
 mod windows {
-    use std::{ffi::c_void, sync::{Arc, Mutex}};
-
-    use irondash_run_loop::platform;
+    use std::{
+        ffi::c_void,
+        sync::{Arc, Mutex},
+    };
 
     use crate::Texture;
 
@@ -242,12 +243,7 @@ mod windows {
     // `HandleType` in `TextureDescriptor`.
     pub struct DxgiSharedHandle(pub *mut c_void);
 
-    pub struct PlatformTexture<Type> {
-        engine_handle: i64,
-        id: i64,
-        _texture: Arc<Mutex<Texture<Type>>>,
-        texture_raw: *const Mutex<Texture<Type>>,
-    }    
+
 }
 #[cfg(target_os = "windows")]
 pub use windows::*;

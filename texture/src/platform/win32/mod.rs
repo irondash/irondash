@@ -7,7 +7,7 @@ use std::{
 use irondash_engine_context::EngineContext;
 
 use crate::{
-    log::OkLog, BoxedPixelData, BoxedTextureDescriptor, DxgiSharedHandle, ID3D11Texture2D, PayloadProvider, PixelFormat, PlatformTexture, PlatformTextureWithProvider, Result, TextureDescriptorProvider
+    log::OkLog, BoxedPixelData, BoxedTextureDescriptor, DxgiSharedHandle, ID3D11Texture2D, PayloadProvider, PixelFormat, PlatformTextureWithProvider, Result, TextureDescriptorProvider
 };
 
 use self::sys::{
@@ -24,9 +24,12 @@ use self::sys::{
 
 mod sys;
 
-
-
-pub const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
+pub struct PlatformTexture<Type> {
+    engine_handle: i64,
+    id: i64,
+    _texture: Arc<Mutex<Texture<Type>>>,
+    texture_raw: *const Mutex<Texture<Type>>,
+}
 
 impl<Type> PlatformTexture<Type> {
     pub fn new<T: TextureInfoProvider<Type>>(
@@ -39,7 +42,7 @@ impl<Type> PlatformTexture<Type> {
         let registrar = EngineContext::get()?.get_texture_registry(engine_handle)?;
         let id = unsafe {
             (Functions::get().RegisterExternalTexture)(
-                registrar as *mut _, 
+                registrar as *mut _,
                 &texture_info as *const _,
             )
         };
@@ -76,23 +79,27 @@ impl<Type> PlatformTexture<Type> {
         Ok(())
     }
 }
-
 impl<Type> Drop for PlatformTexture<Type> {
     fn drop(&mut self) {
         self.destroy().ok_log();
     }
 }
 
+
+pub const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
+
+
+
 unsafe extern "C" fn release_texture<Type>(user_data: *mut c_void) {
     let texture_raw: *const Mutex<Texture<Type>> = user_data as *const _;
     Arc::from_raw(texture_raw);
 }
 
-struct Texture<Type> {
+pub struct Texture<Type> {
     payload_provider: Arc<dyn PayloadProvider<Type>>,
 }
 
-trait TextureInfoProvider<Type>: Sized {
+pub trait TextureInfoProvider<Type>: Sized {
     fn create_texture_info(texture: *const Mutex<Texture<Type>>) -> FlutterDesktopTextureInfo;
 }
 

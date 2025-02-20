@@ -7,8 +7,7 @@ use std::{
 use irondash_engine_context::EngineContext;
 
 use crate::{
-    log::OkLog, BoxedPixelData, BoxedTextureDescriptor, DxgiSharedHandle, ID3D11Texture2D,
-    PayloadProvider, PixelFormat, PlatformTextureWithProvider, Result, TextureDescriptorProvider,
+    log::OkLog, BoxedPixelData, BoxedTextureDescriptor, DxgiSharedHandle, ID3D11Texture2D, PayloadProvider, PixelFormat, PlatformTexture, PlatformTextureWithProvider, Result, TextureDescriptorProvider
 };
 
 use self::sys::{
@@ -25,12 +24,7 @@ use self::sys::{
 
 mod sys;
 
-pub struct PlatformTexture<Type> {
-    engine_handle: i64,
-    id: i64,
-    _texture: Arc<Mutex<Texture<Type>>>,
-    texture_raw: *const Mutex<Texture<Type>>,
-}
+
 
 pub const PIXEL_DATA_FORMAT: PixelFormat = PixelFormat::RGBA;
 

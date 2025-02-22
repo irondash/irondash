@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::{mem::ManuallyDrop, ops::Deref, sync::{Arc, Mutex}};
 
 use irondash_engine_context::EngineContext;
 
@@ -14,6 +14,10 @@ pub trait TextureDescriptorProvider<HandleType> {
 
 pub fn create_texture_info<T>(texture_provider: Arc<dyn TextureDescriptorProvider<T>>) -> FlutterDesktopTextureInfo 
 {
+
+    let wrapper: ManuallyDrop<_> = ManuallyDrop::new(Box::new(Arc::into_raw(texture_provider)));
+
+
     FlutterDesktopTextureInfo {
         type_: FlutterDesktopTextureType_kFlutterDesktopGpuSurfaceTexture,
         __bindgen_anon_1: FlutterDesktopTextureInfo__bindgen_ty_1 {
@@ -21,7 +25,7 @@ pub fn create_texture_info<T>(texture_provider: Arc<dyn TextureDescriptorProvide
                 struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceTextureConfig>(),
                 type_: FlutterDesktopGpuSurfaceType_kFlutterDesktopGpuSurfaceTypeD3d11Texture2D,
                 callback: Some(d3d11texture2d_callback),
-                user_data: Arc::into_raw(texture_provider) as *mut _,
+                user_data: wrapper.as_ref() as *const _ as *mut std::ffi::c_void,
             },
         },
     }
@@ -34,12 +38,18 @@ unsafe extern "C" fn release_payload_holder<Type, FlutterType>(
 }
 
 
+
+
 unsafe extern "C" fn d3d11texture2d_callback(
     _width: usize,
     _height: usize,
     user_data: *mut std::os::raw::c_void,
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
-    let texture_provider: Arc<dyn TextureDescriptorProvider<ID3D11Texture2D>> = Arc::from_raw(user_data as  *mut _);
+
+
+    let texture_provider: *mut Box<Arc<dyn TextureDescriptorProvider<ID3D11Texture2D>>> = user_data as _;
+
+    let texture_provider = (*texture_provider).deref();
 
     let texture2d = texture_provider.get_current_texture();
 

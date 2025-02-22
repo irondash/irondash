@@ -15,9 +15,9 @@ pub trait TextureDescriptorProvider<HandleType> {
 pub fn create_texture_info<T>(texture_provider: Arc<dyn TextureDescriptorProvider<T>>) -> FlutterDesktopTextureInfo 
 {
 
-    let wrapper: ManuallyDrop<_> = ManuallyDrop::new(Box::new(Arc::into_raw(texture_provider)));
+    let wrapper: = Box::new(Box::new(Arc::into_raw(texture_provider)));
 
-
+    let box_raw = Box::into_raw(wrapper);
     FlutterDesktopTextureInfo {
         type_: FlutterDesktopTextureType_kFlutterDesktopGpuSurfaceTexture,
         __bindgen_anon_1: FlutterDesktopTextureInfo__bindgen_ty_1 {
@@ -25,7 +25,7 @@ pub fn create_texture_info<T>(texture_provider: Arc<dyn TextureDescriptorProvide
                 struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceTextureConfig>(),
                 type_: FlutterDesktopGpuSurfaceType_kFlutterDesktopGpuSurfaceTypeD3d11Texture2D,
                 callback: Some(d3d11texture2d_callback),
-                user_data: wrapper.as_ref() as *const _ as *mut std::ffi::c_void,
+                user_data: box_raw as  *mut std::ffi::c_void,
             },
         },
     }
@@ -45,9 +45,9 @@ unsafe extern "C" fn d3d11texture2d_callback(
     _height: usize,
     user_data: *mut std::os::raw::c_void,
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
+    
 
-
-    let texture_provider: *mut Box<Arc<dyn TextureDescriptorProvider<ID3D11Texture2D>>> = user_data as _;
+    let texture_provider: Box<Box<Arc<dyn TextureDescriptorProvider<ID3D11Texture2D>>>> = Box::from_raw(user_data as *mut _);
 
     let texture_provider = (*texture_provider).deref();
 

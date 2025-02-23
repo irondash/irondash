@@ -9,24 +9,9 @@ use crate::{log::OkLog, ID3D11Texture2D, PixelFormat, TextureDescriptor};
 
 use super::{sys::*, PayloadHolder};
 
-struct FlutterRegisteredTexture {
-    texture_id: i64,
-    engine_handle: i64,
-}
-
-impl FlutterRegisteredTexture {
-    pub fn new(texture_id: i64, engine_handle: i64) -> Self {
-        Self {
-            texture_id,
-            engine_handle,
-        }
-    }
-}
-
 pub struct TextureDescriptionProvider2<T: Clone, TCtx> {
     pub current_texture: Arc<Mutex<TextureDescriptor<T>>>,
     pub context: TCtx,
-    pub flutter_texture_id: Mutex<i64>,
 }
 
 impl<T: Clone, TCtx> TextureDescriptionProvider2<T, TCtx> {
@@ -36,7 +21,7 @@ impl<T: Clone, TCtx> TextureDescriptionProvider2<T, TCtx> {
     }
 }
 
-type ArcTextureProvider<T: Clone, TCtx> = Arc<TextureDescriptionProvider2<T, TCtx>>;
+type ArcTextureProvider<T, TCtx> = Arc<TextureDescriptionProvider2<T, TCtx>>;
 
 /// A registered texture with the Flutter engine.
 /// if the texture is dropped the texture is unregistered from the engine.

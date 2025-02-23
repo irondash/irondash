@@ -223,7 +223,18 @@ mod windows {
         pub visible_height: i32,
         pub pixel_format: super::PixelFormat,
     }
-
+    impl<T: Clone> TextureDescriptor<T> {
+        pub fn new(handle: T, width: i32, height: i32, visible_width: i32, visible_height: i32, pixel_format: super::PixelFormat) -> Self {
+            Self {
+                handle,
+                width,
+                height,
+                visible_width,
+                visible_height,
+                pixel_format,
+            }
+        }
+    }
     pub trait TextureDescriptorProvider<HandleType: Clone> {
         fn get(&self) -> TextureDescriptor<HandleType>;
     }

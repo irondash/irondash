@@ -105,7 +105,7 @@ impl<Type: PlatformTextureWithoutProvider> Texture<Type> {
         Type::get(&self.platform_texture)
     }
 }
-
+#[derive(Debug, Clone)]
 pub enum PixelFormat {
     BGRA,
     RGBA,
@@ -210,12 +210,13 @@ pub use linux::*;
 
 #[cfg(target_os = "windows")]
 mod windows {
-    use std::{ffi::c_void, sync::{Arc, Mutex}};
+    use std::{ffi::c_void, fmt::Debug, sync::{Arc, Mutex}};
 
 
     /// Texture descriptor for native texture.
-    pub struct TextureDescriptor<'a, HandleType> {
-        pub handle: &'a HandleType,
+    #[derive(Debug)]
+    pub struct TextureDescriptor<HandleType: Clone> {
+        pub handle: HandleType,
         pub width: i32,
         pub height: i32,
         pub visible_width: i32,
@@ -223,7 +224,7 @@ mod windows {
         pub pixel_format: super::PixelFormat,
     }
 
-    pub trait TextureDescriptorProvider<HandleType> {
+    pub trait TextureDescriptorProvider<HandleType: Clone> {
         fn get(&self) -> TextureDescriptor<HandleType>;
     }
 
@@ -236,6 +237,7 @@ mod windows {
 
     /// Wrapper around DXGI shared handle (*mut HANDLE), can be used as
     // `HandleType` in `TextureDescriptor`.
+    #[derive(Clone, Debug)]
     pub struct DxgiSharedHandle(pub *mut c_void);
 
     impl PlatformTextureWithProvider for BoxedTextureDescriptor<ID3D11Texture2D> {

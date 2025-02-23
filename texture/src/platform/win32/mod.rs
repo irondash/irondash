@@ -60,7 +60,7 @@ impl<Type> PlatformTexture<Type> {
     }
 
     pub fn mark_frame_available(&self) -> Result<()> {
-        let registrar = EngineContext::get()?.get_texture_registry(self.engine_handle)?;
+        let registrar: *mut c_void = EngineContext::get()?.get_texture_registry(self.engine_handle)?;
         unsafe {
             (Functions::get().MarkExternalTextureFrameAvailable)(registrar as *mut _, self.id);
         }

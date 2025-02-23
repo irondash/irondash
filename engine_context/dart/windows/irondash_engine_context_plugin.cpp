@@ -130,13 +130,37 @@ void PerformOnMainThread(void (*callback)(void *data), void *data) {
 
 DWORD GetMainThreadId() { return main_thread_id; }
 
-size_t GetFlutterView(int64_t engine_handle) {
+flutter::FlutterView* GetFlutterViewImpl(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
   if (context != contexts.end()) {
-    return reinterpret_cast<size_t>(context->second.hwnd);
+    return context->second.view;
   } else {
-    return 0;
+    return nullptr;
   }
+}
+
+size_t GetFlutterView(int64_t engine_handle) {
+  return reinterpret_cast<size_t>(GetFlutterViewImpl(engine_handle));
+}
+
+// copied from https://github.com/wang-bin/fvp/blob/cbfb02ddab90a6e2182e71b93b7d6992d965ce3c/windows/fvp_plugin.cpp#L98-L107
+template<typename T>
+auto View_GetGraphicsAdapter(T* v) -> decltype(v->GetGraphicsAdapter())
+{
+    return v->GetGraphicsAdapter();
+}
+
+template<typename T>
+IDXGIAdapter* View_GetGraphicsAdapter(T v) {
+    return nullptr;
+}
+
+size_t GetGraphicsAdapter(int64_t engine_handle) {
+  IDXGIAdapter *adapter = View_GetGraphicsAdapter(GetFlutterViewImpl(engine_handle));
+  if (!adapter) {
+    return 
+  }
+
 }
 
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle) {

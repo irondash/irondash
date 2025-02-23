@@ -46,6 +46,8 @@ impl EngineContext {
         PlatformContext::get_class_loader()
     }
 
+
+
     pub fn perform_on_main_thread(f: impl FnOnce() + Send + 'static) -> Result<()> {
         PlatformContext::perform_on_main_thread(f)
     }
@@ -97,6 +99,12 @@ impl EngineContext {
     pub fn get_flutter_view(&self, handle: i64) -> Result<platform::FlutterView> {
         let handle = Self::strip_version(handle)?;
         self.platform_context.get_flutter_view(handle)
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn get_dxgi_adapter(&self, handle: i64) -> Result<platform::IDXGIAdapter> {
+        let handle = Self::strip_version(handle)?;
+        self.platform_context.get_flutter_graphics_adapter(handle)
     }
 
     /// Returns texture registry for given engine handle.

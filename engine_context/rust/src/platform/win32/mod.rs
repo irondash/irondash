@@ -13,6 +13,9 @@ type HMODULE = isize;
 #[allow(clippy::upper_case_acronyms)]
 type HWND = isize;
 #[allow(clippy::upper_case_acronyms)]
+pub type IDXGIAdapter = isize;
+
+#[allow(clippy::upper_case_acronyms)]
 pub type DWORD = u32;
 
 #[link(name = "kernel32")]
@@ -34,6 +37,7 @@ pub type Callback = extern "C" fn(*mut c_void);
 type GetMainThreadIdProc = unsafe extern "C" fn() -> DWORD;
 type PerformOnMainThreadProc = unsafe extern "C" fn(callback: Callback, data: *mut c_void);
 type GetFlutterViewProc = unsafe extern "C" fn(i64) -> isize;
+type GetFlutterGraphicsAdapterProc = unsafe extern "C" fn(i64) -> isize;
 type RegisterDestroyNotificationProc = unsafe extern "C" fn(extern "C" fn(i64)) -> ();
 type GetTextureRegistrarProc = unsafe extern "C" fn(i64) -> FlutterDesktopTextureRegistrarRef;
 type GetMessengerProc = unsafe extern "C" fn(i64) -> FlutterDesktopMessengerRef;
@@ -94,6 +98,19 @@ impl PlatformContext {
         } else {
             Ok(view)
         }
+    }
+
+    pub fn get_flutter_graphics_adapter(&self, handle: i64) -> Result<IDXGIAdapter>{
+        let proc = Self::get_proc(b"IrondashEngineContextGetFlutterGraphicsAdapter\0")?;
+        let proc: GetFlutterGraphicsAdapterProc = unsafe { transmute(proc) };
+        let adapter = unsafe { proc(handle) };
+        if adapter == 0 {
+            println!("irondash: adapter is null, probably a gpu issue");
+            Err(Error::InvalidHandle)
+        } else {
+            Ok(adapter)
+        }
+        
     }
 
     pub fn get_texture_registry(&self, handle: i64) -> Result<FlutterDesktopTextureRegistrarRef> {

@@ -4,6 +4,7 @@ use std::{
 };
 
 use irondash_engine_context::EngineContext;
+use irondash_run_loop::RunLoop;
 
 use crate::{log::OkLog, ID3D11Texture2D, PixelFormat, TextureDescriptor};
 
@@ -56,17 +57,25 @@ impl<T: Clone, TCtx> RegisteredTexture<T, TCtx> {
         self.texture_provider.set_current_texture(texture);
         self.mark_frame_available()
     }
-
+    /// Marks the frame as available. This should be called after the texture has been updated.
+    /// runs on the main thread by default.
     pub fn mark_frame_available(&self) -> crate::Result<()> {
-        let registrar: *mut std::ffi::c_void =
-            EngineContext::get()?.get_texture_registry(self.engine_handle)?;
-        unsafe {
-            (Functions::get().MarkExternalTextureFrameAvailable)(
-                registrar as *mut _,
-                self.texture_id,
-            );
-        }
-        Ok(())
+        let texture_id = self.texture_id;
+        let engine_handle = self.engine_handle;
+
+        RunLoop::sender_for_main_thread()
+            .expect("failed to get main thread sender")
+            .send_and_wait(move || -> crate::Result<()> {
+                let registrar: *mut std::ffi::c_void =
+                    EngineContext::get()?.get_texture_registry(engine_handle)?;
+                unsafe {
+                    (Functions::get().MarkExternalTextureFrameAvailable)(
+                        registrar as *mut _,
+                        texture_id,
+                    );
+                }
+                Ok(())
+            })
     }
 }
 
@@ -75,11 +84,14 @@ unsafe impl<T: Clone, TCtx> Sync for RegisteredTexture<T, TCtx> {}
 
 impl<T: Clone, TCtx> Drop for RegisteredTexture<T, TCtx> {
     fn drop(&mut self) {
-        unregister_texture_provider(self.texture_id, self.engine_handle, self.texture_provider.clone())
-            .ok_log();
+        unregister_texture_provider(
+            self.texture_id,
+            self.engine_handle,
+            self.texture_provider.clone(),
+        )
+        .ok_log();
     }
 }
-
 
 /// Register a texture to the Flutter engine.
 /// Returns the texture id that should be used in the Texture widget.
@@ -155,7 +167,7 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
 
     let texture2d = provider.current_texture.lock().unwrap();
     let texture2d = texture2d.deref();
-    if let Some(texture2d) = texture2d { 
+    if let Some(texture2d) = texture2d {
         let holder = Box::new(PayloadHolder {
             flutter_payload: FlutterDesktopGpuSurfaceDescriptor {
                 struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceDescriptor>(),
@@ -165,8 +177,12 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
                 visible_width: texture2d.visible_width as usize,
                 visible_height: texture2d.visible_height as usize,
                 format: match texture2d.pixel_format {
-                    PixelFormat::BGRA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888,
-                    PixelFormat::RGBA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888,
+                    PixelFormat::BGRA => {
+                        FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888
+                    }
+                    PixelFormat::RGBA => {
+                        FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888
+                    }
                 },
                 release_callback: Some(
                     release_payload_holder::<ID3D11Texture2D, FlutterDesktopGpuSurfaceDescriptor>,
@@ -184,6 +200,4 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
     } else {
         std::ptr::null()
     }
-
-
 }

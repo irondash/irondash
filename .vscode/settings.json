@@ -14,5 +14,9 @@
   ],
   "dart.runPubGetOnPubspecChanges": "never",
   "cSpell.words": ["finalizer"],
-  "cmake.sourceDirectory": "C:/Users/temp/Desktop/OS/irondash/message_channel/dart/example/linux"
+  "cmake.sourceDirectory": "C:/Users/temp/Desktop/OS/irondash/message_channel/dart/example/linux",
+  "files.associations": {
+    "xtree": "cpp",
+    "utility": "cpp"
+  }
 }

@@ -16,7 +16,7 @@ namespace irondash_engine_context {
 namespace {
 struct EngineContext {
   HWND hwnd;
-  FlutterView* view;
+  flutter::FlutterView* view;
   FlutterDesktopTextureRegistrarRef texture_registrar;
   FlutterDesktopMessengerRef binary_messenger;
 };
@@ -132,19 +132,18 @@ void PerformOnMainThread(void (*callback)(void *data), void *data) {
 
 DWORD GetMainThreadId() { return main_thread_id; }
 
-EngineContext* GetEngineContextPriv(int64_t engine_handle) {
+std::optional<const EngineContext*> GetEngineContextPriv(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
   if (context != contexts.end()) {
-    return context->second;
-  } else {
-    return nullptr;
-  }
+    return &context->second;
+  };
+  return std::nullopt;
+  
 }
 
 size_t GetFlutterView(int64_t engine_handle) {
-  auto ctx= GetEngineContextPriv(engine_handle);
-  if (ctx) {
-    return reinterpret_cast<size_t>(ctx->view);
+  if (auto ctx = GetEngineContextPriv(engine_handle)) {
+    return reinterpret_cast<size_t>((*ctx)->hwnd);
   }
   return 0;
 }
@@ -162,9 +161,8 @@ IDXGIAdapter* View_GetGraphicsAdapter(T v) {
 }
 
 size_t GetGraphicsAdapter(int64_t engine_handle) {
-  auto ctx = GetEngineContextPriv(engine_handle);
-  if (ctx) {
-    return reinterpret_cast<size_t>(View_GetGraphicsAdapter(ctx->view));
+  if (auto ctx = GetEngineContextPriv(engine_handle)) {
+    return reinterpret_cast<size_t>(View_GetGraphicsAdapter((*ctx)->view));
   }
   return 0;
 

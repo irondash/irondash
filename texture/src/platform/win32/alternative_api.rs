@@ -106,6 +106,7 @@ fn register_texture_provider<T: Clone, TCtx>(
     let id = unsafe {
         (Functions::get().RegisterExternalTexture)(registrar as *mut _, &texture_info as *const _)
     };
+    println!("irondash_texture::alternative_api::register_texture_provider id: {}", id);
     Ok(id)
 }
 
@@ -164,7 +165,7 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
     let provider =
         Arc::from_raw(user_data as *const TextureDescriptionProvider2<ID3D11Texture2D, TCtx>);
-
+    println!("irondash_texture::alternative_api::d3d11texture2d_callback");
     let texture2d = provider.current_texture.lock().unwrap();
     let texture2d = texture2d.deref();
     if let Some(texture2d) = texture2d {

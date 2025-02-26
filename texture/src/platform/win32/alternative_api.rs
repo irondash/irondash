@@ -1,8 +1,9 @@
 use std::{
     any::TypeId,
+    mem::ManuallyDrop,
     net::TcpListener,
     ops::Deref,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, MutexGuard},
 };
 
 use irondash_engine_context::EngineContext;
@@ -13,7 +14,7 @@ use crate::{log::OkLog, DxgiSharedHandle, ID3D11Texture2D, PixelFormat, TextureD
 
 use super::{sys::*, PayloadHolder};
 
-trait SupportedNativeHandle<TCtx>: Clone + 'static {
+pub trait SupportedNativeHandle<TCtx>: Clone + 'static {
     fn create_texture_info(provider: ArcTextureProvider<Self, TCtx>) -> FlutterDesktopTextureInfo;
 }
 impl<TCtx> SupportedNativeHandle<TCtx> for ID3D11Texture2D {
@@ -25,7 +26,7 @@ impl<TCtx> SupportedNativeHandle<TCtx> for ID3D11Texture2D {
                 gpu_surface_config: FlutterDesktopGpuSurfaceTextureConfig {
                     struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceTextureConfig>(),
                     type_: FlutterDesktopGpuSurfaceType_kFlutterDesktopGpuSurfaceTypeD3d11Texture2D,
-                    callback: Some(d3d11texture2d_callback::<TCtx>),
+                    callback: d3d11texture2d_callback::<TCtx>,
                     user_data: provider_raw as *mut std::ffi::c_void,
                 },
             },
@@ -42,7 +43,7 @@ impl<TCtx> SupportedNativeHandle<TCtx> for DxgiSharedHandle {
                     struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceTextureConfig>(),
                     type_:
                         FlutterDesktopGpuSurfaceType_kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle,
-                    callback: Some(dxgi_callback::<TCtx>),
+                    callback: dxgi_callback::<TCtx>,
                     user_data: provider_raw as *mut std::ffi::c_void,
                 },
             },
@@ -97,10 +98,10 @@ impl<T: SupportedNativeHandle<TCtx>, TCtx> RegisteredTexture<T, TCtx> {
     pub fn get_texture_id(&self) -> i64 {
         self.texture_id
     }
-    /// sets the current texture to the Flutter engine and marks the frame as available.
+    /// sets the current texture.
     pub fn set_current_texture(&self, texture: TextureDescriptor<T>) -> crate::Result<()> {
         self.texture_provider.set_current_texture(texture);
-        self.mark_frame_available()
+        Ok(())
     }
     /// Marks the frame as available. This should be called after the texture has been updated.
     /// runs on the main thread by default.
@@ -185,18 +186,11 @@ pub fn unregister_texture_provider<T: SupportedNativeHandle<TCtx>, TCtx>(
         (Functions::get().UnregisterExternalTexture)(
             registrar as *mut _,
             texture_id,
-            Some(release_callback_impl::<T, TCtx>),
+            release_callback_impl::<T, TCtx>,
             provider_raw as _,
         )
     }
     Ok(())
-}
-
-/// release a "frame" descriptor when flutter is done with it.
-unsafe extern "C" fn release_payload_holder<Type, FlutterType>(
-    user_data: *mut ::std::os::raw::c_void,
-) {
-    let _user_data: Box<PayloadHolder<Type, FlutterType>> = Box::from_raw(user_data as *mut _);
 }
 
 unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
@@ -206,46 +200,43 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
     let provider =
         Arc::from_raw(user_data as *const TextureDescriptionProvider2<ID3D11Texture2D, TCtx>);
-    let texture2d = provider.current_texture.lock().unwrap();
-    let texture2d = texture2d.deref();
+    let texture2d_lock: std::sync::MutexGuard<'_, Option<TextureDescriptor<ID3D11Texture2D>>> =
+        provider.current_texture.lock().unwrap();
+    let texture2d = texture2d_lock.deref();
     if let Some(texture2d) = texture2d {
-        let holder = Box::new(PayloadHolder {
-            flutter_payload: FlutterDesktopGpuSurfaceDescriptor {
-                struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceDescriptor>(),
-                handle: texture2d.handle.0,
-                width: texture2d.width as usize,
-                height: texture2d.height as usize,
-                visible_width: texture2d.visible_width as usize,
-                visible_height: texture2d.visible_height as usize,
-                format: match texture2d.pixel_format {
-                    PixelFormat::BGRA => {
-                        FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888
-                    }
-                    PixelFormat::RGBA => {
-                        FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888
-                    }
-                },
-                // TODO(#1): we should keep the previous texture cached if replaced.
-                // although it is reasonable to have only one texture for the lifetime
-                // of the provider.
-                release_callback: release_payload_holder::<
-                    ID3D11Texture2D,
-                    FlutterDesktopGpuSurfaceDescriptor,
-                >,
-
-                release_context: std::ptr::null_mut(),
+        let mut flutter_descriptor = ManuallyDrop::new(FlutterDesktopGpuSurfaceDescriptor {
+            struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceDescriptor>(),
+            handle: texture2d.handle.0,
+            width: texture2d.width as usize,
+            height: texture2d.height as usize,
+            visible_width: texture2d.visible_width as usize,
+            visible_height: texture2d.visible_height as usize,
+            format: match texture2d.pixel_format {
+                PixelFormat::BGRA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888,
+                PixelFormat::RGBA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888,
             },
-            _payload: texture2d,
+            release_callback: release_payload_holder::<
+                MutexGuard<'_, Option<TextureDescriptor<ID3D11Texture2D>>>,
+            >,
+            release_context: std::ptr::null_mut(),
         });
-        // make sure not to leak the holder
-        let holder = Box::into_raw(holder);
-        let holder_deref = &mut *holder;
-        holder_deref.flutter_payload.release_context = holder as *mut _;
-        let flutter_descriptor = &mut holder_deref.flutter_payload;
-        flutter_descriptor as *mut _
+
+        let boxed_release_ctx = Box::new(TextureReleaseCtx {
+            texture_lock: texture2d_lock,
+            descriptor: flutter_descriptor,
+        });
+
+        flutter_descriptor.release_context = Box::into_raw(boxed_release_ctx) as *mut _;
+        let res = ManuallyDrop::take(&mut flutter_descriptor);
+        &res as *const _
     } else {
         std::ptr::null()
     }
+}
+
+struct TextureReleaseCtx<TLock> {
+    texture_lock: TLock,
+    descriptor: ManuallyDrop<FlutterDesktopGpuSurfaceDescriptor>,
 }
 
 unsafe extern "C" fn dxgi_callback<TCtx>(
@@ -255,40 +246,45 @@ unsafe extern "C" fn dxgi_callback<TCtx>(
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
     let provider =
         Arc::from_raw(user_data as *const TextureDescriptionProvider2<DxgiSharedHandle, TCtx>);
-    let texture2d = provider.current_texture.lock().unwrap();
-    let texture2d = texture2d.deref();
+    trace!("acquiring lock for dxgi callback");
+    let texture2d_lock: std::sync::MutexGuard<'_, Option<TextureDescriptor<DxgiSharedHandle>>> =
+        provider.current_texture.lock().unwrap();
+    trace!("lock for dxgi callback acquired");
+    let texture2d = texture2d_lock.deref();
     if let Some(texture2d) = texture2d {
-        let holder = Box::new(PayloadHolder {
-            flutter_payload: FlutterDesktopGpuSurfaceDescriptor {
-                struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceDescriptor>(),
-                handle: texture2d.handle.0,
-                width: texture2d.width as usize,
-                height: texture2d.height as usize,
-                visible_width: texture2d.visible_width as usize,
-                visible_height: texture2d.visible_height as usize,
-                format: match texture2d.pixel_format {
-                    PixelFormat::BGRA => {
-                        FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888
-                    }
-                    PixelFormat::RGBA => {
-                        FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888
-                    }
-                },
-                release_callback: release_payload_holder::<
-                    DxgiSharedHandle,
-                    FlutterDesktopGpuSurfaceDescriptor,
-                >,
-                release_context: std::ptr::null_mut(),
+        let mut flutter_descriptor = ManuallyDrop::new(FlutterDesktopGpuSurfaceDescriptor {
+            struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceDescriptor>(),
+            handle: texture2d.handle.0,
+            width: texture2d.width as usize,
+            height: texture2d.height as usize,
+            visible_width: texture2d.visible_width as usize,
+            visible_height: texture2d.visible_height as usize,
+            format: match texture2d.pixel_format {
+                PixelFormat::BGRA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888,
+                PixelFormat::RGBA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888,
             },
-            _payload: texture2d,
+            release_callback: release_payload_holder::<
+                MutexGuard<'_, Option<TextureDescriptor<DxgiSharedHandle>>>,
+            >,
+            release_context: std::ptr::null_mut(),
         });
-        // make sure not to leak the holder
-        let holder = Box::into_raw(holder);
-        let holder_deref = &mut *holder;
-        holder_deref.flutter_payload.release_context = holder as *mut _;
-        let flutter_descriptor = &mut holder_deref.flutter_payload;
-        flutter_descriptor as *mut _
+
+        let boxed_release_ctx = Box::new(TextureReleaseCtx {
+            texture_lock: texture2d_lock,
+            descriptor: flutter_descriptor,
+        });
+
+        flutter_descriptor.release_context = Box::into_raw(boxed_release_ctx) as *mut _;
+        let res = ManuallyDrop::take(&mut flutter_descriptor);
+        &res as *const _
     } else {
         std::ptr::null()
     }
+}
+
+/// release a "frame" descriptor when flutter is done with it.
+unsafe extern "C" fn release_payload_holder<TLock>(user_data: *mut ::std::os::raw::c_void) {
+    trace!("releasing a payload holder");
+    let mut _user_data: Box<TextureReleaseCtx<TLock>> = Box::from_raw(user_data as *mut _);
+    ManuallyDrop::drop(&mut _user_data.descriptor);
 }

@@ -251,22 +251,6 @@ mod windows {
     #[derive(Clone, Debug)]
     pub struct DxgiSharedHandle(pub *mut c_void);
 
-    impl PlatformTextureWithProvider for BoxedTextureDescriptor<ID3D11Texture2D> {
-        fn create_texture(
-                engine_handle: i64,
-                payload_provider: Arc<dyn PayloadProvider<Self>>,
-            ) -> crate::Result<PlatformTexture<Self>> {
-                PlatformTexture::new::<Self>(engine_handle, payload_provider)
-        }
-    }
-    impl PlatformTextureWithProvider for BoxedTextureDescriptor<DxgiSharedHandle> {
-        fn create_texture(
-                engine_handle: i64,
-                payload_provider: Arc<dyn PayloadProvider<Self>>,
-            ) -> crate::Result<PlatformTexture<Self>> {
-                PlatformTexture::new::<Self>(engine_handle, payload_provider)
-        }
-    }
     
     pub use crate::platform::*;
     use crate::{PayloadProvider, PlatformTextureWithProvider};

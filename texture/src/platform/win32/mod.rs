@@ -185,12 +185,11 @@ unsafe extern "C" fn d3d11texture2d_callback(
                 PixelFormat::BGRA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888,
                 PixelFormat::RGBA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888,
             },
-            release_callback: Some(
+            release_callback: 
                 release_payload_holder::<
                     BoxedTextureDescriptor<ID3D11Texture2D>,
                     FlutterDesktopGpuSurfaceDescriptor,
                 >,
-            ),
             release_context: std::ptr::null_mut(),
         },
         _payload: payload,
@@ -242,12 +241,11 @@ unsafe extern "C" fn dxgi_callback(
                 PixelFormat::BGRA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888,
                 PixelFormat::RGBA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888,
             },
-            release_callback: Some(
+            release_callback: 
                 release_payload_holder::<
                     BoxedTextureDescriptor<DxgiSharedHandle>,
                     FlutterDesktopGpuSurfaceDescriptor,
                 >,
-            ),
             release_context: std::ptr::null_mut(),
         },
         _payload: payload,

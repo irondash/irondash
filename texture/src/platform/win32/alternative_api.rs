@@ -1,21 +1,22 @@
 use std::{
-    any::TypeId, net::TcpListener, ops::Deref, sync::{Arc, Mutex}
+    any::TypeId,
+    net::TcpListener,
+    ops::Deref,
+    sync::{Arc, Mutex},
 };
 
 use irondash_engine_context::EngineContext;
 use irondash_run_loop::RunLoop;
-use log::{error, info};
+use log::{error, info, trace};
 
 use crate::{log::OkLog, DxgiSharedHandle, ID3D11Texture2D, PixelFormat, TextureDescriptor};
 
 use super::{sys::*, PayloadHolder};
 
-
-trait SupportedNativeHandle<TCtx>: Clone + 'static{
+trait SupportedNativeHandle<TCtx>: Clone + 'static {
     fn create_texture_info(provider: ArcTextureProvider<Self, TCtx>) -> FlutterDesktopTextureInfo;
-
 }
-impl<TCtx> SupportedNativeHandle<TCtx> for ID3D11Texture2D{
+impl<TCtx> SupportedNativeHandle<TCtx> for ID3D11Texture2D {
     fn create_texture_info(provider: ArcTextureProvider<Self, TCtx>) -> FlutterDesktopTextureInfo {
         let provider_raw = Arc::into_raw(provider);
         return FlutterDesktopTextureInfo {
@@ -28,30 +29,26 @@ impl<TCtx> SupportedNativeHandle<TCtx> for ID3D11Texture2D{
                     user_data: provider_raw as *mut std::ffi::c_void,
                 },
             },
-        };  
+        };
     }
-
 }
-impl<TCtx> SupportedNativeHandle<TCtx> for DxgiSharedHandle{
-
-
+impl<TCtx> SupportedNativeHandle<TCtx> for DxgiSharedHandle {
     fn create_texture_info(provider: ArcTextureProvider<Self, TCtx>) -> FlutterDesktopTextureInfo {
-                
         let provider_raw = Arc::into_raw(provider);
         return FlutterDesktopTextureInfo {
             type_: FlutterDesktopTextureType_kFlutterDesktopGpuSurfaceTexture,
             __bindgen_anon_1: FlutterDesktopTextureInfo__bindgen_ty_1 {
                 gpu_surface_config: FlutterDesktopGpuSurfaceTextureConfig {
                     struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceTextureConfig>(),
-                    type_: FlutterDesktopGpuSurfaceType_kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle,
+                    type_:
+                        FlutterDesktopGpuSurfaceType_kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle,
                     callback: Some(dxgi_callback::<TCtx>),
                     user_data: provider_raw as *mut std::ffi::c_void,
                 },
             },
-        };     
+        };
     }
 }
-
 
 pub struct TextureDescriptionProvider2<T: SupportedNativeHandle<TCtx>, TCtx> {
     pub current_texture: Arc<Mutex<Option<TextureDescriptor<T>>>>,
@@ -73,7 +70,8 @@ type ArcTextureProvider<T, TCtx> = Arc<TextureDescriptionProvider2<T, TCtx>>;
 /// if the texture is dropped the texture is unregistered from the engine.
 /// When a `RegisteredTexture` is dropped, the texture is unregistered from the engine.
 pub struct RegisteredTexture<T, TCtx>
-where T: SupportedNativeHandle<TCtx>
+where
+    T: SupportedNativeHandle<TCtx>,
 {
     _phantom: std::marker::PhantomData<T>,
     texture_provider: ArcTextureProvider<T, TCtx>,
@@ -129,9 +127,6 @@ impl<T: SupportedNativeHandle<TCtx>, TCtx> RegisteredTexture<T, TCtx> {
 unsafe impl<T: SupportedNativeHandle<TCtx>, TCtx> Send for RegisteredTexture<T, TCtx> {}
 unsafe impl<T: SupportedNativeHandle<TCtx>, TCtx> Sync for RegisteredTexture<T, TCtx> {}
 
-
-
-
 impl<T: SupportedNativeHandle<TCtx>, TCtx> Drop for RegisteredTexture<T, TCtx> {
     fn drop(&mut self) {
         unregister_texture_provider::<T, TCtx>(
@@ -148,20 +143,22 @@ impl<T: SupportedNativeHandle<TCtx>, TCtx> Drop for RegisteredTexture<T, TCtx> {
 ///
 fn register_texture_provider<T: SupportedNativeHandle<TCtx>, TCtx>(
     engine_handle: i64,
-    provider:  ArcTextureProvider<T, TCtx>,
-) -> crate::Result<i64>
-{
+    provider: ArcTextureProvider<T, TCtx>,
+) -> crate::Result<i64> {
     let texture_info = T::create_texture_info(provider);
-    
+
     let registrar = EngineContext::get()?.get_texture_registry(engine_handle)?;
 
     let id = unsafe {
         (Functions::get().RegisterExternalTexture)(registrar as *mut _, &texture_info as *const _)
     };
-    info!("registered a new {:?} texture(id={:?})",  std::any::type_name::<T>(), id);
+    info!(
+        "registered a new {:?} texture(id={:?})",
+        std::any::type_name::<T>(),
+        id
+    );
     Ok(id)
 }
-
 
 /// unregister a texture from the Flutter engine.
 pub fn unregister_texture_provider<T: SupportedNativeHandle<TCtx>, TCtx>(
@@ -169,12 +166,18 @@ pub fn unregister_texture_provider<T: SupportedNativeHandle<TCtx>, TCtx>(
     engine_handle: i64,
     provider: ArcTextureProvider<T, TCtx>,
 ) -> crate::Result<()> {
-    extern "C" fn release_callback_impl<T: SupportedNativeHandle<TCtx>, TCtx>(user_data: *mut std::ffi::c_void) {
+    extern "C" fn release_callback_impl<T: SupportedNativeHandle<TCtx>, TCtx>(
+        user_data: *mut std::ffi::c_void,
+    ) {
         info!("releasing a {:?} texture", std::any::type_name::<T>());
         // decrease the reference count of the provider
         let _: ArcTextureProvider<T, TCtx> = unsafe { Arc::from_raw(user_data as *const _) };
     }
-    info!("asking to unregister a {:?} texture(id={:?})",  std::any::type_name::<T>(), texture_id);
+    info!(
+        "asking to unregister a {:?} texture(id={:?})",
+        std::any::type_name::<T>(),
+        texture_id
+    );
 
     let provider_raw = Arc::into_raw(provider);
     let registrar = EngineContext::get()?.get_texture_registry(engine_handle)?;
@@ -188,10 +191,6 @@ pub fn unregister_texture_provider<T: SupportedNativeHandle<TCtx>, TCtx>(
     }
     Ok(())
 }
-
-
-
-
 
 /// release a "frame" descriptor when flutter is done with it.
 unsafe extern "C" fn release_payload_holder<Type, FlutterType>(
@@ -226,12 +225,14 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
                         FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888
                     }
                 },
-                // TODO(#1): we should keep the previous texture cached if replaced. 
+                // TODO(#1): we should keep the previous texture cached if replaced.
                 // although it is reasonable to have only one texture for the lifetime
                 // of the provider.
-                release_callback: Some(
-                    release_payload_holder::<ID3D11Texture2D, FlutterDesktopGpuSurfaceDescriptor>,
-                ),
+                release_callback: release_payload_holder::<
+                    ID3D11Texture2D,
+                    FlutterDesktopGpuSurfaceDescriptor,
+                >,
+
                 release_context: std::ptr::null_mut(),
             },
             _payload: texture2d,
@@ -242,12 +243,10 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
         holder_deref.flutter_payload.release_context = holder as *mut _;
         let flutter_descriptor = &mut holder_deref.flutter_payload;
         flutter_descriptor as *mut _
-
     } else {
         std::ptr::null()
     }
 }
-
 
 unsafe extern "C" fn dxgi_callback<TCtx>(
     _width: usize,
@@ -275,9 +274,10 @@ unsafe extern "C" fn dxgi_callback<TCtx>(
                         FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888
                     }
                 },
-                release_callback: Some(
-                    release_payload_holder::<DxgiSharedHandle, FlutterDesktopGpuSurfaceDescriptor>,
-                ),
+                release_callback: release_payload_holder::<
+                    DxgiSharedHandle,
+                    FlutterDesktopGpuSurfaceDescriptor,
+                >,
                 release_context: std::ptr::null_mut(),
             },
             _payload: texture2d,
@@ -288,10 +288,7 @@ unsafe extern "C" fn dxgi_callback<TCtx>(
         holder_deref.flutter_payload.release_context = holder as *mut _;
         let flutter_descriptor = &mut holder_deref.flutter_payload;
         flutter_descriptor as *mut _
-
     } else {
-
         std::ptr::null()
     }
-
 }

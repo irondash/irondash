@@ -50,8 +50,7 @@ pub struct FlutterDesktopGpuSurfaceDescriptor {
     pub visible_width: usize,
     pub visible_height: usize,
     pub format: FlutterDesktopPixelFormat,
-    pub release_callback:
-        ::std::option::Option<unsafe extern "C" fn(release_context: *mut ::std::os::raw::c_void)>,
+    pub release_callback: unsafe extern "C" fn(release_context: *mut ::std::os::raw::c_void),
     pub release_context: *mut ::std::os::raw::c_void,
 }
 pub type FlutterDesktopPixelBufferTextureCallback = ::std::option::Option<

@@ -7,7 +7,7 @@ pub enum Error {
     TextureRegistrationFailed,
     #[cfg(target_os = "android")]
     JNIError(jni::errors::Error),
-    UnsupportedTextureType
+    TextureLocked,
 }
 
 impl Display for Error {
@@ -17,7 +17,7 @@ impl Display for Error {
             Error::TextureRegistrationFailed => write!(f, "texture registration failed"),
             #[cfg(target_os = "android")]
             Error::JNIError(e) => e.fmt(f),
-            Error::UnsupportedTextureType => write!(f, "unsupported texture type"),
+            Error::TextureLocked => write!(f, "cannot modify locked texture"),
         }
     }
 }

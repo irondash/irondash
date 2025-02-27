@@ -57,10 +57,11 @@ pub struct TextureDescriptionProvider2<T: SupportedNativeHandle<TCtx>, TCtx> {
 }
 
 impl<T: SupportedNativeHandle<TCtx>, TCtx> TextureDescriptionProvider2<T, TCtx> {
-    pub fn set_current_texture(&self, texture: TextureDescriptor<T>) {
+    pub fn set_current_texture(&self, texture: TextureDescriptor<T>) -> crate::Result<()> {
         trace!("setting current texture on thread {:?}", std::thread::current().id());
-        let mut current_texture = self.current_texture.lock().unwrap();
-        *current_texture = Some(texture);
+         self.current_texture.try_lock().map(|mut current_texture| {
+            *current_texture = Some(texture);
+        }).map_err(|_| crate::Error::TextureLocked)
     }
 }
 unsafe impl<T: SupportedNativeHandle<TCtx>, TCtx> Send for TextureDescriptionProvider2<T, TCtx> {}

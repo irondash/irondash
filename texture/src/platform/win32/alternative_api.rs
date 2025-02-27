@@ -48,7 +48,7 @@ impl<TCtx> SupportedNativeHandle<TCtx> for DxgiSharedHandle {
                 },
             },
         };
-    }
+    }// #1
 }
 
 pub struct TextureDescriptionProvider2<T: SupportedNativeHandle<TCtx>, TCtx> {
@@ -58,6 +58,7 @@ pub struct TextureDescriptionProvider2<T: SupportedNativeHandle<TCtx>, TCtx> {
 
 impl<T: SupportedNativeHandle<TCtx>, TCtx> TextureDescriptionProvider2<T, TCtx> {
     pub fn set_current_texture(&self, texture: TextureDescriptor<T>) {
+        trace!("setting current texture on thread {:?}", std::thread::current().id());
         let mut current_texture = self.current_texture.lock().unwrap();
         *current_texture = Some(texture);
     }
@@ -246,7 +247,7 @@ unsafe extern "C" fn dxgi_callback<TCtx>(
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
     let provider =
         Arc::from_raw(user_data as *const TextureDescriptionProvider2<DxgiSharedHandle, TCtx>);
-    trace!("acquiring lock for dxgi callback");
+    trace!("acquiring lock for dxgi callback on thread {:?}", std::thread::current().id());
     let texture2d_lock: std::sync::MutexGuard<'_, Option<TextureDescriptor<DxgiSharedHandle>>> =
         provider.current_texture.lock().unwrap();
     trace!("lock for dxgi callback acquired");
@@ -284,7 +285,7 @@ unsafe extern "C" fn dxgi_callback<TCtx>(
 
 /// release a "frame" descriptor when flutter is done with it.
 unsafe extern "C" fn release_payload_holder<TLock>(user_data: *mut ::std::os::raw::c_void) {
-    trace!("releasing a payload holder");
+    trace!("releasing a payload holder on thread {:?}", std::thread::current().id());
     let mut _user_data: Box<TextureReleaseCtx<TLock>> = Box::from_raw(user_data as *mut _);
     ManuallyDrop::drop(&mut _user_data.descriptor);
 }

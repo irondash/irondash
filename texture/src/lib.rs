@@ -4,7 +4,6 @@
 use std::sync::{Arc, Mutex};
 
 use irondash_run_loop::{util::Capsule, RunLoop, RunLoopSender};
-use platform::PlatformTexture;
 
 mod error;
 mod log;
@@ -106,7 +105,7 @@ impl<Type: PlatformTextureWithoutProvider> Texture<Type> {
         Type::get(&self.platform_texture)
     }
 }
-
+#[derive(Debug, Clone)]
 pub enum PixelFormat {
     BGRA,
     RGBA,
@@ -211,31 +210,51 @@ pub use linux::*;
 
 #[cfg(target_os = "windows")]
 mod windows {
-    use std::ffi::c_void;
+    use std::{ffi::c_void, fmt::Debug, sync::{Arc, Mutex}};
+
 
     /// Texture descriptor for native texture.
-    pub struct TextureDescriptor<'a, HandleType> {
-        pub handle: &'a HandleType,
+    #[derive(Debug)]
+    pub struct TextureDescriptor<HandleType: Clone> {
+        pub handle: HandleType,
         pub width: i32,
         pub height: i32,
         pub visible_width: i32,
         pub visible_height: i32,
         pub pixel_format: super::PixelFormat,
     }
-
-    pub trait TextureDescriptorProvider<HandleType> {
+    impl<T: Clone> TextureDescriptor<T> {
+        pub fn new(handle: T, width: i32, height: i32, visible_width: i32, visible_height: i32, pixel_format: super::PixelFormat) -> Self {
+            Self {
+                handle,
+                width,
+                height,
+                visible_width,
+                visible_height,
+                pixel_format,
+            }
+        }
+    }
+    pub trait TextureDescriptorProvider<HandleType: Clone> {
         fn get(&self) -> TextureDescriptor<HandleType>;
     }
 
     pub type BoxedTextureDescriptor<HandleType> = Box<dyn TextureDescriptorProvider<HandleType>>;
 
-    /// Wrapper around `ID3D11Texture2D`, can be used as `TextureHandle` in
+    /// Wrapper around `ID3D11Texture2D`, can be used as `HandleType` in
     /// `TextureDescriptor`.
+    #[derive(Clone, Debug)]
     pub struct ID3D11Texture2D(pub *mut c_void);
 
     /// Wrapper around DXGI shared handle (*mut HANDLE), can be used as
-    // `TextureHandle` in `TextureDescriptor`.
+    // `HandleType` in `TextureDescriptor`.
+    #[derive(Clone, Debug)]
     pub struct DxgiSharedHandle(pub *mut c_void);
+
+    
+    pub use crate::platform::*;
+    use crate::{PayloadProvider, PlatformTextureWithProvider};
+
 }
 #[cfg(target_os = "windows")]
 pub use windows::*;

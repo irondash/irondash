@@ -50,8 +50,7 @@ pub struct FlutterDesktopGpuSurfaceDescriptor {
     pub visible_width: usize,
     pub visible_height: usize,
     pub format: FlutterDesktopPixelFormat,
-    pub release_callback:
-        ::std::option::Option<unsafe extern "C" fn(release_context: *mut ::std::os::raw::c_void)>,
+    pub release_callback: unsafe extern "C" fn(release_context: *mut ::std::os::raw::c_void),
     pub release_context: *mut ::std::os::raw::c_void,
 }
 pub type FlutterDesktopPixelBufferTextureCallback = ::std::option::Option<
@@ -61,13 +60,12 @@ pub type FlutterDesktopPixelBufferTextureCallback = ::std::option::Option<
         user_data: *mut ::std::os::raw::c_void,
     ) -> *const FlutterDesktopPixelBuffer,
 >;
-pub type FlutterDesktopGpuSurfaceTextureCallback = ::std::option::Option<
+pub type FlutterDesktopGpuSurfaceTextureCallback = 
     unsafe extern "C" fn(
         width: usize,
         height: usize,
         user_data: *mut ::std::os::raw::c_void,
-    ) -> *const FlutterDesktopGpuSurfaceDescriptor,
->;
+    ) -> *const FlutterDesktopGpuSurfaceDescriptor;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FlutterDesktopPixelBufferTextureConfig {
@@ -104,9 +102,8 @@ pub struct Functions {
     pub UnregisterExternalTexture: unsafe extern "C" fn(
         texture_registrar: FlutterDesktopTextureRegistrarRef,
         texture_id: i64,
-        callback: ::std::option::Option<
+        callback: 
             unsafe extern "C" fn(user_data: *mut ::std::os::raw::c_void),
-        >,
         user_data: *mut ::std::os::raw::c_void,
     ),
     pub MarkExternalTextureFrameAvailable: unsafe extern "C" fn(

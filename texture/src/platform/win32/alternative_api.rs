@@ -1,9 +1,5 @@
 use std::{
-    any::TypeId,
-    mem::ManuallyDrop,
-    net::TcpListener,
-    ops::Deref,
-    sync::{Arc, Mutex, MutexGuard},
+    any::TypeId, cell::RefCell, mem::ManuallyDrop, net::TcpListener, ops::Deref, sync::{Arc, Mutex, MutexGuard, RwLock, RwLockReadGuard}
 };
 
 use irondash_engine_context::EngineContext;
@@ -48,20 +44,29 @@ impl<TCtx> SupportedNativeHandle<TCtx> for DxgiSharedHandle {
                 },
             },
         };
-    }// #1
+    } // #1
 }
 
 pub struct TextureDescriptionProvider2<T: SupportedNativeHandle<TCtx>, TCtx> {
-    pub current_texture: Arc<Mutex<Option<TextureDescriptor<T>>>>,
+    pub current_texture: RefCell<Option<TextureDescriptor<T>>>,
     pub context: TCtx,
 }
 
 impl<T: SupportedNativeHandle<TCtx>, TCtx> TextureDescriptionProvider2<T, TCtx> {
     pub fn set_current_texture(&self, texture: TextureDescriptor<T>) -> crate::Result<()> {
-        trace!("setting current texture on thread {:?}", std::thread::current().id());
-         self.current_texture.try_lock().map(|mut current_texture| {
-            *current_texture = Some(texture);
-        }).map_err(|_| crate::Error::TextureLocked)
+        trace!(
+            "setting current texture on thread {:?}",
+            std::thread::current().id()
+        );
+        let mut current_texture = self.current_texture.borrow_mut();
+        *current_texture = Some(texture);
+        Ok(())
+        // self.current_texture
+        //     .write()
+        //     .map(|mut current_texture| {
+        //         *current_texture = Some(texture);
+        //     })
+        //     .map_err(|_| crate::Error::TextureLocked)
     }
 }
 unsafe impl<T: SupportedNativeHandle<TCtx>, TCtx> Send for TextureDescriptionProvider2<T, TCtx> {}
@@ -102,8 +107,7 @@ impl<T: SupportedNativeHandle<TCtx>, TCtx> RegisteredTexture<T, TCtx> {
     }
     /// sets the current texture.
     pub fn set_current_texture(&self, texture: TextureDescriptor<T>) -> crate::Result<()> {
-        self.texture_provider.set_current_texture(texture);
-        Ok(())
+        self.texture_provider.set_current_texture(texture)
     }
     /// Marks the frame as available. This should be called after the texture has been updated.
     /// runs on the main thread by default.
@@ -202,8 +206,8 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
     let provider =
         Arc::from_raw(user_data as *const TextureDescriptionProvider2<ID3D11Texture2D, TCtx>);
-    let texture2d_lock: std::sync::MutexGuard<'_, Option<TextureDescriptor<ID3D11Texture2D>>> =
-        provider.current_texture.lock().unwrap();
+    let texture2d_lock =
+        provider.current_texture.borrow();
     let texture2d = texture2d_lock.deref();
     if let Some(texture2d) = texture2d {
         let mut flutter_descriptor = ManuallyDrop::new(FlutterDesktopGpuSurfaceDescriptor {
@@ -218,7 +222,7 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
                 PixelFormat::RGBA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888,
             },
             release_callback: release_payload_holder::<
-                MutexGuard<'_, Option<TextureDescriptor<ID3D11Texture2D>>>,
+            RwLockReadGuard<'_, Option<TextureDescriptor<ID3D11Texture2D>>>,
             >,
             release_context: std::ptr::null_mut(),
         });
@@ -248,45 +252,59 @@ unsafe extern "C" fn dxgi_callback<TCtx>(
 ) -> *const FlutterDesktopGpuSurfaceDescriptor {
     let provider =
         Arc::from_raw(user_data as *const TextureDescriptionProvider2<DxgiSharedHandle, TCtx>);
-    trace!("acquiring lock for dxgi callback on thread {:?}", std::thread::current().id());
-    let texture2d_lock: std::sync::MutexGuard<'_, Option<TextureDescriptor<DxgiSharedHandle>>> =
-        provider.current_texture.lock().unwrap();
-    trace!("lock for dxgi callback acquired");
-    let texture2d = texture2d_lock.deref();
-    if let Some(texture2d) = texture2d {
-        let mut flutter_descriptor = ManuallyDrop::new(FlutterDesktopGpuSurfaceDescriptor {
-            struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceDescriptor>(),
-            handle: texture2d.handle.0,
-            width: texture2d.width as usize,
-            height: texture2d.height as usize,
-            visible_width: texture2d.visible_width as usize,
-            visible_height: texture2d.visible_height as usize,
-            format: match texture2d.pixel_format {
-                PixelFormat::BGRA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888,
-                PixelFormat::RGBA => FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888,
-            },
-            release_callback: release_payload_holder::<
-                MutexGuard<'_, Option<TextureDescriptor<DxgiSharedHandle>>>,
-            >,
-            release_context: std::ptr::null_mut(),
-        });
+    trace!(
+        "trying to acquire lock for dxgi callback on thread {:?}",
+        std::thread::current().id()
+    );
+    let current_texture = provider.current_texture.borrow();
+    if true {
+        trace!("lock for dxgi callback acquired on thread {:?}",
+        std::thread::current().id()
+    );
+        let texture2d = current_texture.deref();
+          if let Some(texture2d) = texture2d {
+            let mut flutter_descriptor = ManuallyDrop::new(FlutterDesktopGpuSurfaceDescriptor {
+                struct_size: std::mem::size_of::<FlutterDesktopGpuSurfaceDescriptor>(),
+                handle: texture2d.handle.0,
+                width: texture2d.width as usize,
+                height: texture2d.height as usize,
+                visible_width: texture2d.visible_width as usize,
+                visible_height: texture2d.visible_height as usize,
+                format: match texture2d.pixel_format {
+                    PixelFormat::BGRA => {
+                        FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatBGRA8888
+                    }
+                    PixelFormat::RGBA => {
+                        FlutterDesktopPixelFormat_kFlutterDesktopPixelFormatRGBA8888
+                    }
+                },
+                release_callback: release_payload_holder::<
+                    i32,
+                >,
+                release_context: std::ptr::null_mut(),
+            });
 
-        let boxed_release_ctx = Box::new(TextureReleaseCtx {
-            texture_lock: texture2d_lock,
-            descriptor: flutter_descriptor,
-        });
+            let boxed_release_ctx = Box::new(TextureReleaseCtx {
+                texture_lock: 0i32,
+                descriptor: flutter_descriptor,
+            });
 
-        flutter_descriptor.release_context = Box::into_raw(boxed_release_ctx) as *mut _;
-        let res = ManuallyDrop::take(&mut flutter_descriptor);
-        &res as *const _
+            flutter_descriptor.release_context = Box::into_raw(boxed_release_ctx) as *mut _;
+            let res = ManuallyDrop::take(&mut flutter_descriptor);
+            return &res as *const _;
+        } 
     } else {
-        std::ptr::null()
+        error!("failed to lock texture for dxgi callback on thread {:?}", std::thread::current().id());
     }
+    std::ptr::null()
 }
 
 /// release a "frame" descriptor when flutter is done with it.
 unsafe extern "C" fn release_payload_holder<TLock>(user_data: *mut ::std::os::raw::c_void) {
-    trace!("releasing a payload holder on thread {:?}", std::thread::current().id());
+    trace!(
+        "releasing a payload holder on thread {:?}",
+        std::thread::current().id()
+    );
     let mut _user_data: Box<TextureReleaseCtx<TLock>> = Box::from_raw(user_data as *mut _);
     ManuallyDrop::drop(&mut _user_data.descriptor);
 }

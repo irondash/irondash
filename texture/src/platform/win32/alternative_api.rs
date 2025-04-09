@@ -52,7 +52,7 @@ impl<TCtx> SupportedNativeHandle<TCtx> for DxgiSharedHandle {
 }
 
 pub struct TextureDescriptionProvider2<T: SupportedNativeHandle<TCtx>, TCtx> {
-    pub current_texture: Arc<RwLock<Option<TextureDescriptor<T>>>>,
+    pub current_texture: Arc<Mutex<Option<TextureDescriptor<T>>>>,
     pub context: TCtx,
 }
 
@@ -63,7 +63,7 @@ impl<T: SupportedNativeHandle<TCtx>, TCtx> TextureDescriptionProvider2<T, TCtx> 
             std::thread::current().id()
         );
         self.current_texture
-            .write()
+            .lock()
             .map(|mut current_texture| {
                 *current_texture = Some(texture);
             })
@@ -208,7 +208,7 @@ unsafe extern "C" fn d3d11texture2d_callback<TCtx>(
     let provider =
         Arc::from_raw(user_data as *const TextureDescriptionProvider2<ID3D11Texture2D, TCtx>);
     let texture2d_lock =
-        provider.current_texture.try_read().unwrap();
+        provider.current_texture.lock().unwrap();
     let texture2d = texture2d_lock.deref();
     if let Some(texture2d) = texture2d {
         let mut flutter_descriptor = ManuallyDrop::new(FlutterDesktopGpuSurfaceDescriptor {
@@ -257,7 +257,7 @@ unsafe extern "C" fn dxgi_callback<TCtx>(
         "trying to acquire lock for dxgi callback on thread {:?}",
         std::thread::current().id()
     );
-    if let Ok(texture2d_lock) = provider.current_texture.try_read() {
+    if let Ok(texture2d_lock) = provider.current_texture.try_lock() {
         trace!("lock for dxgi callback acquired on thread {:?}",
         std::thread::current().id()
     );

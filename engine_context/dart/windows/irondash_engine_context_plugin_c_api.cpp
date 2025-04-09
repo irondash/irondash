@@ -25,6 +25,10 @@ size_t IrondashEngineContextGetFlutterView(int64_t engine_handle) {
   return irondash_engine_context::GetFlutterView(engine_handle);
 }
 
+size_t IrondashEngineContextGetGraphicsAdapter(int64_t engine_handle) {
+  return irondash_engine_context::GetGraphicsAdapter(engine_handle);
+}
+
 FlutterDesktopTextureRegistrarRef
 IrondashEngineContextGetTextureRegistrar(int64_t engine_handle) {
   return irondash_engine_context::GetTextureRegistrar(engine_handle);

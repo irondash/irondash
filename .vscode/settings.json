@@ -1,19 +1,22 @@
 {
-    // "rust-analyzer.cargo.target": "aarch64-apple-ios",
-    // "rust-analyzer.cargo.target": "aarch64-linux-android",
-    "rust-analyzer.check.command": "clippy",
-    "rust-analyzer.cargo.features": [
-        // "mock"
-        "irondash_message_channel_derive",
-    ],
-    "dart.analysisExcludedFolders": [
-        // These are symlinks that confuse dart analyzer
-        "cargokit",
-        "message_channel/dart/example/cargokit",
-        "texture/example/cargokit",
-    ],
-    "dart.runPubGetOnPubspecChanges": "never",
-    "cSpell.words": [
-        "finalizer"
-    ]
+  // "rust-analyzer.cargo.target": "aarch64-apple-ios",
+  // "rust-analyzer.cargo.target": "aarch64-linux-android",
+  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.cargo.features": [
+    // "mock"
+    "irondash_message_channel_derive"
+  ],
+  "dart.analysisExcludedFolders": [
+    // These are symlinks that confuse dart analyzer
+    "cargokit",
+    "message_channel/dart/example/cargokit",
+    "texture/example/cargokit"
+  ],
+  "dart.runPubGetOnPubspecChanges": "never",
+  "cSpell.words": ["finalizer"],
+  "cmake.sourceDirectory": "C:/Users/temp/Desktop/OS/irondash/message_channel/dart/example/linux",
+  "files.associations": {
+    "xtree": "cpp",
+    "utility": "cpp"
+  }
 }

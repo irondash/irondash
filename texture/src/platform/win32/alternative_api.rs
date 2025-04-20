@@ -20,7 +20,7 @@ pub trait SupportedNativeHandle<TCtx>: Clone + 'static {
 impl<TCtx> SupportedNativeHandle<TCtx> for ID3D11Texture2D {
     fn create_texture_info(provider: ArcTextureProvider<Self, TCtx>) -> FlutterDesktopTextureInfo {
         let provider_raw = Arc::into_raw(provider);
-        return FlutterDesktopTextureInfo {
+        FlutterDesktopTextureInfo {
             type_: FlutterDesktopTextureType_kFlutterDesktopGpuSurfaceTexture,
             __bindgen_anon_1: FlutterDesktopTextureInfo__bindgen_ty_1 {
                 gpu_surface_config: FlutterDesktopGpuSurfaceTextureConfig {
@@ -30,13 +30,13 @@ impl<TCtx> SupportedNativeHandle<TCtx> for ID3D11Texture2D {
                     user_data: provider_raw as *mut std::ffi::c_void,
                 },
             },
-        };
+        }
     }
 }
 impl<TCtx> SupportedNativeHandle<TCtx> for DxgiSharedHandle {
     fn create_texture_info(provider: ArcTextureProvider<Self, TCtx>) -> FlutterDesktopTextureInfo {
         let provider_raw = Arc::into_raw(provider);
-        return FlutterDesktopTextureInfo {
+        FlutterDesktopTextureInfo {
             type_: FlutterDesktopTextureType_kFlutterDesktopGpuSurfaceTexture,
             __bindgen_anon_1: FlutterDesktopTextureInfo__bindgen_ty_1 {
                 gpu_surface_config: FlutterDesktopGpuSurfaceTextureConfig {
@@ -47,7 +47,7 @@ impl<TCtx> SupportedNativeHandle<TCtx> for DxgiSharedHandle {
                     user_data: provider_raw as *mut std::ffi::c_void,
                 },
             },
-        };
+        }
     }// #1
 }
 
@@ -59,7 +59,7 @@ pub struct TextureDescriptionProvider2<T: SupportedNativeHandle<TCtx>, TCtx> {
 impl<T: SupportedNativeHandle<TCtx>, TCtx> TextureDescriptionProvider2<T, TCtx> {
     pub fn set_current_texture(&self, texture: TextureDescriptor<T>) -> crate::Result<()> {
         trace!("setting current texture on thread {:?}", std::thread::current().id());
-         self.current_texture.try_lock().map(|mut current_texture| {
+         self.current_texture.lock().map(|mut current_texture| {
             *current_texture = Some(texture);
         }).map_err(|_| crate::Error::TextureLocked)
     }

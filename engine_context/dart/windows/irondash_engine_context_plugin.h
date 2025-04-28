@@ -16,7 +16,7 @@ DWORD GetMainThreadId();
 
 size_t GetFlutterView(int64_t engine_handle);
 size_t GetGraphicsAdapter(int64_t engine_handle);
-site_t GetD3D11Device(int64_t engine_handle);
+size_t GetD3D11Device(int64_t engine_handle);
 
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle);
 FlutterDesktopMessengerRef GetBinaryMessenger(int64_t engine_handle);

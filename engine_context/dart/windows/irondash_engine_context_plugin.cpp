@@ -155,10 +155,10 @@ size_t GetGraphicsAdapter(int64_t engine_handle) {
   return 0;
 }
 
-site_t GetD3D11Device(int64_t engine_handle)
+size_t GetD3D11Device(int64_t engine_handle)
 {
     if (auto ctx = GetEngineContextPriv(engine_handle)) {
-      return reinterpret_cast<site_t>(FlutterDesktopPluginViewGetID3D11Device((*ctx)->view));
+      return reinterpret_cast<size_t>(FlutterDesktopPluginViewGetID3D11Device((*ctx)->view));
     }
 }
 

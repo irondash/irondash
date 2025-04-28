@@ -100,6 +100,18 @@ impl PlatformContext {
         }
     }
 
+    pub fn get_flutter_d3d11_device(&self, handle: i64) -> Result<IDXGIAdapter> {
+        let proc = Self::get_proc(b"IrondashEngineContextGetD3D11Device\0")?;
+        let proc: GetFlutterGraphicsAdapterProc = unsafe { transmute(proc) };
+        let device = unsafe { proc(handle) };
+        if device == 0 {
+            println!("irondash: device is null, probably a gpu issue");
+            Err(Error::InvalidHandle)
+        } else {
+            Ok(device)
+        }
+    }
+
     pub fn get_flutter_graphics_adapter(&self, handle: i64) -> Result<IDXGIAdapter>{
         let proc = Self::get_proc(b"IrondashEngineContextGetFlutterGraphicsAdapter\0")?;
         let proc: GetFlutterGraphicsAdapterProc = unsafe { transmute(proc) };

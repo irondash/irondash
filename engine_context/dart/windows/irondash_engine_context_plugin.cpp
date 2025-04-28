@@ -148,24 +148,18 @@ size_t GetFlutterView(int64_t engine_handle) {
   return 0;
 }
 
-// copied from https://github.com/wang-bin/fvp/blob/cbfb02ddab90a6e2182e71b93b7d6992d965ce3c/windows/fvp_plugin.cpp#L98-L107
-template<typename T>
-auto View_GetGraphicsAdapter(T* v) -> decltype(v->GetGraphicsAdapter())
-{
-    return v->GetGraphicsAdapter();
-}
-
-template<typename T>
-IDXGIAdapter* View_GetGraphicsAdapter(T v) {
-    return nullptr;
-}
-
 size_t GetGraphicsAdapter(int64_t engine_handle) {
   if (auto ctx = GetEngineContextPriv(engine_handle)) {
-    return reinterpret_cast<size_t>(View_GetGraphicsAdapter((*ctx)->view));
+    return reinterpret_cast<size_t>((*ctx)->view->GetGraphicsAdapter());
   }
   return 0;
+}
 
+site_t GetD3D11Device(int64_t engine_handle)
+{
+    if (auto ctx = GetEngineContextPriv(engine_handle)) {
+      return reinterpret_cast<site_t>(FlutterDesktopPluginViewGetID3D11Device((*ctx)->view));
+    }
 }
 
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle) {

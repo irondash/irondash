@@ -157,9 +157,11 @@ size_t GetGraphicsAdapter(int64_t engine_handle) {
 
 size_t GetD3D11Device(int64_t engine_handle)
 {
-    if (auto ctx = GetEngineContextPriv(engine_handle)) {
-      return reinterpret_cast<size_t>(FlutterDesktopPluginViewGetID3D11Device((*ctx)->view));
-    }
+  if (auto ctx = GetEngineContextPriv(engine_handle))
+  {
+    return reinterpret_cast<size_t>(FlutterDesktopPluginViewGetID3D11Device(reinterpret_cast<FlutterDesktopViewRef>((*ctx)->view)));
+  }
+  return reinterpret_cast<size_t>(nullptr);
 }
 
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle) {

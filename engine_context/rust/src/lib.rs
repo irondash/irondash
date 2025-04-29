@@ -32,8 +32,9 @@ pub struct EngineContext {
 // can only be accessed on platform thread.
 unsafe impl Sync for EngineContext {}
 unsafe impl Send for EngineContext {}
-
-static ENGINE_CONTEXT: OnceCell<EngineContext> = OnceCell::new();
+thread_local! {
+    static ENGINE_CONTEXT: OnceCell<EngineContext> = OnceCell::new();
+}
 
 impl EngineContext {
     #[cfg(target_os = "android")]
@@ -45,8 +46,6 @@ impl EngineContext {
     pub fn get_class_loader() -> Result<jni::objects::GlobalRef> {
         PlatformContext::get_class_loader()
     }
-
-
 
     pub fn perform_on_main_thread(f: impl FnOnce() + Send + 'static) -> Result<()> {
         PlatformContext::perform_on_main_thread(f)
@@ -102,9 +101,23 @@ impl EngineContext {
     }
 
     #[cfg(target_os = "windows")]
-    pub fn get_dxgi_adapter(&self, handle: i64) -> Result<platform::IDXGIAdapter> {
-        let handle = Self::strip_version(handle)?;
-        self.platform_context.get_flutter_graphics_adapter(handle)
+    pub fn get_dxgi_adapter(
+        context: &EngineContext,
+        handle: i64,
+    ) -> Result<platform::IDXGIAdapter> {
+        let handle = EngineContext::strip_version(handle)?;
+        context
+            .platform_context
+            .get_flutter_graphics_adapter(handle)
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn get_d3d11_device(
+        context: &EngineContext,
+        handle: i64,
+    ) -> Result<platform::IDXGIAdapter> {
+        let handle = EngineContext::strip_version(handle)?;
+        context.platform_context.get_flutter_d3d11_device(handle)
     }
 
     /// Returns texture registry for given engine handle.

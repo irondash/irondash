@@ -32,9 +32,8 @@ pub struct EngineContext {
 // can only be accessed on platform thread.
 unsafe impl Sync for EngineContext {}
 unsafe impl Send for EngineContext {}
-thread_local! {
-    static ENGINE_CONTEXT: OnceCell<EngineContext> = OnceCell::new();
-}
+// TODO: support multiple engines.
+static ENGINE_CONTEXT: OnceCell<EngineContext> = OnceCell::new();
 
 impl EngineContext {
     #[cfg(target_os = "android")]

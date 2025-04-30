@@ -80,6 +80,7 @@ impl PlatformContext {
 
     fn get_proc(proc_name: &[u8]) -> Result<*mut c_void> {
         let module_name = b"irondash_engine_context_plugin.dll\0";
+        print!("irondash: loading module: {}", String::from_utf8_lossy(module_name));
         let module = unsafe { GetModuleHandleA(module_name.as_ptr() as *const _) };
         print!("irondash: module: {:#?}", module);
         let res = unsafe { GetProcAddress(module, proc_name.as_ptr() as *const _) };

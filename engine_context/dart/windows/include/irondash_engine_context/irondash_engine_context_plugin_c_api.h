@@ -28,6 +28,9 @@ IrondashEngineContextGetFlutterView(int64_t engine_handle);
 
 FLUTTER_PLUGIN_EXPORT size_t IrondashEngineContextGetGraphicsAdapter(int64_t engine_handle);
 
+FLUTTER_PLUGIN_EXPORT size_t IrondashEngineContextGetD3D11Device(int64_t engine_handle);
+FLUTTER_PLUGIN_EXPORT size_t IrondashEngineContextGetDevice(int64_t engine_handle);
+
 FLUTTER_PLUGIN_EXPORT FlutterDesktopTextureRegistrarRef
 IrondashEngineContextGetTextureRegistrar(int64_t engine_handle);
 

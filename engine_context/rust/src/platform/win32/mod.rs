@@ -38,6 +38,7 @@ type GetMainThreadIdProc = unsafe extern "C" fn() -> DWORD;
 type PerformOnMainThreadProc = unsafe extern "C" fn(callback: Callback, data: *mut c_void);
 type GetFlutterViewProc = unsafe extern "C" fn(i64) -> isize;
 type GetFlutterGraphicsAdapterProc = unsafe extern "C" fn(i64) -> isize;
+type GetFlutterD3D11DeviceProc = unsafe extern "C" fn(i64) -> isize;
 type RegisterDestroyNotificationProc = unsafe extern "C" fn(extern "C" fn(i64)) -> ();
 type GetTextureRegistrarProc = unsafe extern "C" fn(i64) -> FlutterDesktopTextureRegistrarRef;
 type GetMessengerProc = unsafe extern "C" fn(i64) -> FlutterDesktopMessengerRef;
@@ -106,7 +107,7 @@ impl PlatformContext {
 
     pub fn get_flutter_d3d11_device(&self, handle: i64) -> Result<IDXGIAdapter> {
         let proc = Self::get_proc(b"IrondashEngineContextGetD3D11Device\0")?;
-        let proc: GetFlutterGraphicsAdapterProc = unsafe { transmute(proc) };
+        let proc: GetFlutterD3D11DeviceProc = unsafe { transmute(proc) };
         let device = unsafe { proc(handle) };
         if device == 0 {
             println!("irondash: device is null, probably a gpu issue");
@@ -117,7 +118,7 @@ impl PlatformContext {
     }
 
     pub fn get_flutter_graphics_adapter(&self, handle: i64) -> Result<IDXGIAdapter>{
-        let proc = Self::get_proc(b"IrondashEngineContextGetFlutterGraphicsAdapter\0")?;
+        let proc = Self::get_proc(b"IrondashEngineContextGetGraphicsAdapter\0")?;
         let proc: GetFlutterGraphicsAdapterProc = unsafe { transmute(proc) };
         let adapter = unsafe { proc(handle) };
         if adapter == 0 {

@@ -10,6 +10,7 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
+#include <iostream>
 
 namespace irondash_engine_context {
 
@@ -157,9 +158,12 @@ size_t GetGraphicsAdapter(int64_t engine_handle) {
 
 size_t GetD3D11Device(int64_t engine_handle)
 {
+  std::cout << "GetD3D11Device: " << engine_handle << std::endl;
   if (auto ctx = GetEngineContextPriv(engine_handle))
   {
-    return reinterpret_cast<size_t>(FlutterDesktopPluginViewGetID3D11Device(reinterpret_cast<FlutterDesktopViewRef>((*ctx)->view)));
+    auto device = reinterpret_cast<FlutterDesktopViewRef>((*ctx)->view->GetID3D11Device());
+    std::cout << "GetD3D11Device: " << device << std::endl;
+    return reinterpret_cast<size_t>(device);
   }
   return reinterpret_cast<size_t>(nullptr);
 }

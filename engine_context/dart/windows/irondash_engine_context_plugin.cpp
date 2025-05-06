@@ -10,15 +10,18 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
+#include <iostream>
 
 namespace irondash_engine_context {
 
 namespace {
 struct EngineContext {
   HWND hwnd;
+  flutter::FlutterView* view;
   FlutterDesktopTextureRegistrarRef texture_registrar;
   FlutterDesktopMessengerRef binary_messenger;
 };
+
 std::map<int64_t, EngineContext> contexts;
 int64_t next_handle = 1;
 std::vector<EngineDestroyedCallback> engine_destroyed_callbacks;
@@ -130,13 +133,39 @@ void PerformOnMainThread(void (*callback)(void *data), void *data) {
 
 DWORD GetMainThreadId() { return main_thread_id; }
 
-size_t GetFlutterView(int64_t engine_handle) {
+std::optional<const EngineContext*> GetEngineContextPriv(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
   if (context != contexts.end()) {
-    return reinterpret_cast<size_t>(context->second.hwnd);
-  } else {
-    return 0;
+    return &context->second;
+  };
+  return std::nullopt;
+  
+}
+
+size_t GetFlutterView(int64_t engine_handle) {
+  if (auto ctx = GetEngineContextPriv(engine_handle)) {
+    return reinterpret_cast<size_t>((*ctx)->hwnd);
   }
+  return 0;
+}
+
+size_t GetGraphicsAdapter(int64_t engine_handle) {
+  if (auto ctx = GetEngineContextPriv(engine_handle)) {
+    return reinterpret_cast<size_t>((*ctx)->view->GetGraphicsAdapter());
+  }
+  return 0;
+}
+
+size_t GetD3D11Device(int64_t engine_handle)
+{
+  std::cout << "GetD3D11Device: " << engine_handle << std::endl;
+  if (auto ctx = GetEngineContextPriv(engine_handle))
+  {
+    auto device = reinterpret_cast<FlutterDesktopViewRef>((*ctx)->view->GetID3D11Device());
+    std::cout << "GetD3D11Device: " << device << std::endl;
+    return reinterpret_cast<size_t>(device);
+  }
+  return reinterpret_cast<size_t>(nullptr);
 }
 
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle) {
@@ -170,6 +199,7 @@ void IrondashEngineContextPlugin::RegisterWithRegistrar(
   ++next_handle;
 
   EngineContext context;
+  context.view = registrar->GetView();
   context.hwnd = registrar->GetView()->GetNativeWindow();
   context.texture_registrar =
       FlutterDesktopRegistrarGetTextureRegistrar(raw_registrar);

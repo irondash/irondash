@@ -1,7 +1,7 @@
 #![allow(clippy::new_without_default)]
 #![allow(clippy::type_complexity)]
 
-use std::sync::{Arc, Mutex};
+use std::{rc::Rc, sync::{Arc, Mutex, RwLock}};
 
 use irondash_run_loop::{util::Capsule, RunLoop, RunLoopSender};
 use platform::PlatformTexture;
@@ -115,49 +115,21 @@ pub enum PixelFormat {
 /// Pixel data is supported payload type on every platform, but the expected
 /// PixelFormat may differ. You can [`PixelData::FORMAT`] to query expected
 /// pixel format.
-pub struct PixelData<'a> {
+pub struct PixelData {
     pub width: i32,
     pub height: i32,
-    pub data: &'a [u8],
+    pub data:  Vec<u8>, // Pixel data, 4 bytes per pixel
 }
 
-impl PixelData<'_> {
+impl PixelData {
     pub const FORMAT: PixelFormat = platform::PIXEL_DATA_FORMAT;
-}
 
-pub trait PixelDataProvider {
-    fn get(&self) -> PixelData;
-}
-
-/// Actual type for pixel buffer payload.
-pub type BoxedPixelData = Box<dyn PixelDataProvider>;
-
-/// Convenience implementation for pixel data texture.
-pub struct SimplePixelData {
-    width: i32,
-    height: i32,
-    data: Vec<u8>,
-}
-
-impl SimplePixelData {
-    pub fn new_boxed(width: i32, height: i32, data: Vec<u8>) -> Box<Self> {
-        Box::new(Self {
-            width,
-            height,
-            data,
-        })
+    pub fn new(width: i32, height: i32, data: Vec<u8>) -> Self {
+        Self { width, height, data }
     }
 }
 
-impl PixelDataProvider for SimplePixelData {
-    fn get(&self) -> PixelData {
-        PixelData {
-            width: self.width,
-            height: self.height,
-            data: &self.data,
-        }
-    }
-}
+pub type SharedPixelData = Arc<RwLock<PixelData>>;
 
 //
 // Platform specific payloads.

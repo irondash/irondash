@@ -1,11 +1,9 @@
 use std::{
-    marker::PhantomData,
-    sync::{Arc, Mutex},
+    cell::RefCell, marker::PhantomData, mem::ManuallyDrop, sync::{Arc, Mutex, MutexGuard, RwLockWriteGuard}
 };
 
 use crate::{
-    log::OkLog, BoxedGLTexture, BoxedPixelData, Error, PayloadProvider, PixelFormat,
-    PlatformTextureWithProvider, Result,
+    log::OkLog, BoxedGLTexture, Error, PayloadProvider, PixelData, PixelFormat, PlatformTextureWithProvider, Result, SharedPixelData
 };
 
 mod gl_texture;
@@ -35,6 +33,13 @@ struct Inner<Type> {
     // the value here. There are no lifecycle notifications on Linux so
     // we keep the value until next one is requested.
     current_value: Option<Type>,
+}
+
+
+struct PixelBufferTextureWrapper{
+    provider: Arc<dyn PayloadProvider<SharedPixelData>>,
+    // save the lock until flutter is done with the texture
+    guard: RefCell<Option<RwLockWriteGuard<'static, PixelData>>>,
 }
 
 impl<Type> Inner<Type> {
@@ -99,18 +104,19 @@ impl<Type> PlatformTexture<Type> {
         Ok(())
     }
 
-    fn create_pixel_buffer_texture(texture: Arc<Mutex<Inner<BoxedPixelData>>>) -> GObjectWrapper {
-        new_pixel_buffer_texture(move || {
-            let mut texture = texture.lock().unwrap();
-            let pixel_data = texture.provider.get_payload();
-            let buffer = pixel_data.get();
-            let res = (
-                buffer.data.as_ptr(),
-                buffer.width as u32,
-                buffer.height as u32,
-            );
-            texture.current_value = Some(pixel_data);
-            res
+    fn create_pixel_buffer_texture(wrapper: Arc<PixelBufferTextureWrapper>) -> GObjectWrapper {
+        new_pixel_buffer_texture(move || { 
+            let pixel_data = wrapper.provider.get_payload();
+            let pixel_data_clone = pixel_data.clone();
+            let raw_pixel_data = Arc::into_raw(pixel_data_clone);
+            unsafe{
+                let lock_guard: RwLockWriteGuard<'static, PixelData> = ( *raw_pixel_data ).write().unwrap();
+                wrapper.guard.replace(
+                    Some(lock_guard)
+                ); // Keep the lock alive
+            }
+
+            pixel_data.clone()
         })
     }
 
@@ -137,13 +143,18 @@ impl<Type> Drop for PlatformTexture<Type> {
     }
 }
 
-impl PlatformTextureWithProvider for BoxedPixelData {
+impl PlatformTextureWithProvider for SharedPixelData {
     fn create_texture(
         engine_handle: i64,
         payload_provider: Arc<dyn PayloadProvider<Self>>,
     ) -> Result<PlatformTexture<Self>> {
-        let inner = Inner::new(payload_provider);
-        let texture = PlatformTexture::<BoxedPixelData>::create_pixel_buffer_texture(inner);
+        // we want to comply with trait so we use Arc..
+        #[allow(clippy::arc_with_non_send_sync)]
+        let wrapper = Arc::new(PixelBufferTextureWrapper {
+            provider: payload_provider,
+            guard: RefCell::new(None), // Placeholder, will be replaced later
+        });
+        let texture = PlatformTexture::<SharedPixelData>::create_pixel_buffer_texture(wrapper);
         PlatformTexture::new(engine_handle, texture)
     }
 }

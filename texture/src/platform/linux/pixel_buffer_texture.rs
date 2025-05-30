@@ -1,12 +1,14 @@
 use std::mem;
 
-use super::sys;
+use crate::SharedPixelData;
+
+use super::{sys, PixelBufferTextureWrapper};
 use cstr::cstr;
 
 #[repr(C)]
 struct PixelBufferTextureImpl {
     parent_instance: sys::FlPixelBufferTexture,
-    callback: Option<Box<dyn Fn() -> (*const u8, u32, u32)>>,
+    callback: Option<Box<dyn Fn() -> SharedPixelData>>,
 }
 
 #[repr(C)]
@@ -24,9 +26,11 @@ unsafe extern "C" fn pixel_buffer_texture_impl_copy_pixels(
     let s = texture as *mut PixelBufferTextureImpl;
     let s = &*s;
     let data = (s.callback.as_ref().unwrap())();
-    *buffer = data.0;
-    *width = data.1;
-    *height = data.2;
+    let texture = data.read().unwrap();
+
+    *buffer = texture.data.as_ptr();
+    *width = texture.width as u32;
+    *height = texture.height as u32;
     if !error.is_null() {
         *error = std::ptr::null_mut();
     }
@@ -87,7 +91,7 @@ fn pixel_buffer_texture_get_type() -> glib_sys::GType {
 
 pub(super) fn new_pixel_buffer_texture<F>(callback: F) -> super::GObjectWrapper
 where
-    F: Fn() -> (*const u8, u32, u32) + 'static,
+    F: Fn() -> SharedPixelData + 'static,
 {
     unsafe {
         let instance =

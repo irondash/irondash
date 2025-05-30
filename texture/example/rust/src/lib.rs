@@ -1,8 +1,8 @@
-use std::{cell::Cell, ffi::c_void, iter::repeat_with, rc::Rc, sync::Arc, time::Duration};
+use std::{cell::Cell, ffi::c_void, iter::repeat_with, rc::Rc, sync::{Arc, Mutex, RwLock}, time::Duration};
 
 use irondash_dart_ffi::DartValue;
 use irondash_run_loop::RunLoop;
-use irondash_texture::{BoxedPixelData, PayloadProvider, SimplePixelData, Texture};
+use irondash_texture::{PayloadProvider, PixelData, SharedPixelData, Texture};
 use log::error;
 
 #[cfg(target_os = "android")]
@@ -28,27 +28,45 @@ fn init_logging() {
 }
 
 struct Animator {
-    texture: Texture<BoxedPixelData>,
+    texture: Texture<SharedPixelData>,
     counter: Cell<u32>,
 }
 
-struct PixelBufferSource {}
+fn generate_frame() -> PixelData{
+    let rng = fastrand::Rng::new();
+    let width = 100i32;
+    let height = 100i32;
+    let bytes: Vec<u8> = repeat_with(|| rng.u8(..))
+        .take((width * height * 4) as usize)
+        .collect();
+    PixelData::new(width, height, bytes)
+}
+
+struct PixelBufferSource {
+    current_frame: SharedPixelData,
+
+}
 
 impl PixelBufferSource {
     fn new() -> Self {
-        Self {}
+        Self {
+            current_frame: Arc::new(Mutex::new(generate_frame())),
+        }
     }
 }
 
-impl PayloadProvider<BoxedPixelData> for PixelBufferSource {
-    fn get_payload(&self) -> BoxedPixelData {
-        let rng = fastrand::Rng::new();
-        let width = 100i32;
-        let height = 100i32;
-        let bytes: Vec<u8> = repeat_with(|| rng.u8(..))
-            .take((width * height * 4) as usize)
-            .collect();
-        SimplePixelData::new_boxed(width, height, bytes)
+impl PayloadProvider<SharedPixelData> for PixelBufferSource {
+    fn get_payload(&self) -> SharedPixelData {
+        // get payload should always be called with the write lock free.
+        // thus it should be safe to write here. 
+        // this way we can avoid copying the frame data and
+        // we can always return the same frame data if flutter asks for it again.
+        // i.e on window resize.
+        let new_frame = generate_frame();
+        let mut current_frame = self.current_frame.lock().unwrap();
+        *current_frame = new_frame;
+        self.current_frame.clone()
+        
     }
 }
 

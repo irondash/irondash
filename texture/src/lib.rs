@@ -48,7 +48,6 @@ impl<Type> Texture<Type> {
     }
 }
 
-///
 /// Trait that implemented by objects that provide texture contents.
 pub trait PayloadProvider<Type>: Send + Sync {
     /// Called by the engine to get the latest texture payload. This will
@@ -118,18 +117,18 @@ pub enum PixelFormat {
 pub struct PixelData {
     pub width: i32,
     pub height: i32,
-    pub data:  Vec<u8>, // Pixel data, 4 bytes per pixel
+    data_ptr: *const u8,   
 }
 
 impl PixelData {
     pub const FORMAT: PixelFormat = platform::PIXEL_DATA_FORMAT;
 
-    pub fn new(width: i32, height: i32, data: Vec<u8>) -> Self {
-        Self { width, height, data }
+    pub fn new(width: i32, height: i32, data_ptr: *const u8) -> Self {
+        Self { width, height, data_ptr }
     }
 }
 
-pub type SharedPixelData = Arc<RwLock<PixelData>>;
+pub type SharedPixelData = Arc<Mutex<PixelData>>;
 
 //
 // Platform specific payloads.

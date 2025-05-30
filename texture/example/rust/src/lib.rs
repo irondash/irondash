@@ -1,4 +1,4 @@
-use std::{cell::Cell, ffi::c_void, iter::repeat_with, rc::Rc, sync::{Arc, RwLock}, time::Duration};
+use std::{cell::Cell, ffi::c_void, iter::repeat_with, rc::Rc, sync::{Arc, Mutex, RwLock}, time::Duration};
 
 use irondash_dart_ffi::DartValue;
 use irondash_run_loop::RunLoop;
@@ -50,7 +50,7 @@ struct PixelBufferSource {
 impl PixelBufferSource {
     fn new() -> Self {
         Self {
-            current_frame: Arc::new(RwLock::new(generate_frame())),
+            current_frame: Arc::new(Mutex::new(generate_frame())),
         }
     }
 }
@@ -63,7 +63,7 @@ impl PayloadProvider<SharedPixelData> for PixelBufferSource {
         // we can always return the same frame data if flutter asks for it again.
         // i.e on window resize.
         let new_frame = generate_frame();
-        let mut current_frame = self.current_frame.write().unwrap();
+        let mut current_frame = self.current_frame.lock().unwrap();
         *current_frame = new_frame;
         self.current_frame.clone()
         

@@ -1,3 +1,7 @@
+## 0.5.5
+
+- Update cargokit
+
 ## 0.5.4
 
 - Update cargokit

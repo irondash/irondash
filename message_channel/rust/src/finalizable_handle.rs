@@ -36,12 +36,12 @@ impl FinalizableHandle {
     /// # Arguments
     ///
     /// * `finalizer` - closure that will be executed on main thread when the
-    ///                 Dart object associated with this handle is garbage collected.
-    ///                 The closure will not be invoked when this `FinalizableHandle`
-    ///                 is dropped.
+    ///   Dart object associated with this handle is garbage collected.
+    ///   The closure will not be invoked when this `FinalizableHandle`
+    ///   is dropped.
     ///
     /// * `external_size` - hit to garbage collector about how much memory is taken by
-    ///                     native object. Used when determining memory pressure.
+    ///   native object. Used when determining memory pressure.
     ///
     pub fn new<F: FnOnce() + 'static>(
         external_size: isize,

@@ -27,7 +27,6 @@ pub fn dispatch_get_main_queue() -> dispatch_queue_t {
     not(any(target_os = "macos", target_os = "ios")),
     link(name = "dispatch", kind = "dylib")
 )]
-
 extern "C" {
     static _dispatch_main_q: dispatch_object_s;
     pub fn dispatch_async_f(

@@ -32,7 +32,7 @@ pub struct EngineContext {
 // can only be accessed on platform thread.
 unsafe impl Sync for EngineContext {}
 unsafe impl Send for EngineContext {}
-
+// TODO: support multiple engines.
 static ENGINE_CONTEXT: OnceCell<EngineContext> = OnceCell::new();
 
 impl EngineContext {
@@ -97,6 +97,26 @@ impl EngineContext {
     pub fn get_flutter_view(&self, handle: i64) -> Result<platform::FlutterView> {
         let handle = Self::strip_version(handle)?;
         self.platform_context.get_flutter_view(handle)
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn get_dxgi_adapter(
+        context: &EngineContext,
+        handle: i64,
+    ) -> Result<platform::IDXGIAdapter> {
+        let handle = EngineContext::strip_version(handle)?;
+        context
+            .platform_context
+            .get_flutter_graphics_adapter(handle)
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn get_d3d11_device(
+        context: &EngineContext,
+        handle: i64,
+    ) -> Result<platform::IDXGIAdapter> {
+        let handle = EngineContext::strip_version(handle)?;
+        context.platform_context.get_flutter_d3d11_device(handle)
     }
 
     /// Returns texture registry for given engine handle.

@@ -7,8 +7,8 @@ use std::{
 use irondash_engine_context::EngineContext;
 
 use crate::{
-    log::OkLog, BoxedPixelData, BoxedTextureDescriptor, DxgiSharedHandle, ID3D11Texture2D,
-    PayloadProvider, PixelFormat, PlatformTextureWithProvider, Result,
+    log::OkLog, BoxedTextureDescriptor, DxgiSharedHandle, ID3D11Texture2D,
+    PayloadProvider, PixelFormat, PlatformTextureWithProvider, Result, SharedPixelData,
 };
 
 use self::sys::{
@@ -110,7 +110,8 @@ struct PayloadHolder<Type, FlutterType> {
 unsafe extern "C" fn release_payload_holder<Type, FlutterType>(
     user_data: *mut ::std::os::raw::c_void,
 ) {
-    let _user_data: Box<PayloadHolder<Type, FlutterType>> = Box::from_raw(user_data as *mut _);
+    let user_data: Box<PayloadHolder<Type, FlutterType>> = Box::from_raw(user_data as *mut _);
+    println!("irondash: Releasing payload holder");
 }
 
 unsafe extern "C" fn pixel_buffer_texture_callback(
@@ -118,23 +119,24 @@ unsafe extern "C" fn pixel_buffer_texture_callback(
     _height: usize,
     user_data: *mut ::std::os::raw::c_void,
 ) -> *const FlutterDesktopPixelBuffer {
-    let texture: Arc<Mutex<Texture<BoxedPixelData>>> = Arc::from_raw(user_data as *mut _);
+    let texture: Arc<Mutex<Texture<SharedPixelData>>> = Arc::from_raw(user_data as *mut _);
     let texture = ManuallyDrop::new(texture);
     let texture = texture.lock().unwrap();
-    let pixel_buffer = texture.payload_provider.get_payload();
-    let data = pixel_buffer.get();
+    let binding = texture.payload_provider.get_payload();
+    // we take write lock here to ensure
+    let pb_guard = binding.lock().unwrap();
 
     let holder = Box::new(PayloadHolder {
         flutter_payload: FlutterDesktopPixelBuffer {
-            buffer: data.data.as_ptr(),
-            width: data.width as usize,
-            height: data.height as usize,
+            buffer: pb_guard.data_ptr,
+            width: pb_guard.width as usize,
+            height: pb_guard.height as usize,
             release_callback: Some(
-                release_payload_holder::<BoxedPixelData, FlutterDesktopPixelBuffer>,
+                release_payload_holder::<SharedPixelData, FlutterDesktopPixelBuffer>,
             ),
             release_context: std::ptr::null_mut(), // will be set later
         },
-        _payload: pixel_buffer,
+        _payload: pb_guard,
     });
     let holder = Box::into_raw(holder);
     let holder_deref = &mut *holder;
@@ -143,7 +145,7 @@ unsafe extern "C" fn pixel_buffer_texture_callback(
     pixel_buffer as *mut _
 }
 
-impl TextureInfoProvider<Self> for BoxedPixelData {
+impl TextureInfoProvider<Self> for SharedPixelData {
     fn create_texture_info(texture: *const Mutex<Texture<Self>>) -> FlutterDesktopTextureInfo {
         FlutterDesktopTextureInfo {
             type_: FlutterDesktopTextureType_kFlutterDesktopPixelBufferTexture,
@@ -272,7 +274,7 @@ impl TextureInfoProvider<Self> for BoxedTextureDescriptor<DxgiSharedHandle> {
     }
 }
 
-impl PlatformTextureWithProvider for BoxedPixelData {
+impl PlatformTextureWithProvider for SharedPixelData {
     fn create_texture(
         engine_handle: i64,
         payload_provider: Arc<dyn PayloadProvider<Self>>,

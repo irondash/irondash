@@ -14,4 +14,5 @@ mod platform_impl;
 #[path = "darwin/mod.rs"]
 mod platform_impl;
 
-pub(crate) use platform_impl::*;
+pub use platform_impl::*;
+

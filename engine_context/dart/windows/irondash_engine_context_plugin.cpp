@@ -16,9 +16,11 @@ namespace irondash_engine_context {
 namespace {
 struct EngineContext {
   HWND hwnd;
+  flutter::FlutterView* view;
   FlutterDesktopTextureRegistrarRef texture_registrar;
   FlutterDesktopMessengerRef binary_messenger;
 };
+
 std::map<int64_t, EngineContext> contexts;
 int64_t next_handle = 1;
 std::vector<EngineDestroyedCallback> engine_destroyed_callbacks;
@@ -130,13 +132,40 @@ void PerformOnMainThread(void (*callback)(void *data), void *data) {
 
 DWORD GetMainThreadId() { return main_thread_id; }
 
-size_t GetFlutterView(int64_t engine_handle) {
+std::optional<const EngineContext*> GetEngineContextPriv(int64_t engine_handle) {
   auto context = contexts.find(engine_handle);
   if (context != contexts.end()) {
-    return reinterpret_cast<size_t>(context->second.hwnd);
-  } else {
-    return 0;
+    return &context->second;
+  };
+  return std::nullopt;
+  
+}
+
+size_t GetFlutterView(int64_t engine_handle) {
+  if (auto ctx = GetEngineContextPriv(engine_handle)) {
+    return reinterpret_cast<size_t>((*ctx)->hwnd);
   }
+  return 0;
+}
+
+// copied from https://github.com/wang-bin/fvp/blob/cbfb02ddab90a6e2182e71b93b7d6992d965ce3c/windows/fvp_plugin.cpp#L98-L107
+template<typename T>
+auto View_GetGraphicsAdapter(T* v) -> decltype(v->GetGraphicsAdapter())
+{
+    return v->GetGraphicsAdapter();
+}
+
+template<typename T>
+IDXGIAdapter* View_GetGraphicsAdapter(T v) {
+    return nullptr;
+}
+
+size_t GetGraphicsAdapter(int64_t engine_handle) {
+  if (auto ctx = GetEngineContextPriv(engine_handle)) {
+    return reinterpret_cast<size_t>(View_GetGraphicsAdapter((*ctx)->view));
+  }
+  return 0;
+
 }
 
 FlutterDesktopTextureRegistrarRef GetTextureRegistrar(int64_t engine_handle) {
@@ -170,6 +199,7 @@ void IrondashEngineContextPlugin::RegisterWithRegistrar(
   ++next_handle;
 
   EngineContext context;
+  context.view = registrar->GetView();
   context.hwnd = registrar->GetView()->GetNativeWindow();
   context.texture_registrar =
       FlutterDesktopRegistrarGetTextureRegistrar(raw_registrar);

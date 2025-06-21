@@ -26,6 +26,8 @@ FLUTTER_PLUGIN_EXPORT unsigned long IrondashEngineContextGetMainThreadId();
 FLUTTER_PLUGIN_EXPORT size_t
 IrondashEngineContextGetFlutterView(int64_t engine_handle);
 
+FLUTTER_PLUGIN_EXPORT size_t IrondashEngineContextGetGraphicsAdapter(int64_t engine_handle);
+
 FLUTTER_PLUGIN_EXPORT FlutterDesktopTextureRegistrarRef
 IrondashEngineContextGetTextureRegistrar(int64_t engine_handle);
 

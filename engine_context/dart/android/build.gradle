@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.0'
+        classpath 'com.android.tools.build:gradle:8.5.1'
     }
 }
 
@@ -26,7 +26,8 @@ android {
         namespace 'dev.irondash.engine_context'
     }
 
-    compileSdkVersion 31
+    compileSdkVersion 35
+    ndkVersion "27.0.12077973"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

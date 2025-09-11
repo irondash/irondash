@@ -71,11 +71,11 @@ impl<T: EventHandler> RegisteredEventChannel<T> {
         }
     }
 
-    pub fn borrow(&self) -> Ref<T> {
+    pub fn borrow(&self) -> Ref<'_, T> {
         self.handler.borrow()
     }
 
-    pub fn borrow_mut(&self) -> RefMut<T> {
+    pub fn borrow_mut(&self) -> RefMut<'_, T> {
         self.handler.borrow_mut()
     }
 }

@@ -10,6 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1.7.1
+      - uses: android-actions/setup-android@v3
       - name: Install Android NDK
         run: |
           echo "y" | sdkmanager "ndk;27.2.12479018"

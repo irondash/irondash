@@ -38,15 +38,21 @@ jobs:
             --target=i686-linux-android \
             --target=x86_64-linux-android \
             --temp-dir=$(pwd)/temp_build_output || true
+        env:
+          GITHUB_TOKEN: dummy_token
+          PRIVATE_KEY: dummy_private_key
+        working-directory: engine_context/dart/cargokit/build_tool
 
+      - name: Copy built binaries
+        run: |
           # The build will fail at upload, but the binaries are built in temp directory
           # Find and copy the built .so files
           mkdir -p built_binaries
-          find temp_build_output -name "*.so" -exec sh -c '
+          find engine_context/dart/cargokit/build_tool/temp_build_output -name "*.so" -exec sh -c '
             target_dir=$(dirname "$1" | sed "s/.*target\///g" | sed "s/\/release.*//g")
             mkdir -p "built_binaries/$target_dir"
             cp "$1" "built_binaries/$target_dir/"
-          ' _ {} \;
+          ' _ {} \; 2>/dev/null || true
 
           # Also check the regular target directory
           if [ -d "target" ]; then
@@ -60,7 +66,6 @@ jobs:
 
           echo "Built libraries:"
           find built_binaries -name "*.so" -exec ls -la {} \;
-        working-directory: engine_context/dart/cargokit/build_tool
 
       - name: Upload built binaries as artifacts
         uses: actions/upload-artifact@v4

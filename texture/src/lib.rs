@@ -199,7 +199,7 @@ mod linux {
     }
 
     pub trait GLTextureProvider {
-        fn get(&self) -> GLTexture;
+        fn get(&self) -> GLTexture<'_>;
     }
 
     /// Payload type for IOSurface backed texture.

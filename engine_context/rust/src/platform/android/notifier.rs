@@ -49,7 +49,7 @@ impl Notifier {
         Ok(())
     }
 
-    pub fn as_obj(&self) -> &JObject {
+    pub fn as_obj(&self) -> &JObject<'_> {
         self.notifier.as_obj()
     }
 }

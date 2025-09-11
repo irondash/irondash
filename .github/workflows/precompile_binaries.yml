@@ -10,7 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1.7.1
-      - uses: android-actions/setup-android@v3
+      - name: Install Android NDK
+        run: |
+          echo "y" | sdkmanager "ndk;27.2.12479018"
       - name: Precompile (Android)
         run: dart run build_tool precompile-binaries -v --manifest-dir=../../android/rust --repository=irondash/irondash --android-sdk-location=/usr/local/lib/android/sdk --android-ndk-version=27.2.12479018 --android-min-sdk-version=23 --target=armv7-linux-androideabi --target=aarch64-linux-android --target=i686-linux-android --target=x86_64-linux-android
         working-directory: engine_context/dart/cargokit/build_tool

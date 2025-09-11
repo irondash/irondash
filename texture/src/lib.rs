@@ -126,7 +126,7 @@ impl PixelData<'_> {
 }
 
 pub trait PixelDataProvider {
-    fn get(&self) -> PixelData;
+    fn get(&self) -> PixelData<'_>;
 }
 
 /// Actual type for pixel buffer payload.
@@ -150,7 +150,7 @@ impl SimplePixelData {
 }
 
 impl PixelDataProvider for SimplePixelData {
-    fn get(&self) -> PixelData {
+    fn get(&self) -> PixelData<'_> {
         PixelData {
             width: self.width,
             height: self.height,

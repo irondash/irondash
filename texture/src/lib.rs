@@ -224,7 +224,7 @@ mod windows {
     }
 
     pub trait TextureDescriptorProvider<HandleType> {
-        fn get(&self) -> TextureDescriptor<HandleType>;
+        fn get(&self) -> TextureDescriptor<'_, HandleType>;
     }
 
     pub type BoxedTextureDescriptor<HandleType> = Box<dyn TextureDescriptorProvider<HandleType>>;

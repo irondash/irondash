@@ -5,6 +5,7 @@ name = "irondash_engine_context_native"
 version = "0.1.0"
 edition = "2021"
 resolver = "2"
+build = "build.rs"
 
 [lib]
 crate-type = ["cdylib"]

@@ -53,6 +53,13 @@ android {
         versionName flutterVersionName
     }
 
+    packagingOptions {
+        jniLibs {
+            // Use uncompressed shared libraries for proper 16KB page size alignment
+            useLegacyPackaging false
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

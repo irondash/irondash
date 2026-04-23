@@ -18,7 +18,11 @@
 
 @interface IrondashEngineContextPlugin () {
   int64_t engineHandle;
+  __weak NSObject<FlutterPluginRegistrar> *registrar;
 }
+
+- (void)ensureContextRegistered;
+- (void)resolveEngineHandle:(FlutterResult)result attemptsRemaining:(NSInteger)attemptsRemaining;
 @end
 
 @interface _IrondashAssociatedObject : NSObject {
@@ -51,6 +55,7 @@ static char associatedObjectKey;
   IrondashEngineContextPlugin *instance =
       [[IrondashEngineContextPlugin alloc] init];
   instance->engineHandle = engineHandle;
+  instance->registrar = registrar;
 
   // There is no destroy notification on macOS, so track the lifecycle of
   // BinaryMessenger.
@@ -64,15 +69,7 @@ static char associatedObjectKey;
   // references engine and unfortunately instance itself will leak given current
   // Flutter plugin architecture on macOS;
   dispatch_async(dispatch_get_main_queue(), ^{
-    _IrondashEngineContext *context = [_IrondashEngineContext new];
-    context->flutterView = registrar.view;
-    context->binaryMessenger = registrar.messenger;
-    context->textureRegistry = registrar.textures;
-    // There is no unregister callback on macOS, which means we'll leak
-    // an _IrondashEngineContext instance for every engine. Fortunately the
-    // instance is tiny and only uses weak pointers to reference engine
-    // artifacts.
-    [registry setObject:context forKey:@(instance->engineHandle)];
+    [instance ensureContextRegistered];
   });
 
   FlutterMethodChannel *channel =
@@ -84,24 +81,74 @@ static char associatedObjectKey;
 - (void)handleMethodCall:(FlutterMethodCall *)call
                   result:(FlutterResult)result {
   if ([@"getEngineHandle" isEqualToString:call.method]) {
-    result(@(engineHandle));
+    [self resolveEngineHandle:result attemptsRemaining:16];
   } else {
     result(FlutterMethodNotImplemented);
   }
 }
 
+- (void)ensureContextRegistered {
+  if ([registry objectForKey:@(self->engineHandle)] != nil) {
+    return;
+  }
+
+  NSObject<FlutterPluginRegistrar> *registrar = self->registrar;
+  if (registrar == nil || registrar.view == nil) {
+    return;
+  }
+
+  _IrondashEngineContext *context = [_IrondashEngineContext new];
+  context->flutterView = registrar.view;
+  context->binaryMessenger = registrar.messenger;
+  context->textureRegistry = registrar.textures;
+  // There is no unregister callback on macOS, which means we'll leak
+  // an _IrondashEngineContext instance for every engine. Fortunately the
+  // instance is tiny and only uses weak pointers to reference engine
+  // artifacts.
+  [registry setObject:context forKey:@(self->engineHandle)];
+}
+
+- (void)resolveEngineHandle:(FlutterResult)result attemptsRemaining:(NSInteger)attemptsRemaining {
+  [self ensureContextRegistered];
+
+  if ([registry objectForKey:@(self->engineHandle)] != nil) {
+    result(@(self->engineHandle));
+    return;
+  }
+
+  if (attemptsRemaining <= 0) {
+    result([FlutterError errorWithCode:@"engineContextUnavailable"
+                               message:@"Engine context is not ready yet."
+                               details:nil]);
+    return;
+  }
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self resolveEngineHandle:result attemptsRemaining:attemptsRemaining - 1];
+  });
+}
+
 + (NSView *)getFlutterView:(int64_t)engineHandle {
   _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
+  if (context == nil) {
+    return nil;
+  }
   return context->flutterView;
 }
 
 + (id<FlutterTextureRegistry>)getTextureRegistry:(int64_t)engineHandle {
   _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
+  if (context == nil) {
+    return nil;
+  }
   return context->textureRegistry;
 }
 
 + (id<FlutterBinaryMessenger>)getBinaryMessenger:(int64_t)engineHandle {
   _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
+  if (context == nil) {
+    return nil;
+  }
   return context->binaryMessenger;
 }
 

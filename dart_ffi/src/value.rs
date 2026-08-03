@@ -252,7 +252,7 @@ pub mod raw {
     }
 
     #[repr(C)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[derive(Debug, Copy, Clone)]
     pub struct DartCObjectExternalTypedData {
         pub ty: DartTypedDataType,
         pub length: isize, // in elements, not bytes
@@ -265,6 +265,7 @@ pub mod raw {
 
     #[repr(C)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[allow(unpredictable_function_pointer_comparisons)]
     pub struct DartCObjectNativePointer {
         pub ptr: isize,
         pub size: isize,

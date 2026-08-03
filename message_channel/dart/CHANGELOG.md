@@ -1,3 +1,7 @@
+## 0.8.0-dev.0
+
+- Prepare next minor prerelease.
+
 ## 0.7.0
 
 - Use pointer size values where appropriate (#48)
@@ -42,4 +46,3 @@
 ## 0.1.0
 
 * Initial published version
-

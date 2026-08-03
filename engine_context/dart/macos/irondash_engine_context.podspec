@@ -14,7 +14,8 @@ A new Flutter plugin project.
   s.author           = { 'Your Company' => 'email@example.com' }
 
   s.source           = { :path => '.' }
-  s.source_files     = 'Classes/**/*'
+  s.source_files     = 'irondash_engine_context/Sources/irondash_engine_context/**/*.{h,m}'
+  s.public_header_files = 'irondash_engine_context/Sources/irondash_engine_context/include/**/*.h'
   s.dependency 'FlutterMacOS'
 
   s.platform = :osx, '10.11'

@@ -1,27 +1,16 @@
 PODS:
-  - example_rust (0.0.1)
   - FlutterMacOS (1.0.0)
-  - irondash_engine_context (0.0.1):
-    - FlutterMacOS
 
 DEPENDENCIES:
-  - example_rust (from `../rust`)
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - irondash_engine_context (from `Flutter/ephemeral/.symlinks/plugins/irondash_engine_context/macos`)
 
 EXTERNAL SOURCES:
-  example_rust:
-    :path: "../rust"
   FlutterMacOS:
     :path: Flutter/ephemeral
-  irondash_engine_context:
-    :path: Flutter/ephemeral/.symlinks/plugins/irondash_engine_context/macos
 
 SPEC CHECKSUMS:
-  example_rust: f06c10d023833ef3d902aba66c8725baf77ce384
-  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  irondash_engine_context: da62996ee25616d2f01bbeb85dc115d813359478
+  FlutterMacOS: c232990155153907050900a2e175c7773903ba4e
 
-PODFILE CHECKSUM: d9e786773fee4dedad0bd380d9869363418f5f45
+PODFILE CHECKSUM: 505596d150d38022472859d890f709281982e016
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.16.2

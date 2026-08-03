@@ -1,12 +1,12 @@
 [package]
 name = "example_rust"
-version = "0.1.0"
+version = "0.2.0-dev.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
 log = "0.4"
@@ -14,9 +14,9 @@ simple_logger = "2.1"
 async-trait = "0.1"
 tokio = { version = "1", features = ["full"] }
 thiserror = "1.0"
-irondash_message_channel = { version = "0.8.0", features = ["derive"] }
-irondash_run_loop = { version = "0.6.0" }
-irondash_dart_ffi = "0.2.0"
+irondash_message_channel = { version = "0.9.0-dev.0", features = ["derive"] }
+irondash_run_loop = { version = "0.7.0-dev.0" }
+irondash_dart_ffi = "0.3.0-dev.0"
 
 # reqwest uses different options per platform
 

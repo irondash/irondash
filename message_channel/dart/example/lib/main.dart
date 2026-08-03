@@ -1,16 +1,32 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:isolate';
+import 'dart:io' as io;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:irondash_message_channel/irondash_message_channel.dart';
 
-final _dylib = defaultTargetPlatform == TargetPlatform.android
-    ? DynamicLibrary.open("libexample_rust.so")
-    : (defaultTargetPlatform == TargetPlatform.windows
-        ? DynamicLibrary.open("example_rust.dll")
-        : DynamicLibrary.process());
+const _rustLibraryName = 'example_rust';
+
+final _dylib = _openRustLibrary();
+
+DynamicLibrary _openRustLibrary() {
+  if (io.Platform.isIOS || io.Platform.isMacOS) {
+    return DynamicLibrary.open(
+      '@rpath/$_rustLibraryName.framework/$_rustLibraryName',
+    );
+  }
+
+  if (io.Platform.isAndroid || io.Platform.isLinux) {
+    return DynamicLibrary.open('lib$_rustLibraryName.so');
+  }
+
+  if (io.Platform.isWindows) {
+    return DynamicLibrary.open('$_rustLibraryName.dll');
+  }
+
+  throw UnsupportedError('Unsupported platform ${io.Platform.operatingSystem}');
+}
 
 /// initialize context for Native library.
 MessageChannelContext _initNativeContext() {
@@ -18,9 +34,10 @@ MessageChannelContext _initNativeContext() {
   // initialization data. From it you should call
   // `irondash_init_message_channel_context` and do any other initialization,
   // i.e. register rust method channel handlers.
-  final function =
-      _dylib.lookup<NativeFunction<MessageChannelContextInitFunction>>(
-          "example_rust_init_message_channel_context");
+  final function = _dylib
+      .lookup<NativeFunction<MessageChannelContextInitFunction>>(
+        "example_rust_init_message_channel_context",
+      );
   return MessageChannelContext.forInitFunction(function);
 }
 
@@ -31,7 +48,8 @@ Future<void> _initNative() async {
   final port = ReceivePort();
   final function = _dylib
       .lookup<NativeFunction<Void Function(Pointer<Void>, Int64)>>(
-          "example_rust_init_native")
+        "example_rust_init_native",
+      )
       .asFunction<void Function(Pointer<Void>, int)>();
   function(NativeApi.initializeApiDLData, port.sendPort.nativePort);
   return await port.first;
@@ -39,18 +57,25 @@ Future<void> _initNative() async {
 
 final nativeContext = _initNativeContext();
 
-final _channel =
-    NativeMethodChannel('addition_channel', context: nativeContext);
+final _channel = NativeMethodChannel(
+  'addition_channel',
+  context: nativeContext,
+);
 
 final _channelBackgroundThread = NativeMethodChannel(
-    'addition_channel_background_thread',
-    context: nativeContext);
+  'addition_channel_background_thread',
+  context: nativeContext,
+);
 
-final _slowChannel =
-    NativeMethodChannel('slow_channel', context: nativeContext);
+final _slowChannel = NativeMethodChannel(
+  'slow_channel',
+  context: nativeContext,
+);
 
-final _httpClientChannel =
-    NativeMethodChannel('http_client_channel', context: nativeContext);
+final _httpClientChannel = NativeMethodChannel(
+  'http_client_channel',
+  context: nativeContext,
+);
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -88,8 +113,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _callRustOnBackgroundThread() async {
-    final res = await _channelBackgroundThread
-        .invokeMethod('add', {'a': 15.0, 'b': 5.0});
+    final res = await _channelBackgroundThread.invokeMethod('add', {
+      'a': 15.0,
+      'b': 5.0,
+    });
     _showResult(res);
   }
 
@@ -113,17 +140,21 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextButton(
-                onPressed: _callRustOnPlatformThread,
-                child: const Text('Call Rust (main/platform thread)')),
+              onPressed: _callRustOnPlatformThread,
+              child: const Text('Call Rust (main/platform thread)'),
+            ),
             TextButton(
-                onPressed: _callRustOnBackgroundThread,
-                child: const Text('Call Rust (background thread)')),
+              onPressed: _callRustOnBackgroundThread,
+              child: const Text('Call Rust (background thread)'),
+            ),
             TextButton(
-                onPressed: _callSlowMethod,
-                child: const Text('Call Rust (slow method)')),
+              onPressed: _callSlowMethod,
+              child: const Text('Call Rust (slow method)'),
+            ),
             TextButton(
-                onPressed: _loadPage,
-                child: const Text('Load page using Reqwest/Tokio')),
+              onPressed: _loadPage,
+              child: const Text('Load page using Reqwest/Tokio'),
+            ),
           ],
         ),
       ),
@@ -143,9 +174,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const MyHomePage(),
     );
   }

@@ -1,21 +1,37 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
+import 'dart:io' as io;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:irondash_engine_context/irondash_engine_context.dart';
 
+const _rustLibraryName = 'texture_example';
+
+DynamicLibrary _openRustLibrary() {
+  if (io.Platform.isIOS || io.Platform.isMacOS) {
+    return DynamicLibrary.open(
+      '@rpath/$_rustLibraryName.framework/$_rustLibraryName',
+    );
+  }
+
+  if (io.Platform.isAndroid || io.Platform.isLinux) {
+    return DynamicLibrary.open('lib$_rustLibraryName.so');
+  }
+
+  if (io.Platform.isWindows) {
+    return DynamicLibrary.open('$_rustLibraryName.dll');
+  }
+
+  throw UnsupportedError('Unsupported platform ${io.Platform.operatingSystem}');
+}
+
 Future<int?> initNative() async {
-  final dylib = defaultTargetPlatform == TargetPlatform.android
-      ? DynamicLibrary.open("libtexture_example.so")
-      : (defaultTargetPlatform == TargetPlatform.windows
-          ? DynamicLibrary.open("texture_example.dll")
-          : DynamicLibrary.process());
+  final dylib = _openRustLibrary();
 
   final initFunction = dylib
       .lookup<NativeFunction<Void Function(Int64, Pointer<Void>, Int64)>>(
-          "init_texture_example")
+          'init_texture_example')
       .asFunction<void Function(int, Pointer<Void>, int)>();
 
   final handle = await EngineContext.instance.getEngineHandle();

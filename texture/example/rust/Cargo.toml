@@ -1,17 +1,17 @@
 [package]
 name = "texture_example"
-version = "0.1.1"
+version = "0.2.0-dev.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["staticlib", "cdylib"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-irondash_texture = { version = "0.5.0" }
-irondash_run_loop = { version = "0.6.0" }
-irondash_dart_ffi = "0.2.0"
+irondash_texture = { version = "0.6.0-dev.0" }
+irondash_run_loop = { version = "0.7.0-dev.0" }
+irondash_dart_ffi = "0.3.0-dev.0"
 simple_logger = "2.1"
 log = "0.4"
 fastrand = "1.8"

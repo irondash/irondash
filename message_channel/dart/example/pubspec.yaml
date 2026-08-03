@@ -16,10 +16,11 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.1.0-dev.0
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.14.0-0 <4.0.0'
+  flutter: ">=3.47.0-1.0.pre"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -28,16 +29,18 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  hooks: ^2.1.0
   flutter:
     sdk: flutter
 
-  irondash_message_channel: ^0.6.0
+  irondash_message_channel: ^0.8.0-dev.0
   # Required for RunLoop::sender_for_main_thread to work correctly.
-  irondash_engine_context: ^0.5.2
+  irondash_engine_context: ^0.6.0-dev.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+  native_toolchain_rust: ^1.0.4+0
 
 dev_dependencies:
   flutter_test:

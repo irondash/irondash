@@ -64,9 +64,9 @@ impl EngineContext {
         }
         if ENGINE_CONTEXT.get().is_none() {
             let context = Self::new();
-            match context {
-                Ok(context) => ENGINE_CONTEXT.set(context).ok(),
-                Err(err) => return Err(err),
+            {
+                let context = context?;
+                ENGINE_CONTEXT.set(context).ok()
             };
         }
         Ok(ENGINE_CONTEXT.get().unwrap())

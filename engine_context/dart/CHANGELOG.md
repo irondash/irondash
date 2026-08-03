@@ -1,3 +1,7 @@
+## 0.6.0-dev.0
+
+- Prepare next minor prerelease.
+
 ## 0.5.5
 
 - Update cargokit

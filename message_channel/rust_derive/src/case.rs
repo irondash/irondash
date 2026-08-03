@@ -12,9 +12,10 @@ use std::fmt::{self, Debug, Display};
 use self::RenameRule::*;
 
 /// The different possible ways to change case of fields in a struct, or variants in an enum.
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 pub enum RenameRule {
     /// Don't apply a default rename rule.
+    #[default]
     None,
     /// Rename direct children to "lowercase" style.
     LowerCase,
@@ -37,12 +38,6 @@ pub enum RenameRule {
     ScreamingKebabCase,
 }
 
-impl Default for RenameRule {
-    fn default() -> Self {
-        Self::None
-    }
-}
-
 static RENAME_RULES: &[(&str, RenameRule)] = &[
     ("lowercase", LowerCase),
     ("UPPERCASE", UpperCase),
@@ -55,7 +50,7 @@ static RENAME_RULES: &[(&str, RenameRule)] = &[
 ];
 
 impl RenameRule {
-    pub fn from_str(rename_all_str: &str) -> Result<Self, ParseError> {
+    pub fn from_str(rename_all_str: &str) -> Result<Self, ParseError<'_>> {
         for (name, rule) in RENAME_RULES {
             if rename_all_str == *name {
                 return Ok(*rule);

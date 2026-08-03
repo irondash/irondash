@@ -122,6 +122,12 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+# Copy the native assets provided by the build.dart from all packages.
+set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
+install(DIRECTORY "${NATIVE_ASSETS_DIR}"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+
 # Fully re-copy the assets directory on each build to avoid having stale files
 # from a previous install.
 set(FLUTTER_ASSET_DIR_NAME "flutter_assets")
@@ -136,17 +142,3 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
-
-include("../cargokit/cmake/cargokit.cmake")
-apply_cargokit(${BINARY_NAME}
-    # relative path to folder containing cargo manifest:
-    ../rust
-    # cargo package name:
-    texture_example
-    # any_symbol_name (not used on linux)
-    ""
-)
-
-install(FILES "${${BINARY_NAME}_cargokit_lib}"
-       DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-       COMPONENT Runtime)

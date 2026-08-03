@@ -1,27 +1,16 @@
 PODS:
   - FlutterMacOS (1.0.0)
-  - irondash_engine_context (0.0.1):
-    - FlutterMacOS
-  - texture_example (0.0.1)
 
 DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - irondash_engine_context (from `Flutter/ephemeral/.symlinks/plugins/irondash_engine_context/macos`)
-  - texture_example (from `../rust`)
 
 EXTERNAL SOURCES:
   FlutterMacOS:
     :path: Flutter/ephemeral
-  irondash_engine_context:
-    :path: Flutter/ephemeral/.symlinks/plugins/irondash_engine_context/macos
-  texture_example:
-    :path: "../rust"
 
 SPEC CHECKSUMS:
-  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  irondash_engine_context: da62996ee25616d2f01bbeb85dc115d813359478
-  texture_example: 67ffd40edc05b3dddf54105c4462042996bb8455
+  FlutterMacOS: c232990155153907050900a2e175c7773903ba4e
 
-PODFILE CHECKSUM: c4b569a7789227c376ab3db5156333f5b9bc9b4b
+PODFILE CHECKSUM: 505596d150d38022472859d890f709281982e016
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.16.2

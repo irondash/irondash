@@ -2,12 +2,12 @@
 
 [package]
 name = "irondash_engine_context_native"
-version = "0.1.0"
+version = "0.2.0-dev.0"
 edition = "2021"
 resolver = "2"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["staticlib", "cdylib"]
 
 [profile.dev]
 panic = "abort" # required for no_std

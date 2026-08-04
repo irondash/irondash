@@ -4,14 +4,14 @@ version: 0.6.0-dev.0
 homepage: https://github.com/irondash/irondash
 
 environment:
-  sdk: '>=3.10.0 <4.0.0'
-  flutter: ">=3.47.0-1.0.pre"
+  sdk: ^3.10.0-0
+  flutter: ">=3.44.0"
 
 dependencies:
   code_assets: ^1.0.0
   flutter:
     sdk: flutter
-  hooks: ^2.1.0
+  hooks: ^2.0.2
   native_toolchain_rust: ^1.0.4+0
   plugin_platform_interface: ^2.0.2
 

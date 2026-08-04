@@ -199,7 +199,7 @@ mod linux {
     }
 
     pub trait GLTextureProvider {
-        fn get(&self) -> GLTexture;
+        fn get(&self) -> GLTexture<'_>;
     }
 
     /// Payload type for IOSurface backed texture.
@@ -224,7 +224,7 @@ mod windows {
     }
 
     pub trait TextureDescriptorProvider<HandleType> {
-        fn get(&self) -> TextureDescriptor<HandleType>;
+        fn get(&self) -> TextureDescriptor<'_, HandleType>;
     }
 
     pub type BoxedTextureDescriptor<HandleType> = Box<dyn TextureDescriptorProvider<HandleType>>;

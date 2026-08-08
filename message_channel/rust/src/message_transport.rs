@@ -137,12 +137,12 @@ pub mod native {
     }
 
     // Accepts port, returns isolate id
-    pub(crate) extern "C" fn register_isolate(port: i64, isolate_id: *mut c_void) -> i64 {
+    pub(crate) extern "C" fn register_isolate(port: i64, _isolate_id: *mut c_void) -> i64 {
         // Ensure message channel is initialized, otherwise there is no transport
         // and the isolate gets lost.
         MessageChannel::get();
-
-        let isolate_id = isolate_id as i64;
+        // used the port as the identifier of the isolate because this one is always unique
+        let isolate_id = port;
         if let Some(transport) = NativeMessageTransport::get() {
             let isolate_id = IsolateId(isolate_id);
             transport.register_isolate(isolate_id, port);

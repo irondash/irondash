@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.android.FlutterView;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -86,14 +88,39 @@ public class IrondashEngineContextPlugin implements FlutterPlugin, MethodCallHan
       return null;
     }
   }
-
+  
+  private static FlutterView findFlutterViewRecursive(View view) {
+    if (view instanceof FlutterView) {
+      return (FlutterView) view;
+    }
+    
+    if (view instanceof ViewGroup) {
+      ViewGroup viewGroup = (ViewGroup) view;
+      for (int i = 0; i < viewGroup.getChildCount(); i++) {
+        View child = viewGroup.getChildAt(i);
+        FlutterView result = findFlutterViewRecursive(child);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    
+    return null;
+  }
+  
   static public View getFlutterView(long handle) {
     final Activity activity = getActivity(handle);
-    if (activity != null) {
-      return activity.findViewById(FlutterActivity.FLUTTER_VIEW_ID);
-    } else {
+    if (activity == null) {
       return null;
     }
+    
+    View flutterView = activity.findViewById(FlutterActivity.FLUTTER_VIEW_ID);
+    if (flutterView != null) {
+      return flutterView;
+    }
+    
+    View decorView = activity.getWindow().getDecorView();
+    return findFlutterViewRecursive(decorView.getRootView());
   }
 
   static public BinaryMessenger getBinaryMessenger(long handle) {

@@ -59,21 +59,19 @@ static char associatedObjectKey;
   objc_setAssociatedObject(registrar.messenger, &associatedObjectKey, object,
                            OBJC_ASSOCIATION_RETAIN);
 
-  // View is available only after registerWithRegistrar: completes. And we don't
-  // want to keep strong reference to the registrar in instance because it
-  // references engine and unfortunately instance itself will leak given current
-  // Flutter plugin architecture on macOS;
-  dispatch_async(dispatch_get_main_queue(), ^{
+  void (^populateContext)(void) = ^{
     _IrondashEngineContext *context = [_IrondashEngineContext new];
     context->flutterView = registrar.view;
     context->binaryMessenger = registrar.messenger;
     context->textureRegistry = registrar.textures;
-    // There is no unregister callback on macOS, which means we'll leak
-    // an _IrondashEngineContext instance for every engine. Fortunately the
-    // instance is tiny and only uses weak pointers to reference engine
-    // artifacts.
     [registry setObject:context forKey:@(instance->engineHandle)];
-  });
+  };
+
+  if (registrar.view != nil) {
+    populateContext();
+  } else {
+    dispatch_async(dispatch_get_main_queue(), populateContext);
+  }
 
   FlutterMethodChannel *channel =
       [FlutterMethodChannel methodChannelWithName:@"dev.irondash.engine_context"
@@ -92,17 +90,17 @@ static char associatedObjectKey;
 
 + (NSView *)getFlutterView:(int64_t)engineHandle {
   _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
-  return context->flutterView;
+  return context != nil ? context->flutterView : nil;
 }
 
 + (id<FlutterTextureRegistry>)getTextureRegistry:(int64_t)engineHandle {
   _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
-  return context->textureRegistry;
+  return context != nil ? context->textureRegistry : nil;
 }
 
 + (id<FlutterBinaryMessenger>)getBinaryMessenger:(int64_t)engineHandle {
   _IrondashEngineContext *context = [registry objectForKey:@(engineHandle)];
-  return context->binaryMessenger;
+  return context != nil ? context->binaryMessenger : nil;
 }
 
 + (void)registerEngineDestroyedCallback:(EngineDestroyedCallback)callback {

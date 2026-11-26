@@ -98,6 +98,7 @@ pub mod windows {
     #[link(name = "kernel32")]
     extern "system" {
         pub fn GetModuleHandleW(lpmodulename: PWSTR) -> HINSTANCE;
+        pub fn GetCurrentProcessId() -> DWORD;
     }
 
     #[link(name = "user32")]
@@ -117,6 +118,8 @@ pub mod windows {
             lpparam: *const ::core::ffi::c_void,
         ) -> HWND;
         pub fn DestroyWindow(hWnd: HWND) -> BOOL;
+        pub fn GetWindowThreadProcessId(hwnd: HWND, process_id: *mut DWORD) -> DWORD;
+        pub fn GetClassNameW(hwnd: HWND, class_name: PWSTR, max_count: i32) -> i32;
         pub fn DefWindowProcW(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT;
         pub fn GetWindowLongPtrW(hwnd: HWND, nindex: WINDOW_LONG_PTR_INDEX) -> isize;
         pub fn LoadCursorW(hinstance: HINSTANCE, lpcursorname: PWSTR) -> HCURSOR;

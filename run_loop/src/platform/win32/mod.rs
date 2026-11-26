@@ -1,6 +1,9 @@
 mod adapter;
 mod sys;
 
+#[cfg(test)]
+mod tests;
+
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
@@ -90,6 +93,7 @@ struct Timer {
 type SenderCallback = Box<dyn FnOnce() + Send>;
 
 const WM_RUNLOOP_STOP: u32 = WM_USER + 1;
+const FLUTTER_TASK_RUNNER_CLASS: &str = "FlutterTaskRunnerWindow";
 
 struct State {
     next_handle: Cell<HandleType>,
@@ -260,6 +264,7 @@ impl State {
                 MWMO_INPUTAVAILABLE,
             );
             let mut message = MSG::default();
+            let mut flutter_window_search_attempted = false;
             loop {
                 // If poll session takes longer than n milliseconds we'll process messages
                 // from flutter task runner HWNDs as well. Unlike macOS this shouldn't be
@@ -268,15 +273,26 @@ impl State {
                 // (i.e. because of platform views) so we should handle it correctly.
                 let mut message_hwnds = vec![self.hwnd.get()];
                 if poll_session.timed_out {
-                    let flutter_hwnd = poll_session.flutter_hwnd.get_or_insert_with(|| {
-                        FindWindowExW(
-                            HWND_MESSAGE,
-                            0,
-                            to_utf16("FlutterTaskRunnerWindow").as_mut_ptr(),
-                            std::ptr::null_mut(),
-                        )
-                    });
-                    message_hwnds.push(*flutter_hwnd);
+                    // PeekMessageW requires a window owned by the calling thread.
+                    // A cached handle may have been reused by another window on the same thread.
+                    if !poll_session
+                        .flutter_hwnd
+                        .is_some_and(is_current_thread_flutter_window)
+                    {
+                        poll_session.flutter_hwnd = None;
+                        // Search at most once per call, even when no window exists.
+                        // Retry on the next call to find windows created later.
+                        if !flutter_window_search_attempted {
+                            flutter_window_search_attempted = true;
+                            poll_session.flutter_hwnd =
+                                find_current_thread_window(FLUTTER_TASK_RUNNER_CLASS);
+                        }
+                    }
+                    if let Some(flutter_hwnd) = poll_session.flutter_hwnd {
+                        // A null HWND would retrieve all messages for this thread,
+                        // including unrelated windows, rather than skip Flutter.
+                        message_hwnds.push(flutter_hwnd);
+                    }
                 }
                 let res = message_hwnds.iter().any(|hwnd| {
                     PeekMessageW(&mut message as *mut _, *hwnd, 0, 0, PM_REMOVE | PM_NOYIELD) != 0
@@ -374,4 +390,55 @@ pub(crate) type PlatformThreadId = u32;
 
 pub(crate) fn get_system_thread_id() -> PlatformThreadId {
     unsafe { GetCurrentThreadId() }
+}
+
+// Checking the process alone is insufficient: another thread in the same
+// process also has a separate message queue.
+fn is_current_thread_window(hwnd: HWND) -> bool {
+    if hwnd == 0 {
+        return false;
+    }
+    unsafe {
+        let mut process_id = 0;
+        let thread_id = GetWindowThreadProcessId(hwnd, &mut process_id);
+        thread_id == GetCurrentThreadId() && process_id == GetCurrentProcessId()
+    }
+}
+
+// Ownership can still match after handle reuse, so also check the window class.
+fn is_current_thread_flutter_window(hwnd: HWND) -> bool {
+    if !is_current_thread_window(hwnd) {
+        return false;
+    }
+    let mut class_name = [0u16; 256];
+    let length =
+        unsafe { GetClassNameW(hwnd, class_name.as_mut_ptr(), class_name.len() as i32) } as usize;
+    length > 0
+        && class_name[..length]
+            .iter()
+            .copied()
+            .eq(FLUTTER_TASK_RUNNER_CLASS.encode_utf16())
+}
+
+// Other Flutter instances use the same class name, so the first match may
+// belong to another process or thread.
+fn find_current_thread_window(class_name: &str) -> Option<HWND> {
+    let mut class_name = to_utf16(class_name);
+    let mut hwnd = 0;
+    loop {
+        hwnd = unsafe {
+            FindWindowExW(
+                HWND_MESSAGE,
+                hwnd,
+                class_name.as_mut_ptr(),
+                std::ptr::null_mut(),
+            )
+        };
+        if hwnd == 0 {
+            return None;
+        }
+        if is_current_thread_window(hwnd) {
+            return Some(hwnd);
+        }
+    }
 }
